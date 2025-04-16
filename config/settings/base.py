@@ -40,6 +40,7 @@ except Exception as e:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = secrets["SECRET_KEY"]
+JWT_SECRET_KEY = secrets["JWT_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -157,6 +158,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 APPEND_SLASH = True
 
 AUTH_USER_MODEL = "user.CommonUser"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# jwt setting
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Access Token 만료 시간 (분)
+REFRESH_TOKEN_EXPIRE_DAYS = 1  # Refresh Token 만료 시간 (일)
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")

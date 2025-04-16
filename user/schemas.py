@@ -137,3 +137,32 @@ class CompanyJoinResponseModel(BaseModel):
     message: str
     common_user: CommonUserModel
     company_info: Optional[CompanyInfoModel] = None
+
+
+# ------------------------
+# 로그인 모델
+# ------------------------
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class CompanyLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserLoginResponse(BaseModel):
+    message: str
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+
+class CompanyLoginResponse(BaseModel):
+    message: str
+    access_token: str
+    refresh_token: str
+    token_type: str
