@@ -1,10 +1,8 @@
 import json
 import random
 import string
-from datetime import datetime, timedelta
 from typing import Any, Dict
 
-import jwt
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -13,28 +11,36 @@ from django.http import JsonResponse
 from django.views import View
 from pydantic import ValidationError
 
-from user.models import CompanyInfo, UserInfo
+from user.models import CommonUser, CompanyInfo, UserInfo
 from user.schemas import (
-    CommonUserCreateModel,
     CommonUserModel,
-    CompanyInfoCreateModel,
     CompanyInfoModel,
     CompanyJoinResponseModel,
     CompanyLoginRequest,
     CompanyLoginResponse,
-    UserInfoCreateModel,
-    UserInfoModel,
-    UserSignupRequest,
     CompanySignupRequest,
+    UserInfoModel,
     UserJoinResponseModel,
     UserLoginRequest,
     UserLoginResponse,
+    UserSignupRequest,
 )
+
+from .views_token import create_access_token, create_refresh_token
 
 User = get_user_model()
 
 
+def create_common_user(email, password, join_type):
+    return User.objects.create(
+        email=email,
+        password=make_password(password),
+        join_type=join_type,
+    )
+
+
 class UserSignupView(View):
+    # 일반 사용자 회원가입
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
@@ -47,14 +53,12 @@ class UserSignupView(View):
                 )
 
             # CommonUser 생성
-            user = User.objects.create(
-                email=signup_data.email,
-                password=make_password(signup_data.password),
-                join_type="user",
+            user = create_common_user(
+                signup_data.email, signup_data.password, "user"
             )
 
             # 문자 인증 발송
-            result = self.send_verification_code(signup_data.phone_number)
+            result = send_verification_code(signup_data.phone_number)
             if not result["success"]:
                 user.delete()  # 오류 시 유저 삭제
                 return JsonResponse(
@@ -106,6 +110,7 @@ class UserSignupView(View):
 
 
 class CompanySignupView(View):
+    # 기업 사용자 회원가입
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
@@ -118,18 +123,14 @@ class CompanySignupView(View):
                 )
 
             # CommonUser 생성
-            user = User.objects.create(
-                email=signup_data.email,
-                password=make_password(signup_data.password),
-                join_type="company",
+            user = create_common_user(
+                signup_data.email, signup_data.password, "company"
             )
 
             # CompanyInfo 생성
             company_info = CompanyInfo.objects.create(
                 common_user=user,
-                **signup_data.model_dump(
-                    exclude={"email", "password"}
-                ),
+                **signup_data.model_dump(exclude={"email", "password"}),
             )
 
             response = CompanyJoinResponseModel(
@@ -211,6 +212,7 @@ def send_verification_code(phone_number: str) -> Dict[str, Any]:
 
 
 class UserLoginView(View):
+    # 일반 사용자 로그인
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
@@ -227,13 +229,8 @@ class UserLoginView(View):
                     status=400,
                 )
 
-            secret_key = settings.SECRET_KEY
-            algorithm = settings.JWT_ALGORITHM
-            expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-            access_token = self.create_access_token(user, secret_key, algorithm)
-            refresh_token = self.create_refresh_token(
-                user, secret_key, algorithm
-            )
+            access_token = create_access_token(user)
+            refresh_token = create_refresh_token(user)
 
             # 응답 데이터 생성
             response = UserLoginResponse(
@@ -253,27 +250,9 @@ class UserLoginView(View):
                 {"message": "서버 오류", "error": str(e)}, status=500
             )
 
-    def create_access_token(self, user, secret_key, algorithm) -> str:
-        expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        payload = {
-            "sub": str(user.id),  # 사용자 ID를 토큰에 포함
-            "join_type": user.join_type,
-            "exp": datetime.now() + timedelta(minutes=expire_minutes),
-        }
-        return jwt.encode(payload, secret_key, algorithm=algorithm)
-
-    def create_refresh_token(self, user, secret_key, algorithm) -> str:
-        expire_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
-        expiration = datetime.now() + timedelta(days=expire_days)
-        payload = {
-            "sub": str(user.id),  # common_user_id
-            "join_type": user.join_type,
-            "exp": expiration,
-        }
-        return jwt.encode(payload, secret_key, algorithm=algorithm)
-
 
 class CompanyLoginView(View):
+    # 기업 사용자 로그인
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
@@ -290,13 +269,8 @@ class CompanyLoginView(View):
                     status=400,
                 )
 
-            secret_key = settings.SECRET_KEY
-            algorithm = settings.JWT_ALGORITHM
-            expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-            access_token = self.create_access_token(user, secret_key, algorithm)
-            refresh_token = self.create_refresh_token(
-                user, secret_key, algorithm
-            )
+            access_token = create_access_token(user)
+            refresh_token = create_refresh_token(user)
 
             # 응답 데이터 생성
             response = CompanyLoginResponse(
@@ -311,110 +285,6 @@ class CompanyLoginView(View):
             return JsonResponse(
                 {"message": "잘못된 입력", "errors": e.errors()}, status=422
             )
-        except Exception as e:
-            return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
-            )
-
-    def create_access_token(self, user, secret_key, algorithm) -> str:
-        expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        payload = {
-            "sub": str(user.id),
-            "join_type": user.join_type,
-            "exp": datetime.now() + timedelta(minutes=expire_minutes),
-        }
-        return jwt.encode(payload, secret_key, algorithm=algorithm)
-
-    def create_refresh_token(self, user, secret_key, algorithm) -> str:
-        expire_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
-        expiration = datetime.now() + timedelta(days=expire_days)
-        payload = {
-            "sub": str(user.id),  # common_user_id
-            "join_type": user.join_type,
-            "exp": expiration,
-        }
-        return jwt.encode(payload, secret_key, algorithm=algorithm)
-
-
-class TokenRefreshService:
-    def __init__(self, refresh_token: str):
-        self.refresh_token = refresh_token
-        self.secret_key = settings.SECRET_KEY
-        self.algorithm = settings.JWT_ALGORITHM
-
-    def refresh(self) -> Dict[str, Any]:
-        """
-        Refresh Token을 검증하고 새로운 Access Token발급
-        """
-        try:
-            # Refresh Token 검증
-            try:
-                payload = jwt.decode(
-                    self.refresh_token,
-                    self.secret_key,
-                    algorithms=[self.algorithm],
-                )
-                user_id = payload["sub"]
-                user = User.objects.get(id=user_id)
-            except jwt.ExpiredSignatureError:
-                return {
-                    "success": False,
-                    "message": "Refresh token has expired.",
-                }
-            except jwt.InvalidTokenError:
-                return {"success": False, "message": "Invalid refresh token."}
-
-            # 새로운 Access Token 발급
-            new_access_token = self.create_access_token(user)
-
-            return {
-                "success": True,
-                "access_token": new_access_token,
-                "message": "Access token refreshed successfully.",
-            }
-        except Exception as e:
-            return {"success": False, "message": f"Server error: {str(e)}"}
-
-    def create_access_token(self, user):
-        expire_minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        expiration = datetime.now() + timedelta(minutes=expire_minutes)
-        payload = {
-            "sub": str(user.id),  # 사용자 ID를 토큰에 포함
-            "join_type": user.join_type,
-            "exp": expiration,
-        }
-
-        return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
-
-
-# access 토큰 만료시 refresh토큰으로 새로운 access 토큰 발급
-class TokenRefreshView(View):
-    def post(self, request, *args, **kwargs) -> JsonResponse:
-        try:
-            body = json.loads(request.body.decode())
-            refresh_token = body.get("refresh_token")
-
-            if not refresh_token:
-                return JsonResponse(
-                    {"message": "Refresh token is required."}, status=400
-                )
-
-            # TokenRefreshService를 사용하여 새로운 액세스 토큰을 발급
-            token_service = TokenRefreshService(refresh_token)
-            result = token_service.refresh()
-
-            if not result["success"]:
-                return JsonResponse({"message": result["message"]}, status=400)
-
-            # 새로운 액세스 토큰 반환
-            return JsonResponse(
-                {
-                    "access_token": result["access_token"],
-                    "message": result["message"],
-                },
-                status=200,
-            )
-
         except Exception as e:
             return JsonResponse(
                 {"message": "서버 오류", "error": str(e)}, status=500

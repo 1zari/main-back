@@ -18,9 +18,6 @@ class CommonUserBaseModel(BaseModel):
         orm_mode = True
 
 
-
-
-
 class CommonUserModel(CommonUserBaseModel):
     common_user_id: UUID
 
@@ -58,9 +55,6 @@ class UserInfoBaseModel(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-
 
 
 class UserInfoModel(UserInfoBaseModel):
@@ -110,9 +104,6 @@ class CompanyInfoBaseModel(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-
 
 
 class CompanyInfoModel(CompanyInfoBaseModel):
