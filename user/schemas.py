@@ -18,10 +18,6 @@ class CommonUserBaseModel(BaseModel):
         orm_mode = True
 
 
-class CommonUserCreateModel(CommonUserBaseModel):
-    pass
-
-
 class CommonUserModel(CommonUserBaseModel):
     common_user_id: UUID
 
@@ -31,7 +27,7 @@ class CommonUserModel(CommonUserBaseModel):
 # ------------------------
 
 
-class PersonalUserSignupRequest(BaseModel):
+class UserSignupRequest(BaseModel):
     email: EmailStr
     password: str
     name: str
@@ -61,10 +57,6 @@ class UserInfoBaseModel(BaseModel):
         orm_mode = True
 
 
-class UserInfoCreateModel(UserInfoBaseModel):
-    pass
-
-
 class UserInfoModel(UserInfoBaseModel):
     user_id: UUID
 
@@ -74,7 +66,7 @@ class UserInfoModel(UserInfoBaseModel):
 # ------------------------
 
 
-class CompanyUserSignupRequest(BaseModel):
+class CompanySignupRequest(BaseModel):
     email: EmailStr
     password: str
     company_name: str
@@ -114,10 +106,6 @@ class CompanyInfoBaseModel(BaseModel):
         orm_mode = True
 
 
-class CompanyInfoCreateModel(CompanyInfoBaseModel):
-    pass
-
-
 class CompanyInfoModel(CompanyInfoBaseModel):
     company_id: UUID
 
@@ -137,3 +125,32 @@ class CompanyJoinResponseModel(BaseModel):
     message: str
     common_user: CommonUserModel
     company_info: Optional[CompanyInfoModel] = None
+
+
+# ------------------------
+# 로그인 모델
+# ------------------------
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class CompanyLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserLoginResponse(BaseModel):
+    message: str
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+
+class CompanyLoginResponse(BaseModel):
+    message: str
+    access_token: str
+    refresh_token: str
+    token_type: str

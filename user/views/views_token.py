@@ -7,10 +7,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.views import View
-from pydantic import ValidationError
-
-from user.redis import r
-from user.schemas import TokenRefreshRequest
 
 User = get_user_model()
 
@@ -60,12 +56,6 @@ class TokenRefreshService:
                     algorithms=[self.algorithm],
                 )
                 user_id = payload["sub"]
-                # 1. 블랙리스트 체크
-                if r.get(f"blacklist:refresh:{self.refresh_token}"):
-                    return {
-                        "success": False,
-                        "message": "Refresh token is blacklisted. Please log in again.",
-                    }
 
                 user = User.objects.get(id=user_id)
             except jwt.ExpiredSignatureError:
@@ -93,30 +83,29 @@ class TokenRefreshView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
-            refresh_token_data = TokenRefreshRequest(**body)
+            refresh_token = body.get("refresh_token")
 
-            # 유효한 refresh_token을 사용하여 새로운 access_token 발급
-            refresh_token = refresh_token_data.refresh_token
+            if not refresh_token:
+                return JsonResponse(
+                    {"message": "Refresh token is required."}, status=400
+                )
+
+            # TokenRefreshService를 사용하여 새로운 액세스 토큰을 발급
             token_service = TokenRefreshService(refresh_token)
             result = token_service.refresh()
 
             if not result["success"]:
                 return JsonResponse({"message": result["message"]}, status=400)
 
+            # 새로운 액세스 토큰 반환
             return JsonResponse(
                 {
                     "access_token": result["access_token"],
-                    "token_type": "Bearer",  # Bearer 토큰 타입
                     "message": result["message"],
                 },
                 status=200,
             )
 
-        except ValidationError as e:
-            return JsonResponse(
-                {"message": "Invalid request data", "errors": e.errors()},
-                status=400,
-            )
         except Exception as e:
             return JsonResponse(
                 {"message": "서버 오류", "error": str(e)}, status=500
