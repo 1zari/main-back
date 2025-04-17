@@ -14,8 +14,6 @@ from django.views import View
 from pydantic import ValidationError
 
 from user.models import CompanyInfo, UserInfo
-from user.schemas import CompanyUserSignupRequest  # 추가
-from user.schemas import PersonalUserSignupRequest  # 추가
 from user.schemas import (
     CommonUserCreateModel,
     CommonUserModel,
@@ -26,6 +24,8 @@ from user.schemas import (
     CompanyLoginResponse,
     UserInfoCreateModel,
     UserInfoModel,
+    UserSignupRequest,
+    CompanySignupRequest,
     UserJoinResponseModel,
     UserLoginRequest,
     UserLoginResponse,
@@ -38,7 +38,7 @@ class UserSignupView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
-            signup_data = PersonalUserSignupRequest(**body)  # 요청 모델 사용
+            signup_data = UserSignupRequest(**body)  #
 
             # 이메일 중복 확인
             if User.objects.filter(email=signup_data.email).exists():
@@ -89,8 +89,8 @@ class UserSignupView(View):
                     gender=user_info.gender,
                     birthday=user_info.birthday,
                     interest=user_info.interest,
-                    purpose_subscription=signup_data.purpose_subscription,  # 수정
-                    route=signup_data.route,  # 수정
+                    purpose_subscription=signup_data.purpose_subscription,
+                    route=signup_data.route,
                 ),
             )
             return JsonResponse(response.model_dump(), status=201)
@@ -109,7 +109,7 @@ class CompanySignupView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
-            signup_data = CompanyUserSignupRequest(**body)  # 요청 모델 사용
+            signup_data = CompanySignupRequest(**body)
 
             # 이메일 중복 확인
             if User.objects.filter(email=signup_data.email).exists():
@@ -129,7 +129,7 @@ class CompanySignupView(View):
                 common_user=user,
                 **signup_data.model_dump(
                     exclude={"email", "password"}
-                ),  # 모델 필드 직접 사용
+                ),
             )
 
             response = CompanyJoinResponseModel(
@@ -214,7 +214,7 @@ class UserLoginView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
-            login_data = UserLoginRequest(**body)  # 변경된 요청 모델 사용
+            login_data = UserLoginRequest(**body)
 
             # 사용자 인증
             user = authenticate(
@@ -236,7 +236,7 @@ class UserLoginView(View):
             )
 
             # 응답 데이터 생성
-            response = UserLoginResponse(  # 변경된 응답 모델 사용
+            response = UserLoginResponse(
                 message="로그인 성공",
                 access_token=access_token,
                 refresh_token=refresh_token,
@@ -277,7 +277,7 @@ class CompanyLoginView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
-            login_data = CompanyLoginRequest(**body)  # 변경된 요청 모델 사용
+            login_data = CompanyLoginRequest(**body)
 
             # 사용자 인증
             user = authenticate(

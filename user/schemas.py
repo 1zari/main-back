@@ -18,8 +18,7 @@ class CommonUserBaseModel(BaseModel):
         orm_mode = True
 
 
-class CommonUserCreateModel(CommonUserBaseModel):
-    pass
+
 
 
 class CommonUserModel(CommonUserBaseModel):
@@ -31,7 +30,7 @@ class CommonUserModel(CommonUserBaseModel):
 # ------------------------
 
 
-class PersonalUserSignupRequest(BaseModel):
+class UserSignupRequest(BaseModel):
     email: EmailStr
     password: str
     name: str
@@ -61,8 +60,7 @@ class UserInfoBaseModel(BaseModel):
         orm_mode = True
 
 
-class UserInfoCreateModel(UserInfoBaseModel):
-    pass
+
 
 
 class UserInfoModel(UserInfoBaseModel):
@@ -74,7 +72,7 @@ class UserInfoModel(UserInfoBaseModel):
 # ------------------------
 
 
-class CompanyUserSignupRequest(BaseModel):
+class CompanySignupRequest(BaseModel):
     email: EmailStr
     password: str
     company_name: str
@@ -114,8 +112,7 @@ class CompanyInfoBaseModel(BaseModel):
         orm_mode = True
 
 
-class CompanyInfoCreateModel(CompanyInfoBaseModel):
-    pass
+
 
 
 class CompanyInfoModel(CompanyInfoBaseModel):
