@@ -93,19 +93,19 @@ class Certification(TimestampModel):
         return self.certification_name
 
 
-# class Submission(TimestampModel):
-#     """
-#     지원공고 목록 테이블
-#     """
-#     submission_id = models.UUIDField("id", primary_key=True, default=uuid4)
-#     job_posting = models.ForeignKey("job_posting.JobPosting", on_delete=CASCADE, related_name="submissions-job_posting")
-#     resume = models.ForeignKey(
-#         "Resume", on_delete=CASCADE, related_name="submissions-resume"
-#     )
-#     memo = models.CharField("지원공고 메모", max_length=50, blank=True)
-#     is_read = models.BooleanField("기업 담당자 읽음 여부", default=False)
-#
-#     objects = Manager()
-#
-#     def __str__(self):
-#         return str(self.submission_id)
+class Submission(TimestampModel):
+    """
+    지원공고 목록 테이블
+    """
+    submission_id = models.UUIDField("id", primary_key=True, default=uuid4)
+    job_posting = models.ForeignKey("job_posting.JobPosting", on_delete=CASCADE, related_name="submissions_job_posting")
+    resume = models.ForeignKey(
+        "Resume", on_delete=CASCADE, related_name="submissions_resume"
+    )
+    memo = models.CharField("지원공고 메모", max_length=50, blank=True)
+    is_read = models.BooleanField("기업 담당자 읽음 여부", default=False)
+
+    objects = Manager()
+
+    def __str__(self):
+        return str(self.submission_id)
