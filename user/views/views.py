@@ -1,9 +1,7 @@
 import json
-import random
-import string
-from typing import Any, Dict
+from datetime import datetime
 
-import requests
+import jwt
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
@@ -11,7 +9,8 @@ from django.http import JsonResponse
 from django.views import View
 from pydantic import ValidationError
 
-from user.models import CommonUser, CompanyInfo, UserInfo
+from user.models import CompanyInfo, UserInfo
+from user.redis import r
 from user.schemas import (
     CommonUserModel,
     CompanyInfoModel,
@@ -19,6 +18,7 @@ from user.schemas import (
     CompanyLoginRequest,
     CompanyLoginResponse,
     CompanySignupRequest,
+    LogoutRequest,
     UserInfoModel,
     UserJoinResponseModel,
     UserLoginRequest,
@@ -56,15 +56,6 @@ class UserSignupView(View):
             user = create_common_user(
                 signup_data.email, signup_data.password, "user"
             )
-
-            # 문자 인증 발송
-            result = send_verification_code(signup_data.phone_number)
-            if not result["success"]:
-                user.delete()  # 오류 시 유저 삭제
-                return JsonResponse(
-                    {"message": "문자 전송 실패", "error": result["response"]},
-                    status=500,
-                )
 
             # UserInfo 생성
             user_info = UserInfo.objects.create(
@@ -157,60 +148,6 @@ class CompanySignupView(View):
             )
 
 
-def send_verification_code(phone_number: str) -> Dict[str, Any]:
-    """
-    인증번호를 생성하고 해당 번호로 문자를 전송합니다.
-    :param phone_number: 수신자 전화번호
-    :return: {'success': bool, 'code': str, 'response': dict}
-    """
-    try:
-        if not phone_number:
-            raise ValueError("전화번호가 없습니다.")
-
-        verification_code = "".join(random.choices(string.digits, k=6))
-
-        url = f"https://api-sms.cloud.toast.com/sms/v2.3/appKeys/{settings.NCP_APP_KEY}/sender/sms"
-        headers = {
-            "Content-Type": "application/json;charset=UTF-8",
-            "X-NCP-APIGW-API-KEY-ID": settings.NCP_ACCESS_KEY,
-            "X-NCP-APIGW-API-KEY": settings.NCP_SECRET_KEY,
-        }
-        data = {
-            "type": "SMS",
-            "countryCode": "82",
-            "from": settings.SENDER_PHONE_NUMBER,
-            "contentType": "COMM",
-            "content": f"[인증번호] {verification_code}를 입력해주세요.",
-            "messages": [
-                {
-                    "to": phone_number,
-                    "content": f"[인증번호] {verification_code}를 입력해주세요.",
-                }
-            ],
-        }
-
-        response = requests.post(url, headers=headers, data=json.dumps(data))
-        result = response.json()
-
-        if result.get("resultCode") != "0000":
-            return {"success": False, "response": result}
-
-        return {"success": True, "code": verification_code, "response": result}
-
-    except ValueError as ve:
-        return {"success": False, "response": {"error": str(ve)}}
-    except requests.exceptions.RequestException as e:
-        return {
-            "success": False,
-            "response": {"error": f"Request error: {str(e)}"},
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "response": {"error": f"Server error: {str(e)}"},
-        }
-
-
 class UserLoginView(View):
     # 일반 사용자 로그인
     def post(self, request, *args, **kwargs) -> JsonResponse:
@@ -284,6 +221,49 @@ class CompanyLoginView(View):
         except ValidationError as e:
             return JsonResponse(
                 {"message": "잘못된 입력", "errors": e.errors()}, status=422
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"message": "서버 오류", "error": str(e)}, status=500
+            )
+
+
+class LogoutView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            body = json.loads(request.body.decode())
+            logout_data = LogoutRequest(**body)
+            refresh_token = logout_data.refresh_token
+            if not refresh_token:
+                return JsonResponse(
+                    {"message": "Refresh token이 필요합니다."}, status=400
+                )
+
+            # 토큰 디코딩해서 남은 시간 확인
+            decoded = jwt.decode(
+                refresh_token, settings.JWT_SECRET_KEY, algorithms=["HS256"]
+            )
+            exp = decoded.get("exp")
+            now = datetime.now().timestamp()
+            ttl = int(exp - now)
+
+            if ttl <= 0:
+                return JsonResponse(
+                    {"message": "이미 만료된 토큰입니다."}, status=400
+                )
+
+            # Redis에 블랙리스트 등록
+            r.setex(f"blacklist:refresh:{refresh_token}", ttl, "true")
+
+            return JsonResponse({"message": "로그아웃 성공"}, status=200)
+
+        except jwt.ExpiredSignatureError:
+            return JsonResponse(
+                {"message": "토큰이 이미 만료되었습니다."}, status=400
+            )
+        except jwt.InvalidTokenError:
+            return JsonResponse(
+                {"message": "유효하지 않은 토큰입니다."}, status=400
             )
         except Exception as e:
             return JsonResponse(

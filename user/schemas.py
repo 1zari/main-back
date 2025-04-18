@@ -38,6 +38,9 @@ class UserSignupRequest(BaseModel):
     purpose_subscription: List[str] = Field(default_factory=list)
     route: List[str] = Field(default_factory=list)
 
+    class Config:
+        orm_mode = True
+
 
 # ------------------------
 # 일반 유저 (UserInfo)
@@ -82,6 +85,9 @@ class CompanySignupRequest(BaseModel):
     manager_email: EmailStr
     is_staff: bool
 
+    class Config:
+        orm_mode = True
+
 
 # ------------------------
 # 기업 유저 (CompanyInfo)
@@ -120,11 +126,17 @@ class UserJoinResponseModel(BaseModel):
     common_user: CommonUserModel
     user_info: Optional[UserInfoModel] = None
 
+    class Config:
+        orm_mode = True
+
 
 class CompanyJoinResponseModel(BaseModel):
     message: str
     common_user: CommonUserModel
     company_info: Optional[CompanyInfoModel] = None
+
+    class Config:
+        orm_mode = True
 
 
 # ------------------------
@@ -133,12 +145,12 @@ class CompanyJoinResponseModel(BaseModel):
 
 
 class UserLoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
 class CompanyLoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -154,3 +166,61 @@ class CompanyLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+
+
+# ------------------------
+# 로그아웃 요청 모델
+# ------------------------
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str
+
+
+# ------------------------
+# 토큰 갱신 모델
+# ------------------------
+
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class TokenRefreshResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+
+# ------------------------
+# 토큰 검증 모델
+# ------------------------
+
+
+class TokenVerificationResponse(BaseModel):
+    valid: bool
+    message: str
+
+
+# ------------------------
+# 문자 인증 모델
+# ------------------------
+
+
+class SendVerificationCodeRequest(BaseModel):
+    phone_number: str
+
+
+class VerifyCodeRequest(BaseModel):
+    phone_number: str
+    code: str
+
+
+# ------------------------
+# 사업자등록번호 검증 모델
+# ------------------------
+
+
+class VerifyBusinessRegistrationRequest(BaseModel):
+    b_no: str  # 사업자등록번호
+    p_nm: str  # 대표자 이름
+    start_dt: str  # 개업일자
