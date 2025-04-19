@@ -74,7 +74,7 @@ class ResumeUpdateModel(BaseModel):
     resume_title: str
     education_level: str
     school_name: str
-    education_state : str
+    education_state: str
     introduce: str
     career_list: Optional[List[CareerInfoCreateModel]] = None
     certification_list: Optional[List[CertificationInfoCreateModel]] = None

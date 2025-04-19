@@ -53,7 +53,7 @@ class JobPosting(TimestampModel):
 # job_posting/models.py 또는 별도 app/models.py
 
 from django.conf import settings
-from django.db import models # type: ignore
+from django.db import models  # type: ignore
 
 from utils.models import TimestampModel
 

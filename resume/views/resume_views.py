@@ -97,7 +97,7 @@ class MyResumeDetailView(View):
         try:
             user = request.user
             resume = (
-                Resume.objects.filter(user_id=user, resume_id=resume_id) # type: ignore
+                Resume.objects.filter(user_id=user, resume_id=resume_id)  # type: ignore
                 .prefetch_related("careers", "certifications")
                 .first()
             )
@@ -136,7 +136,7 @@ class MyResumeDetailView(View):
             user = request.user
 
             with transaction.atomic():
-                new_resume = Resume.objects.create( # type: ignore
+                new_resume = Resume.objects.create(  # type: ignore
                     user_id=user,
                     resume_title=resume_data.resume_title,
                     job_category=resume_data.job_category,
@@ -147,7 +147,7 @@ class MyResumeDetailView(View):
                 )
 
                 for career in resume_data.career_list:
-                    CareerInfo.objects.create( # type: ignore
+                    CareerInfo.objects.create(  # type: ignore
                         resume=new_resume,
                         company_name=career.company_name,
                         position=career.position,
@@ -161,7 +161,9 @@ class MyResumeDetailView(View):
                         issuing_organization=certification.issuing_organization,
                         date_acquired=certification.date_acquired,
                     )
-                career_models = serialize_careers(list(new_resume.careers.all()))
+                career_models = serialize_careers(
+                    list(new_resume.careers.all())
+                )
                 certification_models = serialize_certifications(
                     list(new_resume.certifications.all())
                 )
@@ -194,7 +196,7 @@ class MyResumeDetailView(View):
             user = request.user
 
             resume = (
-                Resume.objects.filter(user_id=user, resume_id=resume_id) # type: ignore
+                Resume.objects.filter(user_id=user, resume_id=resume_id)  # type: ignore
                 .prefetch_related("careers", "certifications")
                 .first()
             )
