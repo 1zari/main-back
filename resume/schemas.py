@@ -4,6 +4,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from job_posting.schemas import JobPostingBaseModel, JobPostingListModel
+from user.schemas import UserInfoModel
+from utils.schemas import CustomBaseModel
+
 # ------------------------
 # Career (경력 정보)
 # ------------------------
@@ -70,15 +74,30 @@ class ResumeCreateModel(ResumeBaseModel):
 
 
 class ResumeUpdateModel(BaseModel):
-    education: Optional[str] = None
-    introduce: Optional[str] = None
+    job_category: str = ""
+    resume_title: str
+    education_level: str
+    school_name: str
+    education_state: str
+    introduce: str
     career_list: Optional[List[CareerInfoCreateModel]] = None
     certification_list: Optional[List[CertificationInfoCreateModel]] = None
 
 
-class ResumeModel(ResumeBaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class ResumeInfoModel(ResumeBaseModel):
+    pass
+
+
+class ResumeModel(BaseModel):
+    model_config = ConfigDict()
     resume_id: UUID
+    job_category: str = ""
+    resume_title: str
+    education_level: str
+    school_name: str
+    education_state: str
+    introduce: str
+    user: UserInfoModel
     career_list: List[CareerInfoModel]
     certification_list: List[CertificationInfoModel]
 
@@ -86,6 +105,21 @@ class ResumeModel(ResumeBaseModel):
 # ------------------------
 # Submission (지원한 이력서)
 # ------------------------
+class JobpostingListOutputModel(JobPostingListModel):
+    model_config = ConfigDict(extra="ignore")
+
+
+class SubmissionBaseModel(CustomBaseModel):
+    job_posting: JobPostingBaseModel
+    resume: ResumeModel
+    memo: Optional[str] = ""
+    is_read: bool
+
+
+class SubmissionModel(SubmissionBaseModel):
+    submission_id: UUID
+    job_posting: JobpostingListOutputModel
+    created_at: date
 
 
 # ------------------------
@@ -101,3 +135,8 @@ class ResumeResponseModel(BaseModel):
 class ResumeListResponseModel(BaseModel):
     message: str
     resume_list: List[ResumeModel]
+
+
+class SubmissionListResponseModel(CustomBaseModel):
+    message: str
+    submission_list: List[SubmissionModel]
