@@ -129,7 +129,7 @@ class JobPostingDetailView(View):
             payload = JobPostingCreateModel(**data)
 
             with transaction.atomic():
-                post = JobPosting.objects.create(
+                post = JobPosting.objects.create(  # type: ignore
                     company_id=company,
                     job_posting_title=payload.job_posting_title,
                     location=payload.location,
@@ -159,7 +159,7 @@ class JobPostingDetailView(View):
                 work_time_end=post.work_time_end,
                 posting_type=post.posting_type,
                 employment_type=(
-                    post.posting_employment_type
+                    post.posting_employment_type # type: ignore
                     if hasattr(post, "employment_type")
                     else post.employment_type
                 ),
@@ -213,7 +213,7 @@ class JobPostingDetailView(View):
                 setattr(post, field, value)
             post.save()
 
-            is_bookmarked = JobPostingBookmark.objects.filter(
+            is_bookmarked = JobPostingBookmark.objects.filter( # type: ignore
                 user=user, job_posting=post
             ).exists()
             detail = JobPostingResponseModel(
