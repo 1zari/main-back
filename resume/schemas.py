@@ -4,12 +4,17 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from job_posting.schemas import JobPostingBaseModel, JobPostingListModel
+from user.schemas import UserInfoModel
+from utils.schemas import CustomBaseModel
+
+
 # ------------------------
 # Career (경력 정보)
 # ------------------------
 
 
-class CareerInfoBaseModel(BaseModel):
+class CareerInfoBaseModel(CustomBaseModel):
     company_name: str
     position: str
     employment_period_start: date
@@ -32,7 +37,7 @@ class CareerInfoModel(CareerInfoBaseModel):
 # ------------------------
 
 
-class CertificationBaseModel(BaseModel):
+class CertificationBaseModel(CustomBaseModel):
     certification_name: str
     issuing_organization: str
     date_acquired: date
@@ -51,7 +56,7 @@ class CertificationInfoModel(CertificationBaseModel):
 # ------------------------
 
 
-class ResumeBaseModel(BaseModel):
+class ResumeBaseModel(CustomBaseModel):
     job_category: str = ""
     resume_title: str
     education_level: str
@@ -69,16 +74,18 @@ class ResumeCreateModel(ResumeBaseModel):
     pass
 
 
-class ResumeUpdateModel(BaseModel):
+class ResumeUpdateModel(CustomBaseModel):
     education: Optional[str] = None
     introduce: Optional[str] = None
     career_list: Optional[List[CareerInfoCreateModel]] = None
     certification_list: Optional[List[CertificationInfoCreateModel]] = None
 
+class ResumeInfoModel(ResumeBaseModel):
+    pass
 
 class ResumeModel(ResumeBaseModel):
-    model_config = ConfigDict(from_attributes=True)
     resume_id: UUID
+    user : UserInfoModel
     career_list: List[CareerInfoModel]
     certification_list: List[CertificationInfoModel]
 
@@ -86,6 +93,21 @@ class ResumeModel(ResumeBaseModel):
 # ------------------------
 # Submission (지원한 이력서)
 # ------------------------
+class JobpostingListOutputModel(JobPostingListModel):
+    model_config = ConfigDict(extra='ignore')
+
+class SubmissionBaseModel(CustomBaseModel):
+    job_posting : JobPostingBaseModel
+    resume : ResumeModel
+    memo : Optional[str] = ""
+    is_read : bool
+
+class SubmissionModel(SubmissionBaseModel):
+    submission_id : UUID
+    job_posting : JobpostingListOutputModel
+    created_at: date
+
+
 
 
 # ------------------------
@@ -93,11 +115,16 @@ class ResumeModel(ResumeBaseModel):
 # ------------------------
 
 
-class ResumeResponseModel(BaseModel):
+class ResumeResponseModel(CustomBaseModel):
     message: str
     resume: ResumeModel
 
 
-class ResumeListResponseModel(BaseModel):
+class ResumeListResponseModel(CustomBaseModel):
     message: str
     resume_list: List[ResumeModel]
+
+class SubmissionListResponseModel(CustomBaseModel):
+    message : str
+    submission_list : List[SubmissionModel]
+

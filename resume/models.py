@@ -17,7 +17,7 @@ class Resume(TimestampModel):
     resume_id = models.UUIDField(
         "id", primary_key=True, default=uuid4, editable=False, db_index=True
     )
-    user_id = models.ForeignKey(
+    user = models.ForeignKey(
         "user.UserInfo", on_delete=CASCADE, related_name="resumes"
     )
     job_category = models.CharField(
@@ -60,7 +60,7 @@ class CareerInfo(TimestampModel):
     )
     position = models.CharField(verbose_name="직무", max_length=20)
     employment_period_start = models.DateField(verbose_name="입사일")
-    employment_period_end = models.DateField(verbose_name="퇴사일", blank=True)
+    employment_period_end = models.DateField(verbose_name="퇴사일", blank=True, null=True)
 
     objects = Manager()
 
@@ -99,9 +99,11 @@ class Submission(TimestampModel):
     """
     submission_id = models.UUIDField("id", primary_key=True, default=uuid4)
     job_posting = models.ForeignKey("job_posting.JobPosting", on_delete=CASCADE, related_name="submissions_job_posting")
-    resume = models.ForeignKey(
-        "Resume", on_delete=CASCADE, related_name="submissions_resume"
+    user = models.ForeignKey(
+        "user.UserInfo", on_delete=CASCADE, related_name="submissions_user"
     )
+    snapshot_resume = models.JSONField(verbose_name="지원 시점 이력서 정보")
+
     memo = models.CharField("지원공고 메모", max_length=50, blank=True)
     is_read = models.BooleanField("기업 담당자 읽음 여부", default=False)
 
