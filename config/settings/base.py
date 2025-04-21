@@ -40,8 +40,6 @@ except Exception as e:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = secrets["SECRET_KEY"]
-JWT_SECRET_KEY = secrets["JWT_SECRET_KEY"]
-KOREA_TAX_API_KEY = secrets["KOREA_TAX_API_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -163,7 +161,19 @@ AUTH_USER_MODEL = "user.CommonUser"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+JWT_SECRET_KEY = secrets["JWT_SECRET_KEY"]
+KOREA_TAX_API_KEY = secrets["KOREA_TAX_API_KEY"]
+
 # jwt setting
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Access Token 만료 시간 (분)
 REFRESH_TOKEN_EXPIRE_DAYS = 1  # Refresh Token 만료 시간 (일)
+
+NAVER_CLIENT_ID = secrets["naver"]["client_id"]
+NAVER_SECRET = secrets["naver"]["secret"]
+NAVER_REDIRECT_URL = secrets["naver"]["redirect_url"]
+
+
+KAKAO_CLIENT_ID = secrets["kakao"]["client_id"]
+KAKAO_SECRET = secrets["kakao"]["secret"]
+KAKAO_REDIRECT_URL = secrets["kakao"]["redirect_url"]

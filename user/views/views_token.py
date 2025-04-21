@@ -24,6 +24,7 @@ def create_access_token(user):
     payload = {
         "sub": str(user.id),  # common_user_id
         "join_type": user.join_type,
+        "is_active": user.is_active,
         "exp": expiration,
     }
     return jwt.encode(payload, settings.SECRET_KEY, settings.JWT_ALGORITHM)
@@ -36,6 +37,7 @@ def create_refresh_token(user):
     payload = {
         "sub": str(user.id),
         "join_type": user.join_type,
+        "is_active": user.is_active,
         "exp": expiration,
     }
     return jwt.encode(payload, settings.SECRET_KEY, settings.JWT_ALGORITHM)
@@ -65,27 +67,53 @@ class TokenRefreshService:
                     return {
                         "success": False,
                         "message": "Refresh token is blacklisted. Please log in again.",
+                        "status_code": 401,
                     }
 
-                user = User.objects.get(id=user_id)
+                try:
+                    user = User.objects.get(common_user_id=user_id)
+                except User.DoesNotExist:
+                    return {
+                        "success": False,
+                        "message": "User not found.",
+                        "status_code": 404,
+                    }
+
+                # is_active = False일때
+                if not user.is_active:
+                    return {
+                        "success": False,
+                        "message": "Inactive user. Please contact support.",
+                        "status_code": 403,
+                    }
             except jwt.ExpiredSignatureError:
                 return {
                     "success": False,
                     "message": "Refresh token has expired.",
+                    "status_code": 401,
                 }
             except jwt.InvalidTokenError:
-                return {"success": False, "message": "Invalid refresh token."}
+                return {
+                    "success": False,
+                    "message": "Invalid refresh token.",
+                    "status_code": 400,
+                }
 
-            # 새로운 Access Token 발급
+                # 새로운 Access Token 발급
             new_access_token = create_access_token(user)
 
             return {
                 "success": True,
                 "access_token": new_access_token,
                 "message": "Access token refreshed successfully.",
+                "status_code": 200,
             }
         except Exception as e:
-            return {"success": False, "message": f"Server error: {str(e)}"}
+            return {
+                "success": False,
+                "message": f"Server error: {str(e)}",
+                "status_code": 500,
+            }
 
 
 # access 토큰 만료시 refresh토큰으로 새로운 access 토큰 발급
@@ -101,15 +129,18 @@ class TokenRefreshView(View):
             result = token_service.refresh()
 
             if not result["success"]:
-                return JsonResponse({"message": result["message"]}, status=400)
+                return JsonResponse(
+                    {"message": result["message"]},
+                    status=result.get("status_code", 400),
+                )
 
             return JsonResponse(
                 {
                     "access_token": result["access_token"],
-                    "token_type": "Bearer",  # Bearer 토큰 타입
+                    "token_type": "Bearer",
                     "message": result["message"],
                 },
-                status=200,
+                status=result.get("status_code", 200),
             )
 
         except ValidationError as e:
@@ -119,5 +150,6 @@ class TokenRefreshView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "서버 오류", "error": str(e)},
+                status=500,
             )

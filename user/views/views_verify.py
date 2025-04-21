@@ -17,7 +17,8 @@ from user.schemas import (
 
 
 class SendVerificationCodeView(View):
-    # 인증코드 생성, 발송
+    # 인증코드 생성, 발송/ ncp 프로젝트 생성이 안되서 임시
+    # https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2
     def post(self, request, *args, **kwargs):
 
         try:
@@ -36,17 +37,18 @@ class SendVerificationCodeView(View):
             r.setex(f"verify:{phone_number}", 300, verification_code)
 
             # SMS API 요청
-            url = f"https://api-sms.cloud.toast.com/sms/v2.3/appKeys/{settings.NCP_APP_KEY}/sender/sms"
+            url = f"https://sens.apigw.ntruss.com/sms/v2/services/{settings.serviceId}/messages"
             headers = {
-                "Content-Type": "application/json;charset=UTF-8",
-                "X-NCP-APIGW-API-KEY-ID": settings.NCP_ACCESS_KEY,
-                "X-NCP-APIGW-API-KEY": settings.NCP_SECRET_KEY,
+                "Content-Type": "application/json; charset=utf-8",
+                "x-ncp-apigw-timestamp": "{Timestamp}",
+                "x-ncp-iam-access-key": settings.SubAccountAccessKey,
+                "x-ncp-apigw-signature-v2": settings.APIGatewaySignature,
             }
             data = {
                 "type": "SMS",
                 "countryCode": "82",
-                "from": settings.SENDER_PHONE_NUMBER,
                 "contentType": "COMM",
+                "from": settings.SENDER_PHONE_NUMBER,
                 "content": f"[인증번호] {verification_code}를 입력해주세요.",
                 "messages": [
                     {

@@ -1,9 +1,12 @@
 from django.urls.conf import path
 
 from user.views.views import (
+    CommonUserCreateView,
     CompanyLoginView,
     CompanySignupView,
+    KakaoLoginView,
     LogoutView,
+    NaverLoginView,
     UserLoginView,
     UserSignupView,
 )
@@ -18,6 +21,11 @@ app_name = "user"
 
 
 urlpatterns = [
+    path(
+        "common_user/signup/",
+        CommonUserCreateView.as_view(),
+        name="common_signup",
+    ),
     path("signup/", UserSignupView.as_view(), name="user-signup"),
     path("login/", UserLoginView.as_view(), name="user-login"),
     path("company/signup/", CompanySignupView.as_view(), name="company-signup"),
@@ -35,4 +43,6 @@ urlpatterns = [
         VerifyBusinessRegistrationView.as_view(),
         name="verify-business",
     ),
+    path("kakao/login/", KakaoLoginView.as_view(), name="kakao-login"),
+    path("naver/login/", NaverLoginView.as_view(), name="naver-login"),
 ]

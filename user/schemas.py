@@ -18,8 +18,15 @@ class CommonUserBaseModel(BaseModel):
         orm_mode = True
 
 
-class CommonUserModel(CommonUserBaseModel):
+class CommonUserResponseModel(BaseModel):
     common_user_id: UUID
+    email: EmailStr
+    join_type: str
+    last_login: Optional[str] = None  # 로그인 시간도 예시로 추가
+    is_active: bool = False
+
+    class Config:
+        orm_mode = True
 
 
 # ------------------------
@@ -28,6 +35,7 @@ class CommonUserModel(CommonUserBaseModel):
 
 
 class UserSignupRequest(BaseModel):
+    common_user_id: UUID
     email: EmailStr
     password: str
     name: str
@@ -70,6 +78,7 @@ class UserInfoModel(UserInfoBaseModel):
 
 
 class CompanySignupRequest(BaseModel):
+    common_user_id: UUID
     email: EmailStr
     password: str
     company_name: str
@@ -123,7 +132,7 @@ class CompanyInfoModel(CompanyInfoBaseModel):
 
 class UserJoinResponseModel(BaseModel):
     message: str
-    common_user: CommonUserModel
+    common_user: CommonUserResponseModel
     user_info: Optional[UserInfoModel] = None
 
     class Config:
@@ -132,7 +141,7 @@ class UserJoinResponseModel(BaseModel):
 
 class CompanyJoinResponseModel(BaseModel):
     message: str
-    common_user: CommonUserModel
+    common_user: CommonUserResponseModel
     company_info: Optional[CompanyInfoModel] = None
 
     class Config:
