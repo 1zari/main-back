@@ -1,7 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from datetime import date
 
-MY_CONFIG = ConfigDict(from_attributes=True, extra="ignore")
+from pydantic import ConfigDict
 
-
-class CustomBaseModel(BaseModel):
-    model_config = MY_CONFIG
+MY_CONFIG = ConfigDict(
+    from_attributes=True,
+    extra="ignore",
+    json_encoders={date: lambda v: v.strftime("%Y-%m-%d")},
+    arbitrary_types_allowed=True,
+)
