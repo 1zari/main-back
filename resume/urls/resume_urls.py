@@ -10,5 +10,4 @@ urlpatterns = [
     path(
         "<uuid:resume_id>/", MyResumeDetailView.as_view(), name="resume_detail"
     ),
-
 ]
