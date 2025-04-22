@@ -301,10 +301,10 @@ class LogoutView(View):
             )
 
 
-def create_dummy_password(user):
-    dummy_password = User.objects.make_random_password()
-    user.set_password(dummy_password)
-    user.save()
+def create_dummy_password(common_user):
+    dummy_password = CommonUser.objects.make_random_password()
+    common_user.set_password(dummy_password)
+    common_user.save()
     return dummy_password
 
 
@@ -363,15 +363,12 @@ class KakaoLoginView(View):
 
             if not common_user:
                 # 새 사용자라면 CommonUser 생성
-                user = User.objects.create(email=email)
-                dummy_password = create_dummy_password(user)  # 외부 함수 호출
-
                 common_user = CommonUser.objects.create(
                     email=email,
                     join_type="user",
-                    password=user.password,
                     is_active=True,
                 )
+                dummy_password = create_dummy_password(common_user)
 
             # JWT 토큰 발급 (common_user 사용)
             access_token = create_access_token(common_user)
@@ -405,9 +402,6 @@ class NaverLoginView(View):
 
             # 네이버에서 액세스 토큰을 발급받기 위한 URL과 파라미터
             naver_token_url = "https://nid.naver.com/oauth2.0/token"
-            client_id = "CLIENT_ID"
-            client_secret = "CLIENT_SECRET"
-            redirect_uri = "REDIRECT_URI"
 
             # 인가 코드를 사용해 액세스 토큰을 요청
             token_data = {
@@ -454,15 +448,12 @@ class NaverLoginView(View):
 
             if not common_user:
                 # 새 사용자라면 CommonUser 생성 (비밀번호 추가)
-                user = User.objects.create(email=email)
-                dummy_password = create_dummy_password(user)
-
                 common_user = CommonUser.objects.create(
                     email=email,
                     join_type="user",
-                    password=user.password,
                     is_active=True,
                 )
+                dummy_password = create_dummy_password(common_user)
 
             # JWT 토큰 발급
             access_token = create_access_token(common_user)

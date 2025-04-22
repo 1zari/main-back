@@ -68,8 +68,18 @@ class UserInfoBaseModel(BaseModel):
         orm_mode = True
 
 
-class UserInfoModel(UserInfoBaseModel):
+class UserInfoModel(BaseModel):
     user_id: UUID
+    name: str
+    phone_number: str
+    gender: str
+    birthday: Optional[date] = None
+    interest: List[str] = Field(default_factory=list)
+    purpose_subscription: List[str] = Field(default_factory=list)
+    route: List[str] = Field(default_factory=list)
+
+    class Config:
+        orm_mode = True
 
 
 # ------------------------
