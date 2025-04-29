@@ -37,7 +37,7 @@ class SendVerificationCodeView(View):
 
             # SMS API 요청
             # 알리고 API 요청 URL
-            url = "https://apis.aligo.in/send/"
+            url = settings.ALIGO_API_URL
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             }
@@ -151,7 +151,7 @@ class VerifyBusinessRegistrationView(View):
                 )
 
             # API 엔드포인트
-            url = "https://api.odcloud.kr/api/nts-businessman/v1/validate"
+            url = settings.KOREA_TAX_API_URL
             params = {"serviceKey": api_key, "returnType": "JSON"}
             request_body = {
                 "businesses": [

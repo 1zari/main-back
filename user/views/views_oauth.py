@@ -80,7 +80,7 @@ class KakaoLoginView(View):
 
     def get_kakao_access_token(self, code: str) -> Optional[str]:
         """카카오 액세스 토큰을 발급받는 메서드"""
-        kakao_token_url = "https://kauth.kakao.com/oauth/token"
+        kakao_token_url = settings.KAKAO_TOKEN_URL
         headers = {
             "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
         }
@@ -100,7 +100,7 @@ class KakaoLoginView(View):
         self, kakao_access_token: str
     ) -> Optional[dict[str, Any]]:
         """카카오 액세스 토큰으로 사용자 정보를 가져오는 메서드"""
-        url = "https://kapi.kakao.com/v2/user/me"
+        url = settings.KAKAO_USER_INFO_URL
         headers = {"Authorization": f"Bearer {kakao_access_token}"}
         try:
             response = requests.get(url, headers=headers)
@@ -180,7 +180,7 @@ class NaverLoginView(View):
             )
 
     def get_naver_access_token(self, code: str, state: str) -> Optional[str]:
-        url = "https://nid.naver.com/oauth2.0/token"
+        url = settings.NAVER_TOKEN_URL
         params = {
             "grant_type": "authorization_code",
             "client_id": settings.NAVER_CLIENT_ID,
@@ -196,7 +196,7 @@ class NaverLoginView(View):
     def get_naver_user_info(
         self, access_token: str
     ) -> Optional[dict[str, Any]]:
-        url = "https://openapi.naver.com/v1/nid/me"
+        url = settings.NAVER_USER_INFO_URL
         headers = {"Authorization": f"Bearer {access_token}"}
         try:
             response = requests.get(url, headers=headers)

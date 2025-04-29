@@ -192,3 +192,12 @@ REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_DB = os.environ.get("REDIS_DB")
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+
+ALIGO_API_URL = os.getenv("ALIGO_API_URL")
+KOREA_TAX_API_URL = os.getenv("KOREA_TAX_API_URL")
+
+KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
+KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me"
+
+NAVER_TOKEN_URL = "https://nid.naver.com/oauth2.0/token"
+NAVER_USER_INFO_URL = "https://openapi.naver.com/v1/nid/me"
