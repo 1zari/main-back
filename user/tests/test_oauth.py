@@ -82,7 +82,7 @@ def test_kakao_login_new_user(
         "email": "test@example.com",
     }
     assert CommonUser.objects.filter(
-        email="test@example.com", join_type="user"
+        email="test@example.com", join_type="normal"
     ).exists()
 
 
@@ -110,7 +110,7 @@ def test_naver_login_new_user(
         "email": "test@example.com",
     }
     assert CommonUser.objects.filter(
-        email="test@example.com", join_type="user"
+        email="test@example.com", join_type="normal"
     ).exists()
 
 
