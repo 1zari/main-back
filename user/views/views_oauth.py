@@ -12,7 +12,7 @@ from user.schemas import (
     NaverLoginRequest,
     NaverLoginResponse,
 )
-from user.views.views_token import create_access_token, create_refresh_token
+from user.services.token import create_access_token, create_refresh_token
 
 
 def create_dummy_password(common_user: CommonUser) -> None:

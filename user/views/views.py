@@ -29,9 +29,8 @@ from user.schemas import (
     UserLoginResponse,
     UserSignupRequest,
 )
-from user.views.views_token import create_access_token, create_refresh_token
+from user.services.token import create_access_token, create_refresh_token
 from utils.common import get_valid_company_user, get_valid_normal_user
-
 
 User = get_user_model()
 

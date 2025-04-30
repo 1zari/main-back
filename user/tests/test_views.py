@@ -1,12 +1,8 @@
 import json
-from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import jwt
 import pytest
-from django.conf import settings
 from django.contrib.auth.hashers import check_password
-from django.http import HttpResponse
 from django.test import Client
 from django.urls import reverse
 

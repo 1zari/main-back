@@ -1,4 +1,3 @@
-from user.models import CommonUser, CompanyInfo
 import json
 
 from django.contrib.auth import authenticate
@@ -8,12 +7,9 @@ from django.http import JsonResponse
 from django.views import View
 from pydantic import ValidationError
 
-from utils.common import get_valid_company_user
-from utils.ncp_storage import upload_to_ncp_storage
-
-from .views_token import create_access_token, create_refresh_token
-
+from user.models import CommonUser, CompanyInfo
 from user.schemas import (
+    CommonUserResponseModel,
     CompanyInfoModel,
     CompanyInfoResponse,
     CompanyInfoUpdateRequest,
@@ -24,8 +20,12 @@ from user.schemas import (
     FindCompanyEmailRequest,
     FindCompanyEmailResponse,
     ResetCompanyPasswordRequest,
-    ResetCompanyPasswordResponse, CommonUserResponseModel,
+    ResetCompanyPasswordResponse,
 )
+from user.services.token import create_access_token, create_refresh_token
+from utils.common import get_valid_company_user
+from utils.ncp_storage import upload_to_ncp_storage
+
 
 class CompanySignupView(View):
     # 기업 사용자 회원가입

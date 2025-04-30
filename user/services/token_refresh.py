@@ -4,11 +4,11 @@ import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-
 from user.redis import r
-from user.views.views_token import create_access_token
+from user.services.token import create_access_token
 
 User = get_user_model()
+
 
 class TokenRefreshService:
     def __init__(self, refresh_token: str):
