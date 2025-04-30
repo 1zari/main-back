@@ -1,5 +1,7 @@
 import json
 
+import jwt
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
@@ -12,6 +14,7 @@ from user.schemas import (
     CommonUserResponseModel,
     CompanyInfoModel,
     CompanyInfoResponse,
+    CompanyInfoUpdateResponse,
     CompanyInfoUpdateRequest,
     CompanyJoinResponseModel,
     CompanyLoginRequest,
@@ -28,71 +31,45 @@ from utils.ncp_storage import upload_to_ncp_storage
 
 
 class CompanySignupView(View):
-    # 기업 사용자 회원가입
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            body = json.loads(request.body.decode())
-            signup_data = CompanySignupRequest(**body)
+            # 1) form-data 텍스트만 가져오고, 테스트용 is_staff 제거
+            data = request.POST.dict()
+            data.pop("is_staff", None)
 
-            user = CommonUser.objects.get(
-                common_user_id=signup_data.common_user_id
-            )
+            # 2) 파일 업로드 처리
+            if "certificate_image" not in request.FILES:
+                return JsonResponse({"message": "사업자등록증 파일이 필요합니다."}, status=400)
+            cert_url = upload_to_ncp_storage(request.FILES["certificate_image"])
 
-            # 이미 UserInfo가 존재하는지 확인
-            if CompanyInfo.objects.filter(common_user=user).exists():
-                return JsonResponse(
-                    {"message": "이미 가입된 사용자입니다."}, status=400
-                )
-
-            certificate_image_url = None
-            company_logo_url = None
-
-            # CompanyInfo 생성
-            # 사업자등록증 이미지 업로드
-            if "certificate_image" in request.FILES:
-                try:
-                    certificate_image_url = upload_to_ncp_storage(
-                        request.FILES["certificate_image"]
-                    )
-                except Exception as e:
-                    return JsonResponse(
-                        {
-                            "message": f"사업자등록증 이미지 업로드 실패: {str(e)}"
-                        },
-                        status=500,
-                    )
-
-            # 기업 로고 업로드
+            logo_url = None
             if "company_logo" in request.FILES:
-                try:
-                    company_logo_url = upload_to_ncp_storage(
-                        request.FILES["company_logo"]
-                    )
-                except Exception as e:
-                    return JsonResponse(
-                        {"message": f"기업 로고 업로드 실패: {str(e)}"},
-                        status=500,
-                    )
+                logo_url = upload_to_ncp_storage(request.FILES["company_logo"])
 
-            # CompanyInfo 생성 (NCP URL 포함)
+            # 3) Pydantic 검증 (파일 URL은 뷰에서만 처리)
+            signup_dto = CompanySignupRequest(**data)
+            ci_data = signup_dto.model_dump(exclude={"common_user_id"})
+
+            # 4) CommonUser 조회·중복 가입 방지
+            user = CommonUser.objects.get(common_user_id=signup_dto.common_user_id)
+            if CompanyInfo.objects.filter(common_user=user).exists():
+                return JsonResponse({"message": "이미 가입된 기업회원입니다."}, status=400)
+
+            # 5) CompanyInfo 생성
             company_info = CompanyInfo.objects.create(
                 common_user=user,
-                certificate_image=certificate_image_url,
-                company_logo=company_logo_url,
-                **signup_data.model_dump(
-                    exclude={
-                        "email",
-                        "password",
-                        "certificate_image",
-                        "company_logo",
-                    }
-                ),
+                certificate_image=cert_url,
+                company_logo=logo_url,
+                **ci_data
             )
-            user.is_staff = True
-            user.save()
 
+            # 6) is_staff 권한 부여
+            user.is_staff = True
+            user.save(update_fields=["is_staff"])
+
+            # 7) 응답 생성
             response = CompanyJoinResponseModel(
-                message="Company registration successful.",
+                message="기업 회원가입 성공",
                 common_user=CommonUserResponseModel(
                     common_user_id=user.common_user_id,
                     email=user.email,
@@ -101,19 +78,29 @@ class CompanySignupView(View):
                 ),
                 company_info=CompanyInfoModel(
                     company_id=company_info.company_id,
-                    **signup_data.model_dump(),
+                    company_name=company_info.company_name,
+                    establishment=company_info.establishment,
+                    company_address=company_info.company_address,
+                    business_registration_number=company_info.business_registration_number,
+                    company_introduction=company_info.company_introduction,
+                    certificate_image=cert_url,
+                    company_logo=logo_url,
+                    ceo_name=company_info.ceo_name,
+                    manager_name=company_info.manager_name,
+                    manager_phone_number=company_info.manager_phone_number,
+                    manager_email=company_info.manager_email,
                 ),
             )
             return JsonResponse(response.model_dump(), status=201)
 
         except ValidationError as e:
-            return JsonResponse(
-                {"message": "잘못된 입력", "errors": e.errors()}, status=422
-            )
+            return JsonResponse({"message": "입력값 검증 실패", "errors": e.errors()}, status=422)
+        except CommonUser.DoesNotExist:
+            return JsonResponse({"message": "해당 회원이 존재하지 않습니다."}, status=404)
         except Exception as e:
-            return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "서버 오류", "error": str(e)}, status=500)
+
+
 
 
 class CompanyLoginView(View):
@@ -155,27 +142,78 @@ class CompanyLoginView(View):
                 {"message": "서버 오류", "error": str(e)}, status=500
             )
 
+class CompanyInfoDetailView(View):  # 기업 정보 조회
+    def get(self, request, *args, **kwargs) -> JsonResponse:
+        try:
+            # 1. JWT 토큰 수동 파싱
+            auth_header = request.META.get("HTTP_AUTHORIZATION")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                raise PermissionDenied("Authentication is required.")
+            token = auth_header.split(" ")[1]
+
+            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_id = payload.get("sub")
+            if not user_id:
+                raise PermissionDenied("Invalid token.")
+
+            # 2. CommonUser 인스턴스 조회
+            user = CommonUser.objects.get(common_user_id=user_id)
+
+            # 3. CompanyInfo 가져오기
+            company_info = get_valid_company_user(user)
+
+            response = CompanyInfoResponse(
+                company_id=company_info.company_id,
+                common_user_id=company_info.common_user_id,
+                company_name=company_info.company_name,
+                establishment=company_info.establishment,
+                company_address=company_info.company_address,
+                business_registration_number=company_info.business_registration_number,
+                company_introduction=company_info.company_introduction,
+                ceo_name=company_info.ceo_name,
+                manager_name=company_info.manager_name,
+                manager_phone_number=company_info.manager_phone_number,
+                manager_email=company_info.manager_email,
+                certificate_image=company_info.certificate_image,
+                company_logo=company_info.company_logo,
+                message="기업 정보 조회 성공",
+            )
+            return JsonResponse(response.model_dump(), status=200)
+
+        except PermissionDenied as e:
+            return JsonResponse({"message": str(e)}, status=403)
+        except Exception as e:
+            return JsonResponse({"message": "서버 오류", "detail": str(e)}, status=500)
 
 class CompanyInfoUpdateView(View):
-    def patch(self, request, company_id, *args, **kwargs) -> JsonResponse:
+    def patch(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            token = request.user
-            company_user = get_valid_company_user(token)
+            # 1. 토큰 파싱
+            auth_header = request.META.get("HTTP_AUTHORIZATION")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                raise PermissionDenied("Authentication is required.")
+            token = auth_header.split(" ")[1]
 
-            if str(company_user.company_id) != str(company_id):
-                return JsonResponse({"message": "권한이 없습니다."}, status=403)
+            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_id = payload.get("sub")
+            if not user_id:
+                raise PermissionDenied("Invalid token.")
 
+            user = CommonUser.objects.get(common_user_id=user_id)
+
+            # 2. 회사 정보 조회
+            company_user = get_valid_company_user(user)
+
+            # 3. 본문 처리
             body = json.loads(request.body)
             validated_data = CompanyInfoUpdateRequest(**body)
 
-            for field, value in validated_data.model_dump(
-                exclude_none=True
-            ).items():
+            for field, value in validated_data.model_dump(exclude_none=True).items():
                 setattr(company_user, field, value)
 
             company_user.save()
 
-            response_data = CompanyInfoResponse(
+            response_data = CompanyInfoUpdateResponse(
                 message="회사 정보가 성공적으로 수정되었습니다.",
                 company_name=company_user.company_name,
                 establishment=company_user.establishment,
@@ -195,6 +233,7 @@ class CompanyInfoUpdateView(View):
             return JsonResponse({"message": str(e)}, status=400)
         except Exception as e:
             return JsonResponse({"message": f"오류 발생: {str(e)}"}, status=500)
+
 
 
 # 사업자 이메일 찾기

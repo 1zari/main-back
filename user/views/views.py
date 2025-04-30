@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-
+from jwt import decode as jwt_decode, ExpiredSignatureError, InvalidTokenError
 import jwt
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -22,12 +22,12 @@ from user.schemas import (
     ResetUserPasswordRequest,
     ResetUserPasswordResponse,
     UserInfoModel,
-    UserInfoResponse,
+    UserInfoUpdateResponse,
     UserInfoUpdateRequest,
     UserJoinResponseModel,
     UserLoginRequest,
     UserLoginResponse,
-    UserSignupRequest,
+    UserSignupRequest, UserInfoResponse,
 )
 from user.services.token import create_access_token, create_refresh_token
 from utils.common import get_valid_company_user, get_valid_normal_user
@@ -96,7 +96,7 @@ class UserSignupView(View):
                     {"message": "이미 가입된 사용자입니다."}, status=400
                 )
 
-                # UserInfo 생성
+            # UserInfo 생성
             user_info = UserInfo.objects.create(
                 common_user=user,
                 name=signup_data.name,
@@ -179,23 +179,91 @@ class UserLoginView(View):
             )
 
 
-class UserInfoUpdateView(View):
-    def patch(self, request, user_id, *args, **kwargs) -> JsonResponse:
+class UserInfoDetailView(View):  # 유저 정보 조회
+    def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            user_info = get_valid_normal_user(request.user)
+            # 토큰 추출
+            auth_header = request.META.get("HTTP_AUTHORIZATION")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                raise PermissionDenied("Authentication is required.")
 
-            # URL에 있는 user_id와 인증된 유저 ID가 다르면 막기
-            if str(user_info.user_id) != str(user_id):
-                return JsonResponse({"message": "권한이 없습니다."}, status=403)
+            token = auth_header.split(" ")[1]
 
+            # JWT 디코딩
+            try:
+                payload = jwt_decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            except ExpiredSignatureError:
+                raise PermissionDenied("Token has expired.")
+            except InvalidTokenError:
+                raise PermissionDenied("Invalid token.")
+
+            user_id = payload.get("sub")
+            if not user_id:
+                raise PermissionDenied("Invalid token payload.")
+
+            # CommonUser 조회
+            user = CommonUser.objects.get(common_user_id=user_id)
+
+            # UserInfo 조회
+            user_info = get_valid_normal_user(user)
+
+            #  응답 생성
+            response = UserInfoResponse(
+                message="회원 정보 조회 성공",
+                name=user_info.name,
+                phone_number=user_info.phone_number,
+                gender=user_info.gender,
+                birthday=user_info.birthday,
+                interest=user_info.interest,
+                purpose_subscription=user_info.purpose_subscription,
+                route=user_info.route,
+            )
+            return JsonResponse(response.model_dump(), status=200)
+
+        except CommonUser.DoesNotExist:
+            return JsonResponse({"message": "유저를 찾을 수 없습니다."}, status=404)
+        except PermissionDenied as e:
+            return JsonResponse({"message": str(e)}, status=403)
+        except Exception as e:
+            return JsonResponse({"message": "서버 오류", "detail": str(e)}, status=500)
+
+class UserInfoUpdateView(View):
+    def patch(self, request, *args, **kwargs):
+        try:
+            #  토큰 파싱
+            auth_header = request.META.get("HTTP_AUTHORIZATION")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                raise PermissionDenied("Authentication is required.")
+
+            token = auth_header.split(" ")[1]
+            try:
+                payload = jwt_decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            except ExpiredSignatureError:
+                raise PermissionDenied("Token has expired.")
+            except InvalidTokenError:
+                raise PermissionDenied("Invalid token.")
+
+            user_id = payload.get("sub")
+            if not user_id:
+                raise PermissionDenied("Invalid token payload.")
+
+            #  공통 유저 가져오기
+            user = CommonUser.objects.get(common_user_id=user_id)
+
+            #  유저 정보 가져오기
+            user_info = get_valid_normal_user(user)
+
+            #  요청 본문 파싱
             body = json.loads(request.body)
             data = UserInfoUpdateRequest(**body)
 
+            #  필드 수정
             for field, value in data.model_dump(exclude_unset=True).items():
                 setattr(user_info, field, value)
+
             user_info.save()
 
-            response = UserInfoResponse(
+            response = UserInfoUpdateResponse(
                 message="회원 정보가 성공적으로 수정되었습니다.",
                 name=user_info.name,
                 phone_number=user_info.phone_number,
@@ -211,8 +279,7 @@ class UserInfoUpdateView(View):
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류가 발생했습니다.", "detail": str(e)},
-                status=500,
+                {"message": "서버 오류", "detail": str(e)}, status=500
             )
 
 
@@ -348,6 +415,7 @@ def reset_user_password(request) -> JsonResponse:
 class UserDeleteView(View):
     def delete(self, request, *args, **kwargs) -> JsonResponse:
         try:
+            # JWT 토큰에서 사용자 인증 정보 추출
             auth_header = request.META.get("HTTP_AUTHORIZATION")
             if not auth_header or not auth_header.startswith("Bearer "):
                 raise PermissionDenied("Authentication is required.")
@@ -364,22 +432,19 @@ class UserDeleteView(View):
             if not user_id:
                 raise PermissionDenied("Invalid token.")
 
+            # JWT에서 유저 정보를 추출하여 CommonUser 객체 가져오기
             common_user = CommonUser.objects.get(common_user_id=user_id)
 
             # 'normal' 또는 'company' 유저에 대한 처리
             if common_user.join_type == "normal":
                 # 정상 사용자 처리
-                user_info = get_valid_normal_user(
-                    common_user
-                )  # 정상 유저 정보 가져오기
-                user_info.delete()  # 삭제
+                user_info = get_valid_normal_user(common_user)  # 정상 유저 정보 가져오기
+                user_info.delete()  # 정상 유저 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
             elif common_user.join_type == "company":
                 # 기업 사용자 처리
-                company_info = get_valid_company_user(
-                    common_user
-                )  # 기업 유저 정보 가져오기
+                company_info = get_valid_company_user(common_user)  # 기업 유저 정보 가져오기
                 company_info.delete()  # 기업 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
@@ -392,14 +457,15 @@ class UserDeleteView(View):
             )
 
         except CommonUser.DoesNotExist:
-            return JsonResponse({"message": "User not found."}, status=404)
+            return JsonResponse({"message": "사용자를 찾을 수 없습니다."}, status=404)
         except jwt.ExpiredSignatureError:
-            return JsonResponse({"message": "Token has expired."}, status=403)
+            return JsonResponse({"message": "토큰이 만료되었습니다."}, status=403)
         except jwt.InvalidTokenError:
-            return JsonResponse({"message": "Invalid token."}, status=403)
+            return JsonResponse({"message": "유효하지 않은 토큰입니다."}, status=403)
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "탈퇴 중 오류가 발생했습니다."}, status=500
+                {"message": "탈퇴 중 오류가 발생했습니다.", "error": str(e)}, status=500
             )
+
