@@ -14,8 +14,8 @@ from user.schemas import (
     CommonUserResponseModel,
     CompanyInfoModel,
     CompanyInfoResponse,
-    CompanyInfoUpdateResponse,
     CompanyInfoUpdateRequest,
+    CompanyInfoUpdateResponse,
     CompanyJoinResponseModel,
     CompanyLoginRequest,
     CompanyLoginResponse,
@@ -39,7 +39,9 @@ class CompanySignupView(View):
 
             # 2) 파일 업로드 처리
             if "certificate_image" not in request.FILES:
-                return JsonResponse({"message": "사업자등록증 파일이 필요합니다."}, status=400)
+                return JsonResponse(
+                    {"message": "사업자등록증 파일이 필요합니다."}, status=400
+                )
             cert_url = upload_to_ncp_storage(request.FILES["certificate_image"])
 
             logo_url = None
@@ -51,16 +53,20 @@ class CompanySignupView(View):
             ci_data = signup_dto.model_dump(exclude={"common_user_id"})
 
             # 4) CommonUser 조회·중복 가입 방지
-            user = CommonUser.objects.get(common_user_id=signup_dto.common_user_id)
+            user = CommonUser.objects.get(
+                common_user_id=signup_dto.common_user_id
+            )
             if CompanyInfo.objects.filter(common_user=user).exists():
-                return JsonResponse({"message": "이미 가입된 기업회원입니다."}, status=400)
+                return JsonResponse(
+                    {"message": "이미 가입된 기업회원입니다."}, status=400
+                )
 
             # 5) CompanyInfo 생성
             company_info = CompanyInfo.objects.create(
                 common_user=user,
                 certificate_image=cert_url,
                 company_logo=logo_url,
-                **ci_data
+                **ci_data,
             )
 
             # 6) is_staff 권한 부여
@@ -94,13 +100,18 @@ class CompanySignupView(View):
             return JsonResponse(response.model_dump(), status=201)
 
         except ValidationError as e:
-            return JsonResponse({"message": "입력값 검증 실패", "errors": e.errors()}, status=422)
+            return JsonResponse(
+                {"message": "입력값 검증 실패", "errors": e.errors()},
+                status=422,
+            )
         except CommonUser.DoesNotExist:
-            return JsonResponse({"message": "해당 회원이 존재하지 않습니다."}, status=404)
+            return JsonResponse(
+                {"message": "해당 회원이 존재하지 않습니다."}, status=404
+            )
         except Exception as e:
-            return JsonResponse({"message": "서버 오류", "error": str(e)}, status=500)
-
-
+            return JsonResponse(
+                {"message": "서버 오류", "error": str(e)}, status=500
+            )
 
 
 class CompanyLoginView(View):
@@ -142,6 +153,7 @@ class CompanyLoginView(View):
                 {"message": "서버 오류", "error": str(e)}, status=500
             )
 
+
 class CompanyInfoDetailView(View):  # 기업 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
@@ -151,7 +163,11 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
                 raise PermissionDenied("Authentication is required.")
             token = auth_header.split(" ")[1]
 
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(
+                token,
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+            )
             user_id = payload.get("sub")
             if not user_id:
                 raise PermissionDenied("Invalid token.")
@@ -183,7 +199,10 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
-            return JsonResponse({"message": "서버 오류", "detail": str(e)}, status=500)
+            return JsonResponse(
+                {"message": "서버 오류", "detail": str(e)}, status=500
+            )
+
 
 class CompanyInfoUpdateView(View):
     def patch(self, request, *args, **kwargs) -> JsonResponse:
@@ -194,7 +213,11 @@ class CompanyInfoUpdateView(View):
                 raise PermissionDenied("Authentication is required.")
             token = auth_header.split(" ")[1]
 
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(
+                token,
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+            )
             user_id = payload.get("sub")
             if not user_id:
                 raise PermissionDenied("Invalid token.")
@@ -208,7 +231,9 @@ class CompanyInfoUpdateView(View):
             body = json.loads(request.body)
             validated_data = CompanyInfoUpdateRequest(**body)
 
-            for field, value in validated_data.model_dump(exclude_none=True).items():
+            for field, value in validated_data.model_dump(
+                exclude_none=True
+            ).items():
                 setattr(company_user, field, value)
 
             company_user.save()
@@ -233,7 +258,6 @@ class CompanyInfoUpdateView(View):
             return JsonResponse({"message": str(e)}, status=400)
         except Exception as e:
             return JsonResponse({"message": f"오류 발생: {str(e)}"}, status=500)
-
 
 
 # 사업자 이메일 찾기

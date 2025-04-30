@@ -4,18 +4,20 @@ from user.views.views import (
     CommonUserCreateView,
     LogoutView,
     UserDeleteView,
+    UserInfoDetailView,
     UserInfoUpdateView,
     UserLoginView,
     UserSignupView,
     find_user_email,
-    reset_user_password, UserInfoDetailView,
+    reset_user_password,
 )
 from user.views.views_company import (
+    CompanyInfoDetailView,
     CompanyInfoUpdateView,
     CompanyLoginView,
     CompanySignupView,
     find_company_email,
-    reset_company_password, CompanyInfoDetailView,
+    reset_company_password,
 )
 from user.views.views_oauth import KakaoLoginView, NaverLoginView
 from user.views.views_token import TokenRefreshView
@@ -73,6 +75,10 @@ urlpatterns = [
         name="company-info-update",
     ),
     path("delete/", UserDeleteView.as_view(), name="user-delete"),
-    path("company/info/", CompanyInfoDetailView.as_view(), name="company-info-detail"),
+    path(
+        "company/info/",
+        CompanyInfoDetailView.as_view(),
+        name="company-info-detail",
+    ),
     path("info/", UserInfoDetailView.as_view(), name="user-info-detail"),
 ]

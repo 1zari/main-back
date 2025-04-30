@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from jwt import decode as jwt_decode, ExpiredSignatureError, InvalidTokenError
+
 import jwt
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -8,6 +8,8 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.views import View
+from jwt import ExpiredSignatureError, InvalidTokenError
+from jwt import decode as jwt_decode
 from pydantic import ValidationError
 
 from user.models import CommonUser, UserInfo
@@ -22,12 +24,13 @@ from user.schemas import (
     ResetUserPasswordRequest,
     ResetUserPasswordResponse,
     UserInfoModel,
-    UserInfoUpdateResponse,
+    UserInfoResponse,
     UserInfoUpdateRequest,
+    UserInfoUpdateResponse,
     UserJoinResponseModel,
     UserLoginRequest,
     UserLoginResponse,
-    UserSignupRequest, UserInfoResponse,
+    UserSignupRequest,
 )
 from user.services.token import create_access_token, create_refresh_token
 from utils.common import get_valid_company_user, get_valid_normal_user
@@ -191,7 +194,11 @@ class UserInfoDetailView(View):  # 유저 정보 조회
 
             # JWT 디코딩
             try:
-                payload = jwt_decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+                payload = jwt_decode(
+                    token,
+                    settings.JWT_SECRET_KEY,
+                    algorithms=[settings.JWT_ALGORITHM],
+                )
             except ExpiredSignatureError:
                 raise PermissionDenied("Token has expired.")
             except InvalidTokenError:
@@ -221,11 +228,16 @@ class UserInfoDetailView(View):  # 유저 정보 조회
             return JsonResponse(response.model_dump(), status=200)
 
         except CommonUser.DoesNotExist:
-            return JsonResponse({"message": "유저를 찾을 수 없습니다."}, status=404)
+            return JsonResponse(
+                {"message": "유저를 찾을 수 없습니다."}, status=404
+            )
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
-            return JsonResponse({"message": "서버 오류", "detail": str(e)}, status=500)
+            return JsonResponse(
+                {"message": "서버 오류", "detail": str(e)}, status=500
+            )
+
 
 class UserInfoUpdateView(View):
     def patch(self, request, *args, **kwargs):
@@ -237,7 +249,11 @@ class UserInfoUpdateView(View):
 
             token = auth_header.split(" ")[1]
             try:
-                payload = jwt_decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+                payload = jwt_decode(
+                    token,
+                    settings.JWT_SECRET_KEY,
+                    algorithms=[settings.JWT_ALGORITHM],
+                )
             except ExpiredSignatureError:
                 raise PermissionDenied("Token has expired.")
             except InvalidTokenError:
@@ -438,13 +454,17 @@ class UserDeleteView(View):
             # 'normal' 또는 'company' 유저에 대한 처리
             if common_user.join_type == "normal":
                 # 정상 사용자 처리
-                user_info = get_valid_normal_user(common_user)  # 정상 유저 정보 가져오기
+                user_info = get_valid_normal_user(
+                    common_user
+                )  # 정상 유저 정보 가져오기
                 user_info.delete()  # 정상 유저 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
             elif common_user.join_type == "company":
                 # 기업 사용자 처리
-                company_info = get_valid_company_user(common_user)  # 기업 유저 정보 가져오기
+                company_info = get_valid_company_user(
+                    common_user
+                )  # 기업 유저 정보 가져오기
                 company_info.delete()  # 기업 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
@@ -457,15 +477,21 @@ class UserDeleteView(View):
             )
 
         except CommonUser.DoesNotExist:
-            return JsonResponse({"message": "사용자를 찾을 수 없습니다."}, status=404)
+            return JsonResponse(
+                {"message": "사용자를 찾을 수 없습니다."}, status=404
+            )
         except jwt.ExpiredSignatureError:
-            return JsonResponse({"message": "토큰이 만료되었습니다."}, status=403)
+            return JsonResponse(
+                {"message": "토큰이 만료되었습니다."}, status=403
+            )
         except jwt.InvalidTokenError:
-            return JsonResponse({"message": "유효하지 않은 토큰입니다."}, status=403)
+            return JsonResponse(
+                {"message": "유효하지 않은 토큰입니다."}, status=403
+            )
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "탈퇴 중 오류가 발생했습니다.", "error": str(e)}, status=500
+                {"message": "탈퇴 중 오류가 발생했습니다.", "error": str(e)},
+                status=500,
             )
-

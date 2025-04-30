@@ -97,6 +97,7 @@ class CompanySignupRequest(BaseModel):
     manager_phone_number: str
     manager_email: EmailStr
 
+
 # ------------------------
 # 기업 유저 (CompanyInfo)
 # ------------------------
@@ -197,6 +198,7 @@ class CompanyLoginResponse(BaseModel):
     refresh_token: str
     token_type: str
 
+
 # ------------------------
 # 회원정보 조회 응답 모델
 # ------------------------
@@ -211,6 +213,7 @@ class UserInfoResponse(BaseModel):
     interest: Optional[List[str]]
     purpose_subscription: Optional[List[str]]
     route: Optional[List[str]]
+
 
 class CompanyInfoResponse(BaseModel):
     model_config = MY_CONFIG

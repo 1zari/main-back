@@ -135,10 +135,12 @@ def test_user_signup(client, common_user_data):
 
 
 @pytest.mark.django_db
-@patch('user.views.views_company.upload_to_ncp_storage')
+@patch("user.views.views_company.upload_to_ncp_storage")
 def test_company_signup(mock_upload_func, client, common_company_data):
     # mock_upload_func의 반환 값 설정
-    mock_upload_func.return_value = "https://fake-s3.naver.com/bucket/fake_image.png"
+    mock_upload_func.return_value = (
+        "https://fake-s3.naver.com/bucket/fake_image.png"
+    )
 
     # CommonUser 생성
     common_user = CommonUser.objects.create_user(**common_company_data)
@@ -162,8 +164,12 @@ def test_company_signup(mock_upload_func, client, common_company_data):
     logo_content = b"fake_logo_content"
     certificate_content = b"fake_certificate_content"
     files = {
-        "company_logo": SimpleUploadedFile("logo.png", logo_content, content_type="image/png"),
-        "certificate_image": SimpleUploadedFile("certificate.png", certificate_content, content_type="image/png")
+        "company_logo": SimpleUploadedFile(
+            "logo.png", logo_content, content_type="image/png"
+        ),
+        "certificate_image": SimpleUploadedFile(
+            "certificate.png", certificate_content, content_type="image/png"
+        ),
     }
 
     response = client.post(
@@ -180,9 +186,15 @@ def test_company_signup(mock_upload_func, client, common_company_data):
     # 응답에서 URL 확인
     response_data = response.json()
     assert "certificate_image" in response_data["company_info"]
-    assert response_data["company_info"]["certificate_image"] == "https://fake-s3.naver.com/bucket/fake_image.png"
+    assert (
+        response_data["company_info"]["certificate_image"]
+        == "https://fake-s3.naver.com/bucket/fake_image.png"
+    )
     assert "company_logo" in response_data["company_info"]
-    assert response_data["company_info"]["company_logo"] == "https://fake-s3.naver.com/bucket/fake_image.png"
+    assert (
+        response_data["company_info"]["company_logo"]
+        == "https://fake-s3.naver.com/bucket/fake_image.png"
+    )
 
 
 @pytest.mark.django_db
@@ -449,9 +461,7 @@ def test_user_info_update_success(client, common_user):
     user_info = UserInfo.objects.create(
         common_user=common_user, name="기존 이름", phone_number="01011112222"
     )
-    url = reverse(
-        "user:user-info-update"
-    )
+    url = reverse("user:user-info-update")
     token = create_access_token(common_user)
     updated_data = {
         "name": "새로운 이름",
@@ -468,6 +478,7 @@ def test_user_info_update_success(client, common_user):
     print(f"Response status code: {response.status_code}")
     print(f"Response content: {response.content.decode('utf-8')}")
     assert response.status_code == 200
+
 
 @pytest.mark.django_db
 def test_company_info_detail_success(client, common_company):
@@ -499,6 +510,7 @@ def test_company_info_detail_success(client, common_company):
     assert data["message"] == "기업 정보 조회 성공"
     assert data["company_name"] == "테스트 회사"
     assert data["manager_email"] == "company@example.com"
+
 
 @pytest.mark.django_db
 def test_user_info_detail_success(client, common_user):
