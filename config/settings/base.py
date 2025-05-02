@@ -196,8 +196,8 @@ REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
 ALIGO_API_URL = os.getenv("ALIGO_API_URL")
 KOREA_TAX_API_URL = os.getenv("KOREA_TAX_API_URL")
 
-KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
-KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me"
+KAKAO_TOKEN_URL = os.getenv("KAKAO_TOKEN_URL")
+KAKAO_USER_INFO_URL = os.getenv("KAKAO_USER_INFO_URL")
 
-NAVER_TOKEN_URL = "https://nid.naver.com/oauth2.0/token"
-NAVER_USER_INFO_URL = "https://openapi.naver.com/v1/nid/me"
+NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL")
+NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL")
