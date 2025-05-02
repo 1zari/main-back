@@ -48,10 +48,12 @@ def test_get_search_success(
     mock_job_posting.town = "역삼동"
     mock_job_posting.location = job_location
     mock_job_posting.save()
-    calculated_distance = district.geometry.centroid.distance(
-        mock_job_posting.location) * 111000  # Approximate conversion degrees to meters
+    calculated_distance = (
+        district.geometry.centroid.distance(mock_job_posting.location) * 111000
+    )  # Approximate conversion degrees to meters
     print(
-        f"Distance between District centroid and Job Posting location (meters): {calculated_distance}")
+        f"Distance between District centroid and Job Posting location (meters): {calculated_distance}"
+    )
     assert calculated_distance <= 3000
 
     client = Client()
@@ -68,6 +70,9 @@ def test_get_search_success(
 
     result_job_posting = response_data["results"][0]
     assert result_job_posting["job_posting_id"] == str(
-        mock_job_posting.job_posting_id)  # UUID는 보통 문자열로 직렬화됨
-    assert result_job_posting[
-               "job_posting_title"] == mock_job_posting.job_posting_title
+        mock_job_posting.job_posting_id
+    )  # UUID는 보통 문자열로 직렬화됨
+    assert (
+        result_job_posting["job_posting_title"]
+        == mock_job_posting.job_posting_title
+    )
