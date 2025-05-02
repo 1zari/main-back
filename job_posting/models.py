@@ -23,7 +23,7 @@ class JobPosting(TimestampModel):
     district = models.CharField(max_length=10, default="시,군,구")  # 시,군,구
     town = models.CharField(max_length=10, default="읍,면,동")  # 읍,면,동
     location = models.PointField(
-        verbose_name="근무지 좌표", srid=4326
+        verbose_name="근무지 좌표", srid=5179
     )  # 근무지 위치 x,y (위도,경도)
     work_time_start = models.TimeField()  # 근무 시작 시간
     work_time_end = models.TimeField()  # 근무 종료 시간
