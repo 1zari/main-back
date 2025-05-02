@@ -263,7 +263,10 @@ def test_find_user_email(client, user_info):
 
     # 성공
     url = reverse("user:normal-find-email")
-    data = {"phone_number": user_info.phone_number}
+    data = {
+        "name": user_info.name,
+        "phone_number": user_info.phone_number,
+    }
     response = client.post(
         url, json.dumps(data), content_type="application/json"
     )
@@ -275,8 +278,13 @@ def test_find_user_email(client, user_info):
     response = client.post(
         url, json.dumps(data), content_type="application/json"
     )
-    assert response.status_code == 404  # Not Found
-
+    data_fail = {
+        "name": "잘못된 이름",
+        "phone_number": user_info.phone_number,
+    }
+    response_fail = client.post(url, json.dumps(data_fail), content_type="application/json")
+    assert response_fail.status_code == 404
+    assert response_fail.json()["message"] == "No user found with the provided phone number and email."
 
 @pytest.mark.django_db
 def test_reset_user_password(client, user_info):
@@ -306,6 +314,7 @@ def test_reset_user_password(client, user_info):
         url, json.dumps(data), content_type="application/json"
     )
     assert response.status_code == 404  # Not Found
+    assert response.json()["message"] == "No user registered with this phone number."
 
     # 실패 (이메일 불일치)
     data = {
@@ -317,6 +326,7 @@ def test_reset_user_password(client, user_info):
         url, json.dumps(data), content_type="application/json"
     )
     assert response.status_code == 400  # Bad Request
+    assert response.json()["message"] == "Email and phone number do not match."
 
 
 @pytest.mark.django_db
@@ -328,6 +338,7 @@ def test_find_company_email(client, company_info):
     data = {
         "phone_number": company_info.manager_phone_number,
         "business_registration_number": company_info.business_registration_number,
+        "company_name": company_info.company_name,
     }
     response = client.post(
         url, json.dumps(data), content_type="application/json"
@@ -339,6 +350,7 @@ def test_find_company_email(client, company_info):
     data = {
         "phone_number": "01099998888",
         "business_registration_number": "1234567890",
+        "company_name": "없는 회사"
     }
     response = client.post(
         url, json.dumps(data), content_type="application/json"
@@ -349,6 +361,7 @@ def test_find_company_email(client, company_info):
     data = {
         "phone_number": company_info.manager_phone_number,
         "business_registration_number": "9999999999",
+        "company_name": company_info.company_name,
     }
     response = client.post(
         url, json.dumps(data), content_type="application/json"

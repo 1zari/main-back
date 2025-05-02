@@ -353,14 +353,15 @@ def find_user_email(request):
         body = json.loads(request.body.decode())
         request_data = FindUserEmailRequest(**body)
         phone_number = request_data.phone_number
-        user_info = UserInfo.objects.get(phone_number=phone_number)
+        name = request_data.name
+        user_info = UserInfo.objects.get(phone_number=phone_number, name=name)
         common_user = user_info.common_user
 
         response_data = FindUserEmailResponse(email=common_user.email)
         return JsonResponse(response_data.model_dump())
     except UserInfo.DoesNotExist:
         return JsonResponse(
-            {"message": "No user registered with this phone number."},
+            {"message": "No user found with the provided phone number and email."},
             status=404,
         )
     except json.JSONDecodeError:

@@ -429,6 +429,7 @@ class FindUserEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    name: str
 
 
 class ResetUserPasswordRequest(BaseModel):
@@ -443,6 +444,7 @@ class FindCompanyEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    company_name: str
     business_registration_number: str
 
 

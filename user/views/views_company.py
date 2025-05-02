@@ -271,11 +271,13 @@ def find_company_email(request) -> JsonResponse:
         request_data = FindCompanyEmailRequest(**body)
         phone_number = request_data.phone_number
         business_registration_number = request_data.business_registration_number
+        company_name = request_data.company_name
 
         try:
-            # 전화번호, 사업자등록번호로 사업자 정보 조회
+            # 전화번호, 사업자등록번호, 회사명으로 사업자 정보 조회
             company_info = CompanyInfo.objects.get(
-                manager_phone_number=phone_number
+                manager_phone_number=phone_number,
+                company_name=company_name
             )
 
             # 사업자등록번호가 일치하는지 확인
@@ -299,7 +301,7 @@ def find_company_email(request) -> JsonResponse:
         except CompanyInfo.DoesNotExist:
             return JsonResponse(
                 {
-                    "message": "No registered company found with the provided information."
+                    "message": "No registered company found with the provided phone number and company name."
                 },
                 status=404,
             )
