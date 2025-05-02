@@ -31,7 +31,7 @@ class KakaoLoginView(View):
             code = request.GET.get("code")
             if code is None:
                 return JsonResponse(
-                    {"message": "code가 필요합니다."}, status=400
+                    {"message": "Code is required."}, status=400
                 )
             try:
                 Kakao_login_request = KakaoLoginRequest(code=code)
@@ -40,12 +40,15 @@ class KakaoLoginView(View):
 
             kakao_access_token = self.get_kakao_access_token(code)
             if not kakao_access_token:
-                return JsonResponse({"message": "카카오 인증 실패"}, status=400)
+                return JsonResponse(
+                    {"message": "Kakao authentication failed."}, status=400
+                )
 
             user_data = self.get_kakao_user_info(kakao_access_token)
             if not user_data:
                 return JsonResponse(
-                    {"message": "카카오 사용자 정보 요청 실패"}, status=400
+                    {"message": "Failed to retrieve Kakao user info."},
+                    status=400,
                 )
 
             email = user_data.get("kakao_account", {}).get("email")
@@ -71,7 +74,9 @@ class KakaoLoginView(View):
                     status=202,
                 )
 
-            return JsonResponse({"message": "사용자 생성 실패"}, status=400)
+            return JsonResponse(
+                {"message": "Failed to create user."}, status=400
+            )
 
         except Exception as e:
             return JsonResponse(
@@ -132,7 +137,7 @@ class NaverLoginView(View):
             state = request.GET.get("state")
             if code is None or state is None:
                 return JsonResponse(
-                    {"message": "code와 state가 필요합니다."}, status=400
+                    {"message": "Code and state are required."}, status=400
                 )
             try:
                 naver_login_request = NaverLoginRequest(code=code, state=state)
@@ -141,12 +146,15 @@ class NaverLoginView(View):
 
             naver_access_token = self.get_naver_access_token(code, state)
             if not naver_access_token:
-                return JsonResponse({"message": "네이버 인증 실패"}, status=400)
+                return JsonResponse(
+                    {"message": "Naver authentication failed."}, status=400
+                )
 
             user_data = self.get_naver_user_info(naver_access_token)
             if not user_data:
                 return JsonResponse(
-                    {"message": "네이버 사용자 정보 요청 실패"}, status=400
+                    {"message": "Failed to retrieve Naver user info."},
+                    status=400,
                 )
 
             email = user_data.get("response", {}).get("email")
@@ -172,7 +180,9 @@ class NaverLoginView(View):
                     status=202,
                 )
 
-            return JsonResponse({"message": "사용자 생성 실패"}, status=400)
+            return JsonResponse(
+                {"message": "Failed to create user."}, status=400
+            )
 
         except Exception as e:
             return JsonResponse(

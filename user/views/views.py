@@ -47,7 +47,7 @@ class CommonUserCreateView(View):
             # 중복 체크
             if User.objects.filter(email=data.email).exists():
                 return JsonResponse(
-                    {"message": "이미 등록된 이메일입니다."}, status=400
+                    {"message": "Email is already registered."}, status=400
                 )
 
             # CommonUser 생성
@@ -68,11 +68,12 @@ class CommonUserCreateView(View):
 
         except ValidationError as e:
             return JsonResponse(
-                {"message": "입력 오류", "errors": e.errors()}, status=422
+                {"message": "Validation error", "errors": e.errors()},
+                status=422,
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -89,14 +90,12 @@ class UserSignupView(View):
                     common_user_id=signup_data.common_user_id
                 )
             except CommonUser.DoesNotExist:
-                return JsonResponse(
-                    {"message": "유저를 찾을 수 없습니다."}, status=400
-                )
+                return JsonResponse({"message": "User not found."}, status=400)
 
             # 이미 UserInfo가 존재하는지 확인
             if UserInfo.objects.filter(common_user=user).exists():
                 return JsonResponse(
-                    {"message": "이미 가입된 사용자입니다."}, status=400
+                    {"message": "User already registered."}, status=400
                 )
 
             # UserInfo 생성
@@ -134,11 +133,11 @@ class UserSignupView(View):
 
         except ValidationError as e:
             return JsonResponse(
-                {"message": "잘못된 입력", "errors": e.errors()}, status=422
+                {"message": "Invalid input", "errors": e.errors()}, status=422
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -156,7 +155,7 @@ class UserLoginView(View):
 
             if not user or not user.is_active or user.join_type != "normal":
                 return JsonResponse(
-                    {"message": "이메일 또는 비밀번호가 올바르지 않습니다."},
+                    {"message": "Invalid email or password."},
                     status=400,
                 )
 
@@ -165,7 +164,7 @@ class UserLoginView(View):
 
             # 응답 데이터 생성
             response = UserLoginResponse(
-                message="로그인 성공",
+                message="Login successful.",
                 access_token=access_token,
                 refresh_token=refresh_token,
                 token_type="bearer",
@@ -174,11 +173,11 @@ class UserLoginView(View):
 
         except ValidationError as e:
             return JsonResponse(
-                {"message": "잘못된 입력", "errors": e.errors()}, status=422
+                {"message": "Invalid input", "errors": e.errors()}, status=422
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -216,7 +215,7 @@ class UserInfoDetailView(View):  # 유저 정보 조회
 
             #  응답 생성
             response = UserInfoResponse(
-                message="회원 정보 조회 성공",
+                message="User info retrieved successfully.",
                 name=user_info.name,
                 phone_number=user_info.phone_number,
                 gender=user_info.gender,
@@ -228,14 +227,12 @@ class UserInfoDetailView(View):  # 유저 정보 조회
             return JsonResponse(response.model_dump(), status=200)
 
         except CommonUser.DoesNotExist:
-            return JsonResponse(
-                {"message": "유저를 찾을 수 없습니다."}, status=404
-            )
+            return JsonResponse({"message": "User not found."}, status=404)
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "detail": str(e)}, status=500
+                {"message": "Server error", "detail": str(e)}, status=500
             )
 
 
@@ -280,7 +277,7 @@ class UserInfoUpdateView(View):
             user_info.save()
 
             response = UserInfoUpdateResponse(
-                message="회원 정보가 성공적으로 수정되었습니다.",
+                message="User info successfully updated.",
                 name=user_info.name,
                 phone_number=user_info.phone_number,
                 gender=user_info.gender,
@@ -295,7 +292,7 @@ class UserInfoUpdateView(View):
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "detail": str(e)}, status=500
+                {"message": "Server error", "detail": str(e)}, status=500
             )
 
 
@@ -307,7 +304,7 @@ class LogoutView(View):
             refresh_token = logout_data.refresh_token
             if not refresh_token:
                 return JsonResponse(
-                    {"message": "Refresh token이 필요합니다."}, status=400
+                    {"message": "Refresh token is required."}, status=400
                 )
 
             # 토큰 디코딩해서 남은 시간 확인
@@ -323,32 +320,30 @@ class LogoutView(View):
 
                 if ttl <= 0:
                     return JsonResponse(
-                        {"message": "이미 만료된 토큰입니다."}, status=400
+                        {"message": "Token is already expired."}, status=400
                     )
                 # Redis에 블랙리스트 등록
                 r.setex(f"blacklist:refresh:{refresh_token}", ttl, "true")
 
                 return JsonResponse(
-                    LogoutResponse(message="로그아웃 성공").model_dump(),
+                    LogoutResponse(message="Logout successful.").model_dump(),
                     status=200,
                 )
             else:
                 return JsonResponse(
-                    {"message": "유효하지 않은 토큰 페이로드입니다."},
+                    {"message": "Invalid token payload."},
                     status=400,
                 )
 
         except jwt.ExpiredSignatureError:
             return JsonResponse(
-                {"message": "토큰이 이미 만료되었습니다."}, status=400
+                {"message": "Token is already expired."}, status=400
             )
         except jwt.InvalidTokenError:
-            return JsonResponse(
-                {"message": "유효하지 않은 토큰입니다."}, status=400
-            )
+            return JsonResponse({"message": "Invalid token."}, status=400)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -365,14 +360,15 @@ def find_user_email(request):
         return JsonResponse(response_data.model_dump())
     except UserInfo.DoesNotExist:
         return JsonResponse(
-            {"message": "해당 전화번호로 가입된 사용자가 없습니다."}, status=404
+            {"message": "No user registered with this phone number."},
+            status=404,
         )
     except json.JSONDecodeError:
-        return JsonResponse({"error": "잘못된 요청 형식입니다."}, status=400)
+        return JsonResponse({"error": "Invalid request format."}, status=400)
     except ValidationError as e:
         return JsonResponse(
             {
-                "message": "유효하지 않은 요청 데이터입니다.",
+                "message": "Invalid request data.",
                 "errors": e.errors(),
             },
             status=400,
@@ -396,9 +392,7 @@ def reset_user_password(request) -> JsonResponse:
             # 이메일이 일치하는지 확인
             if common_user.email != email:
                 return JsonResponse(
-                    {
-                        "message": "입력한 이메일과 전화번호가 일치하지 않습니다."
-                    },
+                    {"message": "Email and phone number do not match."},
                     status=400,
                 )
 
@@ -407,21 +401,21 @@ def reset_user_password(request) -> JsonResponse:
             common_user.save()
 
             response_data = ResetUserPasswordResponse(
-                message="비밀번호 재설정 완료"
+                message="Password reset successful."
             )
             return JsonResponse(response_data.model_dump())
 
         except UserInfo.DoesNotExist:
             return JsonResponse(
-                {"message": "해당 전화번호로 가입된 사용자가 없습니다."},
+                {"message": "No user registered with this phone number."},
                 status=404,
             )
     except json.JSONDecodeError:
-        return JsonResponse({"error": "잘못된 요청 형식입니다."}, status=400)
+        return JsonResponse({"error": "Invalid request format."}, status=400)
     except ValidationError as e:
         return JsonResponse(
             {
-                "message": "유효하지 않은 요청 데이터입니다.",
+                "message": "Invalid request data.",
                 "errors": e.errors(),
             },
             status=400,
@@ -473,25 +467,22 @@ class UserDeleteView(View):
 
             # 성공적으로 삭제 완료
             return JsonResponse(
-                {"message": "회원 탈퇴가 완료되었습니다."}, status=200
+                {"message": "User deletion successful."}, status=200
             )
 
         except CommonUser.DoesNotExist:
-            return JsonResponse(
-                {"message": "사용자를 찾을 수 없습니다."}, status=404
-            )
+            return JsonResponse({"message": "User not found."}, status=404)
         except jwt.ExpiredSignatureError:
-            return JsonResponse(
-                {"message": "토큰이 만료되었습니다."}, status=403
-            )
+            return JsonResponse({"message": "Token has expired."}, status=403)
         except jwt.InvalidTokenError:
-            return JsonResponse(
-                {"message": "유효하지 않은 토큰입니다."}, status=403
-            )
+            return JsonResponse({"message": "Invalid token."}, status=403)
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "탈퇴 중 오류가 발생했습니다.", "error": str(e)},
+                {
+                    "message": "An error occurred during account deletion.",
+                    "error": str(e),
+                },
                 status=500,
             )

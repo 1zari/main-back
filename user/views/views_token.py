@@ -45,6 +45,6 @@ class TokenRefreshView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)},
+                {"message": "Server error", "error": str(e)},
                 status=500,
             )

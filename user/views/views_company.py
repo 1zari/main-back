@@ -40,7 +40,10 @@ class CompanySignupView(View):
             # 2) 파일 업로드 처리
             if "certificate_image" not in request.FILES:
                 return JsonResponse(
-                    {"message": "사업자등록증 파일이 필요합니다."}, status=400
+                    {
+                        "message": "Business registration certificate file is required."
+                    },
+                    status=400,
                 )
             cert_url = upload_to_ncp_storage(request.FILES["certificate_image"])
 
@@ -58,7 +61,8 @@ class CompanySignupView(View):
             )
             if CompanyInfo.objects.filter(common_user=user).exists():
                 return JsonResponse(
-                    {"message": "이미 가입된 기업회원입니다."}, status=400
+                    {"message": "Company user is already registered."},
+                    status=400,
                 )
 
             # 5) CompanyInfo 생성
@@ -75,7 +79,7 @@ class CompanySignupView(View):
 
             # 7) 응답 생성
             response = CompanyJoinResponseModel(
-                message="기업 회원가입 성공",
+                message="Company registration successful.",
                 common_user=CommonUserResponseModel(
                     common_user_id=user.common_user_id,
                     email=user.email,
@@ -101,16 +105,14 @@ class CompanySignupView(View):
 
         except ValidationError as e:
             return JsonResponse(
-                {"message": "입력값 검증 실패", "errors": e.errors()},
+                {"message": "Input validation failed.", "errors": e.errors()},
                 status=422,
             )
         except CommonUser.DoesNotExist:
-            return JsonResponse(
-                {"message": "해당 회원이 존재하지 않습니다."}, status=404
-            )
+            return JsonResponse({"message": "User not found."}, status=404)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error.", "error": str(e)}, status=500
             )
 
 
@@ -128,7 +130,7 @@ class CompanyLoginView(View):
 
             if not user or not user.is_active or user.join_type != "company":
                 return JsonResponse(
-                    {"message": "이메일 또는 비밀번호가 올바르지 않습니다."},
+                    {"message": "Invalid email or password."},
                     status=400,
                 )
 
@@ -137,7 +139,7 @@ class CompanyLoginView(View):
 
             # 응답 데이터 생성
             response = CompanyLoginResponse(
-                message="로그인 성공",
+                message="Login successful.",
                 access_token=access_token,
                 refresh_token=refresh_token,
                 token_type="bearer",
@@ -146,11 +148,11 @@ class CompanyLoginView(View):
 
         except ValidationError as e:
             return JsonResponse(
-                {"message": "잘못된 입력", "errors": e.errors()}, status=422
+                {"message": "Invalid input.", "errors": e.errors()}, status=422
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error.", "error": str(e)}, status=500
             )
 
 
@@ -192,7 +194,7 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
                 manager_email=company_info.manager_email,
                 certificate_image=company_info.certificate_image,
                 company_logo=company_info.company_logo,
-                message="기업 정보 조회 성공",
+                message="Company info retrieved successfully.",
             )
             return JsonResponse(response.model_dump(), status=200)
 
@@ -200,7 +202,7 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "detail": str(e)}, status=500
+                {"message": "Server error.", "detail": str(e)}, status=500
             )
 
 
@@ -239,7 +241,7 @@ class CompanyInfoUpdateView(View):
             company_user.save()
 
             response_data = CompanyInfoUpdateResponse(
-                message="회사 정보가 성공적으로 수정되었습니다.",
+                message="Company info successfully updated.",
                 company_name=company_user.company_name,
                 establishment=company_user.establishment,
                 company_address=company_user.company_address,
@@ -257,7 +259,9 @@ class CompanyInfoUpdateView(View):
         except ValidationError as e:
             return JsonResponse({"message": str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({"message": f"오류 발생: {str(e)}"}, status=500)
+            return JsonResponse(
+                {"message": f"Error occurred: {str(e)}"}, status=500
+            )
 
 
 # 사업자 이메일 찾기
@@ -280,7 +284,9 @@ def find_company_email(request) -> JsonResponse:
                 != business_registration_number
             ):
                 return JsonResponse(
-                    {"message": "입력한 사업자등록번호가 일치하지 않습니다."},
+                    {
+                        "message": "The provided business registration number does not match."
+                    },
                     status=400,
                 )
 
@@ -292,14 +298,17 @@ def find_company_email(request) -> JsonResponse:
 
         except CompanyInfo.DoesNotExist:
             return JsonResponse(
-                {"message": "해당 정보로 가입된 사업자가 없습니다."}, status=404
+                {
+                    "message": "No registered company found with the provided information."
+                },
+                status=404,
             )
     except json.JSONDecodeError:
-        return JsonResponse({"error": "잘못된 요청 형식입니다."}, status=400)
+        return JsonResponse({"error": "Invalid request format."}, status=400)
     except ValidationError as e:
         return JsonResponse(
             {
-                "message": "유효하지 않은 요청 데이터입니다.",
+                "message": "Invalid request data.",
                 "errors": e.errors(),
             },
             status=400,
@@ -328,7 +337,9 @@ def reset_company_password(request) -> JsonResponse:
                 != business_registration_number
             ):
                 return JsonResponse(
-                    {"message": "입력한 사업자등록번호가 일치하지 않습니다."},
+                    {
+                        "message": "The provided business registration number does not match."
+                    },
                     status=400,
                 )
 
@@ -337,7 +348,7 @@ def reset_company_password(request) -> JsonResponse:
             if common_user.email != email:
                 return JsonResponse(
                     {
-                        "message": "입력한 이메일과 전화번호가 일치하지 않습니다."
+                        "message": "The provided email and phone number do not match."
                     },
                     status=400,
                 )
@@ -347,20 +358,23 @@ def reset_company_password(request) -> JsonResponse:
             common_user.save()
 
             response_data = ResetCompanyPasswordResponse(
-                message="비밀번호 재설정 완료"
+                message="Password reset successful."
             )
             return JsonResponse(response_data.model_dump())
 
         except CompanyInfo.DoesNotExist:
             return JsonResponse(
-                {"message": "해당 정보로 가입된 사업자가 없습니다."}, status=404
+                {
+                    "message": "No registered company found with the provided information."
+                },
+                status=404,
             )
     except json.JSONDecodeError:
-        return JsonResponse({"error": "잘못된 요청 형식입니다."}, status=400)
+        return JsonResponse({"error": "Invalid request format."}, status=400)
     except ValidationError as e:
         return JsonResponse(
             {
-                "message": "유효하지 않은 요청 데이터입니다.",
+                "message": "Invalid request data.",
                 "errors": e.errors(),
             },
             status=400,
