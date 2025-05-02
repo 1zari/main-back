@@ -361,7 +361,9 @@ def find_user_email(request):
         return JsonResponse(response_data.model_dump())
     except UserInfo.DoesNotExist:
         return JsonResponse(
-            {"message": "No user found with the provided phone number and email."},
+            {
+                "message": "No user found with the provided phone number and email."
+            },
             status=404,
         )
     except json.JSONDecodeError:

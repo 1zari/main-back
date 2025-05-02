@@ -282,9 +282,15 @@ def test_find_user_email(client, user_info):
         "name": "잘못된 이름",
         "phone_number": user_info.phone_number,
     }
-    response_fail = client.post(url, json.dumps(data_fail), content_type="application/json")
+    response_fail = client.post(
+        url, json.dumps(data_fail), content_type="application/json"
+    )
     assert response_fail.status_code == 404
-    assert response_fail.json()["message"] == "No user found with the provided phone number and email."
+    assert (
+        response_fail.json()["message"]
+        == "No user found with the provided phone number and email."
+    )
+
 
 @pytest.mark.django_db
 def test_reset_user_password(client, user_info):
@@ -314,7 +320,10 @@ def test_reset_user_password(client, user_info):
         url, json.dumps(data), content_type="application/json"
     )
     assert response.status_code == 404  # Not Found
-    assert response.json()["message"] == "No user registered with this phone number."
+    assert (
+        response.json()["message"]
+        == "No user registered with this phone number."
+    )
 
     # 실패 (이메일 불일치)
     data = {
@@ -350,7 +359,7 @@ def test_find_company_email(client, company_info):
     data = {
         "phone_number": "01099998888",
         "business_registration_number": "1234567890",
-        "company_name": "없는 회사"
+        "company_name": "없는 회사",
     }
     response = client.post(
         url, json.dumps(data), content_type="application/json"

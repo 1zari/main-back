@@ -276,8 +276,7 @@ def find_company_email(request) -> JsonResponse:
         try:
             # 전화번호, 사업자등록번호, 회사명으로 사업자 정보 조회
             company_info = CompanyInfo.objects.get(
-                manager_phone_number=phone_number,
-                company_name=company_name
+                manager_phone_number=phone_number, company_name=company_name
             )
 
             # 사업자등록번호가 일치하는지 확인
