@@ -59,7 +59,7 @@ class KakaoLoginView(View):
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = KakaoLoginResponse(
-                        message="로그인 성공",
+                        message="Login successful.",
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
@@ -68,7 +68,7 @@ class KakaoLoginView(View):
 
                 return JsonResponse(
                     {
-                        "message": "추가 정보 입력 필요",
+                        "message": "Additional information required.",
                         "email": email,
                     },
                     status=202,
@@ -80,7 +80,7 @@ class KakaoLoginView(View):
 
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
     def get_kakao_access_token(self, code: str) -> Optional[str]:
@@ -165,7 +165,7 @@ class NaverLoginView(View):
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = NaverLoginResponse(
-                        message="로그인 성공",
+                        message="Login successful.",
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
@@ -174,7 +174,7 @@ class NaverLoginView(View):
 
                 return JsonResponse(
                     {
-                        "message": "추가 정보 입력 필요",
+                        "message": "Additional information required.",
                         "email": email,
                     },
                     status=202,
@@ -186,7 +186,7 @@ class NaverLoginView(View):
 
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
     def get_naver_access_token(self, code: str, state: str) -> Optional[str]:

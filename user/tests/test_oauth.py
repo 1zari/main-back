@@ -78,7 +78,7 @@ def test_kakao_login_new_user(
     response = client.get(kakao_login_url, {"code": code})
     assert response.status_code == 202
     assert json.loads(response.content) == {
-        "message": "추가 정보 입력 필요",
+        "message": "Additional information required.",
         "email": "test@example.com",
     }
     assert CommonUser.objects.filter(
@@ -106,7 +106,7 @@ def test_naver_login_new_user(
     response = client.get(naver_login_url, {"code": code, "state": state})
     assert response.status_code == 202
     assert json.loads(response.content) == {
-        "message": "추가 정보 입력 필요",
+        "message": "Additional information required.",
         "email": "test@example.com",
     }
     assert CommonUser.objects.filter(
@@ -151,7 +151,7 @@ def test_kakao_login_existing_user(
     response_data = json.loads(response.content)
     assert "access_token" in response_data
     assert "refresh_token" in response_data
-    assert response_data["message"] == "로그인 성공"
+    assert response_data["message"] == "Login successful."
 
 
 # 4. 기존 사용자 로그인 (네이버)
@@ -192,4 +192,4 @@ def test_naver_login_existing_user(
     response_data = json.loads(response.content)
     assert "access_token" in response_data
     assert "refresh_token" in response_data
-    assert response_data["message"] == "로그인 성공"
+    assert response_data["message"] == "Login successful."

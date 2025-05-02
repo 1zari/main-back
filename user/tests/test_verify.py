@@ -39,7 +39,7 @@ def test_send_verification_code(client):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
             "result_code": 1,
-            "message": "인증번호 전송 성공",
+            "message": "Verification code sent successfully",
         }
 
         with patch("user.redis.r") as mock_r:
