@@ -51,7 +51,10 @@ def test_send_verification_code(client):
             response = client.post(url, data, content_type="application/json")
 
             assert response.status_code == 200
-            assert response.json()["message"] == "Verification code sent successfully"
+            assert (
+                response.json()["message"]
+                == "Verification code sent successfully"
+            )
 
 
 @pytest.mark.django_db
