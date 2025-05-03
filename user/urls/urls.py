@@ -2,18 +2,22 @@ from django.urls.conf import path
 
 from user.views.views import (
     CommonUserCreateView,
-    CompanyInfoUpdateView,
-    CompanyLoginView,
-    CompanySignupView,
     LogoutView,
     UserDeleteView,
+    UserInfoDetailView,
     UserInfoUpdateView,
     UserLoginView,
     UserSignupView,
-    find_company_email,
     find_user_email,
-    reset_company_password,
     reset_user_password,
+)
+from user.views.views_company import (
+    CompanyInfoDetailView,
+    CompanyInfoUpdateView,
+    CompanyLoginView,
+    CompanySignupView,
+    find_company_email,
+    reset_company_password,
 )
 from user.views.views_oauth import KakaoLoginView, NaverLoginView
 from user.views.views_token import TokenRefreshView
@@ -27,17 +31,47 @@ app_name = "user"
 
 
 urlpatterns = [
+    # 공통 유저 (common)
     path(
-        "common_user/signup/",
-        CommonUserCreateView.as_view(),
-        name="common_signup",
+        "common/signup/", CommonUserCreateView.as_view(), name="common-signup"
     ),
-    path("signup/", UserSignupView.as_view(), name="user-signup"),
-    path("login/", UserLoginView.as_view(), name="user-login"),
+    # 일반 유저 (normal)
+    path("normal/signup/", UserSignupView.as_view(), name="normal-signup"),
+    path("normal/login/", UserLoginView.as_view(), name="normal-login"),
+    path(
+        "normal/info/", UserInfoDetailView.as_view(), name="normal-info-detail"
+    ),
+    path(
+        "normal/info/update/",
+        UserInfoUpdateView.as_view(),
+        name="normal-info-update",
+    ),
+    path("normal/find/email/", find_user_email, name="normal-find-email"),
+    path(
+        "normal/reset/password/",
+        reset_user_password,
+        name="normal-reset-password",
+    ),
+    # 기업 유저 (company)
     path("company/signup/", CompanySignupView.as_view(), name="company-signup"),
     path("company/login/", CompanyLoginView.as_view(), name="company-login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
-    path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path(
+        "company/info/",
+        CompanyInfoDetailView.as_view(),
+        name="company-info-detail",
+    ),
+    path(
+        "company/info/update/",
+        CompanyInfoUpdateView.as_view(),
+        name="company-info-update",
+    ),
+    path("company/find/email/", find_company_email, name="company-find-email"),
+    path(
+        "company/reset/password/",
+        reset_company_password,
+        name="company-reset-password",
+    ),
+    # 인증 관련 (verify)
     path(
         "verify/send-code/",
         SendVerificationCodeView.as_view(),
@@ -49,25 +83,11 @@ urlpatterns = [
         VerifyBusinessRegistrationView.as_view(),
         name="verify-business",
     ),
-    path("kakao/login/", KakaoLoginView.as_view(), name="kakao-login"),
-    path("naver/login/", NaverLoginView.as_view(), name="naver-login"),
-    path("find/email/", find_user_email, name="find-user-email"),
-    path("find/company/email/", find_company_email, name="find-company-email"),
-    path("reset/password/", reset_user_password, name="reset-user-password"),
-    path(
-        "reset/company/password/",
-        reset_company_password,
-        name="reset-company-password",
-    ),
-    path(
-        "info/update/<uuid:user_id>",
-        UserInfoUpdateView.as_view(),
-        name="user-info-update",
-    ),
-    path(
-        "company/info/update/<uuid:company_id>",
-        CompanyInfoUpdateView.as_view(),
-        name="company-info-update",
-    ),
+    # OAuth 로그인
+    path("oauth/kakao/login/", KakaoLoginView.as_view(), name="kakao-login"),
+    path("oauth/naver/login/", NaverLoginView.as_view(), name="naver-login"),
+    # 토큰 관련
+    path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("logout/", LogoutView.as_view(), name="logout"),
     path("delete/", UserDeleteView.as_view(), name="user-delete"),
 ]
