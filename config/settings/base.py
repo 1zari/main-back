@@ -44,8 +44,13 @@ SECRET_KEY = secrets["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
-
+ALLOWED_HOSTS: list[str] = [
+    "senior-naeil.life",
+    "www.senior-naeil.life",
+    "211.188.53.238",
+    "1zari.kro.kr",
+    "senior-tomorrow.kro.kr",
+    ]
 
 # Application definition
 
@@ -65,9 +70,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     # "django_extensions",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -192,3 +199,34 @@ REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_DB = os.environ.get("REDIS_DB")
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+
+ALIGO_API_URL = os.getenv("ALIGO_API_URL")
+KOREA_TAX_API_URL = os.getenv("KOREA_TAX_API_URL")
+
+KAKAO_TOKEN_URL = os.getenv("KAKAO_TOKEN_URL") or ""
+KAKAO_USER_INFO_URL = os.getenv("KAKAO_USER_INFO_URL") or ""
+
+NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL") or ""
+NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL") or ""
+
+
+# CSRF 설정
+CSRF_TRUSTED_ORIGINS = [
+    "https://senior-naeil.life",  # 백엔드 도메인(API server)
+    "https://senior-tomorrow.kro.kr",  # 프론트 도메인
+    "https://1zari.kro.kr",  # 프론트 도메인
+]
+CSRF_COOKIE_SECURE = True  # SSL 적용시 True 해야함.
+
+# CORS 설정
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://senior-tomorrow.kro.kr",
+    "https://1zari.kro.kr",
+    "https://senior-tomorrow.vercel.app",
+    "https://senior-naeil.life",
+    "https://www.senior-naeil.life",
+    "http://localhost:8000"
+    "http://127.0.0.1:8000"
+]
