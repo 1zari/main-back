@@ -210,13 +210,21 @@ NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL") or ""
 NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL") or ""
 
 
+
 # CSRF 설정
 CSRF_TRUSTED_ORIGINS = [
     "https://senior-naeil.life",  # 백엔드 도메인(API server)
     "https://senior-tomorrow.kro.kr",  # 프론트 도메인
     "https://1zari.kro.kr",  # 프론트 도메인
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+
 ]
 CSRF_COOKIE_SECURE = True  # SSL 적용시 True 해야함.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CORS_ALLOW_CREDENTIALS = True
+
 
 # CORS 설정
 CORS_ALLOWED_ORIGINS = [
@@ -227,6 +235,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://senior-tomorrow.vercel.app",
     "https://senior-naeil.life",
     "https://www.senior-naeil.life",
-    "http://localhost:8000"
-    "http://127.0.0.1:8000"
-]
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    ]
