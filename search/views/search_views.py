@@ -1,6 +1,7 @@
-from typing import List, Optional, Set
+from typing import Set
 from uuid import UUID
 
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.measure import D
 from django.db.models import Q
 from django.http.request import HttpRequest
@@ -15,15 +16,16 @@ from search.schemas import (
     JobPostingSearchQueryModel,
     JobPostingSearchResponseModel,
 )
-from utils.common import get_valid_normal_user
+from user.models import CommonUser
 
 
 class SearchView(View):
 
     def get(self, request: HttpRequest) -> JsonResponse:
-        token = request.user
-        if token.join_type == "normal":  # type: ignore
-            user = get_valid_normal_user(token)
+        current_user: CommonUser | AnonymousUser = request.user
+        user_id_for_bookmark = None
+        if current_user.is_authenticated:
+            user_id_for_bookmark = current_user.common_user_id
 
         try:
             query = JobPostingSearchQueryModel(
@@ -38,6 +40,10 @@ class SearchView(View):
             )
         except ValidationError as e:
             return JsonResponse({"errors": e.errors()}, status=400)
+        except Exception as e:
+            return JsonResponse(
+                {"errors": f"Invalid query parameters: {e}"}, status=400
+            )
 
         qs = JobPosting.objects.all()
         if query.city:
@@ -53,7 +59,7 @@ class SearchView(View):
         if query.employment_type:
             qs = qs.filter(employment_type__in=query.employment_type)
         if query.education:
-            qs = qs.filter(education__in=query.education)
+            qs = qs.filter(education=query.education)
 
         if query.search:
             qs = qs.filter(
@@ -62,47 +68,56 @@ class SearchView(View):
                 | Q(company_id__company_name__icontains=query.search)
             )
 
-        region_qs = District.objects.filter(
-            city_name__in=query.city,
-            district_name__in=query.district,
-            emd_name__in=query.town,
-        )
-
-        if not region_qs.exists():
-            return JsonResponse(
-                {"results": [], "error": "Not found region data."},
-                status=404,
-            )
+        region_qs = District.objects.all()
+        if query.city:
+            region_qs = region_qs.filter(city_name__in=query.city)
+        if query.district:
+            region_qs = region_qs.filter(district_name__in=query.district)
+        if query.town:
+            region_qs = region_qs.filter(emd_name__in=query.town)
 
         job_posting_ids: Set[UUID] = set()
-        for region in region_qs:
-            center_point = region.geometry.centroid
-            nearby_qs = qs.filter(
-                location__distance_lte=(center_point, D(km=3))
-            )
-            job_posting_ids.update(
-                nearby_qs.values_list("job_posting_id", flat=True)
-            )
 
-        final_qs = JobPosting.objects.filter(job_posting_id__in=job_posting_ids)
-
-        results = [
-            JobPostingResultModel(
-                job_posting_id=jp.job_posting_id,
-                job_posting_title=jp.job_posting_title,
-                city=jp.city,
-                district=jp.district,
-                is_bookmarked=(
-                    JobPostingBookmark.objects.filter(
-                        job_posting=jp, user=user.common_user_id
-                    ).exists()
-                    if user
-                    else False
-                ),
-                deadline=jp.deadline,
+        if region_qs.exists() or (
+            not query.city and not query.district and not query.town
+        ):
+            target_regions = (
+                region_qs if region_qs.exists() else District.objects.all()
             )
-            for jp in final_qs
-        ]
+            for region in target_regions:
+                if region.geometry:
+                    center_point = region.geometry.centroid
+                    nearby_qs = qs.filter(
+                        location__distance_lte=(center_point, D(km=3))
+                    )
+                    job_posting_ids.update(
+                        nearby_qs.values_list("job_posting_id", flat=True)
+                    )
+
+        final_qs = JobPosting.objects.filter(
+            job_posting_id__in=list(job_posting_ids)
+        )
+
+        results: list[JobPostingResultModel] = []
+        for jp in final_qs:
+
+            is_bookmarked = False
+            if user_id_for_bookmark is not None:
+
+                is_bookmarked = JobPostingBookmark.objects.filter(
+                    job_posting=jp, user_id=user_id_for_bookmark
+                ).exists()
+
+            results.append(
+                JobPostingResultModel(
+                    job_posting_id=jp.job_posting_id,
+                    job_posting_title=jp.job_posting_title,
+                    city=jp.city,
+                    district=jp.district,
+                    is_bookmarked=is_bookmarked,
+                    deadline=jp.deadline,
+                )
+            )
 
         response = JobPostingSearchResponseModel(results=results)
         return JsonResponse(response.model_dump(), status=200)

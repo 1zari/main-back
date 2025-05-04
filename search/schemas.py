@@ -41,3 +41,9 @@ class RegionTreeResponse(RootModel[Dict[str, Dict[str, List[str]]]]):
     """
     지역 계층 구조 응답 모델
     """
+
+
+class JonTreeResponse(RootModel[Dict[str, list[str]]]):
+    """
+    직업 카테고리 응담 모델
+    """

@@ -1,4 +1,3 @@
-import json
 from unittest.mock import patch
 
 import pytest
@@ -40,7 +39,7 @@ def test_send_verification_code(client):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
             "result_code": 1,
-            "message": "인증번호 전송 성공",
+            "message": "Verification code sent successfully",
         }
 
         with patch("user.redis.r") as mock_r:
@@ -52,7 +51,10 @@ def test_send_verification_code(client):
             response = client.post(url, data, content_type="application/json")
 
             assert response.status_code == 200
-            assert response.json()["message"] == "인증번호 전송 성공"
+            assert (
+                response.json()["message"]
+                == "Verification code sent successfully"
+            )
 
 
 @pytest.mark.django_db
@@ -70,7 +72,7 @@ def test_verify_code_success(client, valid_verification_code_data):
         )
 
         assert response.status_code == 200
-        assert response.json()["message"] == "인증 성공!"
+        assert response.json()["message"] == "Verification successful."
 
 
 @pytest.mark.django_db
@@ -88,7 +90,7 @@ def test_verify_code_failure(client, invalid_verification_code_data):
         )
 
         assert response.status_code == 400
-        assert response.json()["message"] == "인증 코드가 일치하지 않습니다."
+        assert response.json()["message"] == "Verification code does not match."
 
 
 @pytest.mark.django_db
@@ -117,7 +119,7 @@ def test_verify_business_registration_success(mock_post, client, settings):
 
     assert response.status_code == 200
     assert response.json()["valid"] is True
-    assert "사업자 정보가 일치합니다." in response.json()["message"]
+    assert "Business information is valid." in response.json()["message"]
 
 
 @pytest.mark.django_db

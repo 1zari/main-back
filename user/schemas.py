@@ -92,8 +92,6 @@ class CompanySignupRequest(BaseModel):
     company_address: str
     business_registration_number: str
     company_introduction: str
-    certificate_image: str
-    company_logo: Optional[str] = None
     ceo_name: str
     manager_name: str
     manager_phone_number: str
@@ -122,6 +120,8 @@ class CompanyInfoBaseModel(BaseModel):
 
 
 class CompanyInfoModel(BaseModel):
+    model_config = MY_CONFIG
+
     company_id: UUID
     company_name: str
     establishment: date
@@ -200,11 +200,48 @@ class CompanyLoginResponse(BaseModel):
 
 
 # ------------------------
+# 회원정보 조회 응답 모델
+# ------------------------
+class UserInfoResponse(BaseModel):
+    model_config = MY_CONFIG
+
+    message: str
+    name: Optional[str]
+    phone_number: Optional[str]
+    gender: Optional[str]
+    birthday: Optional[date]
+    interest: Optional[List[str]]
+    purpose_subscription: Optional[List[str]]
+    route: Optional[List[str]]
+
+
+class CompanyInfoResponse(BaseModel):
+    model_config = MY_CONFIG
+
+    message: str
+    company_id: UUID
+    common_user_id: UUID
+    company_name: str
+    establishment: Optional[date]
+    company_address: Optional[str]
+    business_registration_number: Optional[str]
+    company_introduction: Optional[str]
+    ceo_name: Optional[str]
+    manager_name: Optional[str]
+    manager_phone_number: Optional[str]
+    manager_email: Optional[EmailStr]
+    certificate_image: Optional[str]
+    company_logo: Optional[str]
+
+
+# ------------------------
 # 회원정보 수정 요청 모델
 # ------------------------
 
 
 class UserInfoUpdateRequest(BaseModel):
+    model_config = MY_CONFIG
+
     name: Optional[str] = None
     phone_number: Optional[str] = None
     gender: Optional[str] = None
@@ -231,7 +268,9 @@ class CompanyInfoUpdateRequest(BaseModel):
 # ------------------------
 
 
-class UserInfoResponse(BaseModel):
+class UserInfoUpdateResponse(BaseModel):
+    model_config = MY_CONFIG
+
     message: str
     name: Optional[str] = None
     phone_number: Optional[str] = None
@@ -242,7 +281,9 @@ class UserInfoResponse(BaseModel):
     route: Optional[List[str]] = None
 
 
-class CompanyInfoResponse(BaseModel):
+class CompanyInfoUpdateResponse(BaseModel):
+    model_config = MY_CONFIG
+
     message: str
     company_name: Optional[str] = None
     establishment: Optional[date] = None
@@ -388,6 +429,7 @@ class FindUserEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    name: str
 
 
 class ResetUserPasswordRequest(BaseModel):
@@ -402,6 +444,7 @@ class FindCompanyEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    company_name: str
     business_registration_number: str
 
 

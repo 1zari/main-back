@@ -10,7 +10,7 @@ def test_common_user_creation():
     user = CommonUser.objects.create(
         email="test@example.com",
         password="hashed_pw",
-        join_type="nomal",
+        join_type="normal",
         is_active=True,
     )
     assert user.email == "test@example.com"
