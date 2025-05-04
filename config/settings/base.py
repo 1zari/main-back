@@ -50,7 +50,7 @@ ALLOWED_HOSTS: list[str] = [
     "211.188.53.238",
     "1zari.kro.kr",
     "senior-tomorrow.kro.kr",
-    ]
+]
 
 # Application definition
 
@@ -210,7 +210,6 @@ NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL") or ""
 NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL") or ""
 
 
-
 # CSRF 설정
 CSRF_TRUSTED_ORIGINS = [
     "https://senior-naeil.life",  # 백엔드 도메인(API server)
@@ -218,11 +217,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://1zari.kro.kr",  # 프론트 도메인
     "http://127.0.0.1:3000",
     "http://localhost:3000",
-
 ]
 CSRF_COOKIE_SECURE = True  # SSL 적용시 True 해야함.
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -237,4 +235,4 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.senior-naeil.life",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    ]
+]
