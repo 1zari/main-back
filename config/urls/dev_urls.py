@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import include, path
+
 from utils.csrf_views import get_csrf_token
+
 urlpatterns = [
     path("api/admin/", admin.site.urls),
     path("api/resume/", include("resume.urls.resume_urls")),
