@@ -8,16 +8,17 @@ from user.views.views import (
     UserInfoUpdateView,
     UserLoginView,
     UserSignupView,
-    find_user_email,
-    reset_user_password,
+    UserFindEmailView,
+    UserResetPasswordView,
+    EmailDuplicateCheckView,
 )
 from user.views.views_company import (
     CompanyInfoDetailView,
     CompanyInfoUpdateView,
     CompanyLoginView,
     CompanySignupView,
-    find_company_email,
-    reset_company_password,
+    CompanyFindEmailView,
+    CompanyResetPasswordView,
 )
 from user.views.views_oauth import KakaoLoginView, NaverLoginView
 from user.views.views_token import TokenRefreshView
@@ -35,6 +36,7 @@ urlpatterns = [
     path(
         "common/signup/", CommonUserCreateView.as_view(), name="common-signup"
     ),
+    path("email/check/", EmailDuplicateCheckView.as_view(), name="email-duplicate-check"),
     # 일반 유저 (normal)
     path("normal/signup/", UserSignupView.as_view(), name="normal-signup"),
     path("normal/login/", UserLoginView.as_view(), name="normal-login"),
@@ -46,10 +48,10 @@ urlpatterns = [
         UserInfoUpdateView.as_view(),
         name="normal-info-update",
     ),
-    path("normal/find/email/", find_user_email, name="normal-find-email"),
+    path("normal/find/email/", UserFindEmailView.as_view(), name="normal-find-email"),
     path(
         "normal/reset/password/",
-        reset_user_password,
+        UserResetPasswordView.as_view(),
         name="normal-reset-password",
     ),
     # 기업 유저 (company)
@@ -65,10 +67,10 @@ urlpatterns = [
         CompanyInfoUpdateView.as_view(),
         name="company-info-update",
     ),
-    path("company/find/email/", find_company_email, name="company-find-email"),
+    path("company/find/email/", CompanyFindEmailView.as_view(), name="company-find-email"),
     path(
         "company/reset/password/",
-        reset_company_password,
+        CompanyResetPasswordView.as_view(),
         name="company-reset-password",
     ),
     # 인증 관련 (verify)

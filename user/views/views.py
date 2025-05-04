@@ -347,82 +347,83 @@ class LogoutView(View):
             )
 
 
-# 일반 유저 이메일 찾기
-def find_user_email(request):
-    try:
-        body = json.loads(request.body.decode())
-        request_data = FindUserEmailRequest(**body)
-        phone_number = request_data.phone_number
-        name = request_data.name
-        user_info = UserInfo.objects.get(phone_number=phone_number, name=name)
-        common_user = user_info.common_user
 
-        response_data = FindUserEmailResponse(email=common_user.email)
-        return JsonResponse(response_data.model_dump())
-    except UserInfo.DoesNotExist:
-        return JsonResponse(
-            {
-                "message": "No user found with the provided phone number and email."
-            },
-            status=404,
-        )
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid request format."}, status=400)
-    except ValidationError as e:
-        return JsonResponse(
-            {
-                "message": "Invalid request data.",
-                "errors": e.errors(),
-            },
-            status=400,
-        )
-
-
-# 일반 유저 비밀번호 재설정
-def reset_user_password(request) -> JsonResponse:
-    try:
-        body = json.loads(request.body.decode())
-        request_data = ResetUserPasswordRequest(**body)
-        email = request_data.email
-        phone_number = request_data.phone_number
-        new_password = request_data.new_password
-
+# 일반 유저 이메일 찾기 - 클래스 기반 뷰로 변경
+class UserFindEmailView(View):
+    def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 이메일과 전화번호로 유저 정보 조회
-            user_info = UserInfo.objects.get(phone_number=phone_number)
+            body = json.loads(request.body.decode())
+            request_data = FindUserEmailRequest(**body)
+            phone_number = request_data.phone_number
+            name = request_data.name
+            user_info = UserInfo.objects.get(phone_number=phone_number, name=name)
             common_user = user_info.common_user
 
-            # 이메일이 일치하는지 확인
-            if common_user.email != email:
-                return JsonResponse(
-                    {"message": "Email and phone number do not match."},
-                    status=400,
-                )
-
-            # 새 비밀번호 해싱 후 저장
-            common_user.password = make_password(new_password)
-            common_user.save()
-
-            response_data = ResetUserPasswordResponse(
-                message="Password reset successful."
-            )
+            response_data = FindUserEmailResponse(email=common_user.email)
             return JsonResponse(response_data.model_dump())
-
         except UserInfo.DoesNotExist:
             return JsonResponse(
-                {"message": "No user registered with this phone number."},
+                {
+                    "message": "No user found with the provided phone number and email."
+                },
                 status=404,
             )
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid request format."}, status=400)
-    except ValidationError as e:
-        return JsonResponse(
-            {
-                "message": "Invalid request data.",
-                "errors": e.errors(),
-            },
-            status=400,
-        )
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid request format."}, status=400)
+        except ValidationError as e:
+            return JsonResponse(
+                {
+                    "message": "Invalid request data.",
+                    "errors": e.errors(),
+                },
+                status=400,
+            )
+
+
+
+# 일반 유저 비밀번호 재설정 - 클래스 기반 뷰로 변경
+class UserResetPasswordView(View):
+    def post(self, request, *args, **kwargs) -> JsonResponse:
+        try:
+            body = json.loads(request.body.decode())
+            request_data = ResetUserPasswordRequest(**body)
+            email = request_data.email
+            phone_number = request_data.phone_number
+            new_password = request_data.new_password
+
+            try:
+                user_info = UserInfo.objects.get(phone_number=phone_number)
+                common_user = user_info.common_user
+
+                if common_user.email != email:
+                    return JsonResponse(
+                        {"message": "Email and phone number do not match."},
+                        status=400,
+                    )
+
+                common_user.password = make_password(new_password)
+                common_user.save()
+
+                response_data = ResetUserPasswordResponse(
+                    message="Password reset successful."
+                )
+                return JsonResponse(response_data.model_dump())
+
+            except UserInfo.DoesNotExist:
+                return JsonResponse(
+                    {"message": "No user registered with this phone number."},
+                    status=404,
+                )
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid request format."}, status=400)
+        except ValidationError as e:
+            return JsonResponse(
+                {
+                    "message": "Invalid request data.",
+                    "errors": e.errors(),
+                },
+                status=400,
+            )
 
 
 class UserDeleteView(View):
@@ -489,3 +490,15 @@ class UserDeleteView(View):
                 },
                 status=500,
             )
+
+
+class EmailDuplicateCheckView(View):
+    def get(self, request, *args, **kwargs) -> JsonResponse:
+        email = request.GET.get("email")
+        if not email:
+            return JsonResponse({"message": "Email is required."}, status=400)
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"message": "Email is already registered."}, status=200)
+        else:
+            return JsonResponse({"message": "Email is available."}, status=200)
