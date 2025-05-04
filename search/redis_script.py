@@ -24,7 +24,7 @@ def fetch_regions():
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT city_name, district_name, emd_name
+        SELECT city_no, city_name, district_no, district_name, emd_no, emd_name
         FROM search_district;
     """
     )
@@ -43,23 +43,53 @@ r = redis.Redis(
 # Redis에 저장 (key: region:시:군구:읍면동, value: polygon WKT)
 def save_regions_to_redis(regions):
     try:
-        region_tree = {}
-        for city, district, town in regions:
-            # 시/도 추가
-            if city not in region_tree:
-                region_tree[city] = {}
-            # 시군구 추가
-            if district not in region_tree[city]:
-                region_tree[city][district] = []
-            # 읍면동 추가 (중복 방지)
-            if town not in region_tree[city][district]:
-                region_tree[city][district].append(town)
+        region_tree = []
+        city_map = {}  # city_no -> city 객체
 
-        # JSON으로 직렬화 후 Redis 저장
+        for (
+            city_no,
+            city_name,
+            district_no,
+            district_name,
+            emd_no,
+            emd_name,
+        ) in regions:
+            # 시/도 객체 생성 또는 조회
+            if city_no not in city_map:
+                city_obj = {"id": city_no, "name": city_name, "districts": []}
+                city_map[city_no] = city_obj
+                region_tree.append(city_obj)
+            else:
+                city_obj = city_map[city_no]
+
+            # 시군구 객체 생성 또는 조회
+            district_map = city_obj.setdefault("_district_map", {})
+            if district_no not in district_map:
+                district_obj = {
+                    "id": district_no,
+                    "name": district_name,
+                    "towns": [],
+                }
+                district_map[district_no] = district_obj
+                city_obj["districts"].append(district_obj)
+            else:
+                district_obj = district_map[district_no]
+
+            # 읍면동 추가 (중복 방지)
+            town_entry = {"id": emd_no, "name": emd_name}
+            if town_entry not in district_obj["towns"]:
+                district_obj["towns"].append(town_entry)
+
+        # 임시 _district_map 제거
+        for city_obj in region_tree:
+            if "_district_map" in city_obj:
+                del city_obj["_district_map"]
+
         r.set("region_tree", json.dumps(region_tree, ensure_ascii=False))
+        print("지역 계층 구조 저장 완료!")
     except Exception as e:
-        return print(f"error: {str(e)}")
-    print("지역 계층 구조 저장 완료!")
+        print(f"에러 발생: {str(e)}")
+        raise
 
 
 def save_job_to_redis(job):

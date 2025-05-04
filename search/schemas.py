@@ -37,13 +37,65 @@ class JobPostingSearchResponseModel(BaseModel):
     results: List[JobPostingResultModel]
 
 
-class RegionTreeResponse(RootModel[Dict[str, Dict[str, List[str]]]]):
+class TownCategory(BaseModel):
+    """
+    읍면동 카테고리
+    """
+
+    id: str
+    name: str
+
+
+class DistrictCategory(BaseModel):
+    """
+    시군구 카테고리
+    """
+
+    id: str
+    name: str
+    towns: list[TownCategory] = []
+
+
+class CityCategory(BaseModel):
+    """
+    시도 카테고리
+    """
+
+    id: str
+    name: str
+    districts: list[DistrictCategory]
+
+
+class RegionTreeResponse(RootModel):
     """
     지역 계층 구조 응답 모델
     """
 
+    root: list[CityCategory]
 
-class JonTreeResponse(RootModel[Dict[str, list[str]]]):
+
+class JobCategory(BaseModel):
+    """
+    직업 소분류 카테고리
+    """
+
+    id: str
+    name: str
+
+
+class JobCategoryBig(BaseModel):
+    """
+    직업 대분류 카테고리
+    """
+
+    id: str
+    name: str
+    children: list[JobCategory]
+
+
+class JobTreeResponse(RootModel):
     """
     직업 카테고리 응담 모델
     """
+
+    root: List[JobCategoryBig]

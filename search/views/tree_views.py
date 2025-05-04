@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views import View
 
 from config.settings.base import REDIS_DB, REDIS_HOST, REDIS_PORT
-from search.schemas import JonTreeResponse, RegionTreeResponse
+from search.schemas import JobTreeResponse, RegionTreeResponse
 
 r = redis.Redis(
     host=cast(str, REDIS_HOST),
@@ -26,6 +26,7 @@ class RegionTreeView(View):
         return JsonResponse(
             response_model.model_dump(),
             status=200,
+            safe=False,
             json_dumps_params={"ensure_ascii": False},
         )
 
@@ -35,9 +36,10 @@ class JobTreeView(View):
         job_tree_json = r.get("job_categories")
         job_tree = json.loads(job_tree_json) if job_tree_json else {}
 
-        response_model = JonTreeResponse.model_validate(job_tree)
+        response_model = JobTreeResponse.model_validate(job_tree)
         return JsonResponse(
             response_model.model_dump(),
-            status=200,
+            safe=False,
             json_dumps_params={"ensure_ascii": False},
+            status=200,
         )
