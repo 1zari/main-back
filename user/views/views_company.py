@@ -6,7 +6,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from pydantic import ValidationError
 
 from user.models import CommonUser, CompanyInfo
@@ -264,22 +266,34 @@ class CompanyInfoUpdateView(View):
             )
 
 
-# 사업자 이메일 찾기
-def find_company_email(request) -> JsonResponse:
-    try:
-        body = json.loads(request.body.decode())
-        request_data = FindCompanyEmailRequest(**body)
-        phone_number = request_data.phone_number
-        business_registration_number = request_data.business_registration_number
-        company_name = request_data.company_name
-
+@method_decorator(csrf_exempt, name="dispatch")
+class CompanyFindEmailView(View):
+    def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 전화번호, 사업자등록번호, 회사명으로 사업자 정보 조회
-            company_info = CompanyInfo.objects.get(
-                manager_phone_number=phone_number, company_name=company_name
-            )
+            body = json.loads(request.body.decode())
+            request_data = FindCompanyEmailRequest(**body)
 
-            # 사업자등록번호가 일치하는지 확인
+            phone_number = request_data.phone_number
+            business_registration_number = (
+                request_data.business_registration_number
+            )
+            company_name = request_data.company_name
+
+            # 회사 정보 존재 여부 먼저 확인
+            qs = CompanyInfo.objects.filter(
+                manager_phone_number=phone_number,
+                company_name=company_name,
+            )
+            if not qs.exists():
+                return JsonResponse(
+                    {
+                        "message": "No registered company found with the provided phone number and company name."
+                    },
+                    status=404,
+                )
+
+            company_info = qs.get()
+
             if (
                 company_info.business_registration_number
                 != business_registration_number
@@ -291,92 +305,95 @@ def find_company_email(request) -> JsonResponse:
                     status=400,
                 )
 
-            # 사업자 이메일 반환
             response_data = FindCompanyEmailResponse(
                 email=company_info.manager_email
             )
             return JsonResponse(response_data.model_dump())
 
-        except CompanyInfo.DoesNotExist:
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
+            )
+        except ValidationError as e:
             return JsonResponse(
                 {
-                    "message": "No registered company found with the provided phone number and company name."
+                    "message": "Invalid request data.",
+                    "errors": e.errors(),
                 },
-                status=404,
+                status=400,
             )
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid request format."}, status=400)
-    except ValidationError as e:
-        return JsonResponse(
-            {
-                "message": "Invalid request data.",
-                "errors": e.errors(),
-            },
-            status=400,
-        )
+        except Exception as e:
+            return JsonResponse(
+                {"message": "Server error.", "error": str(e)}, status=500
+            )
 
 
-# 사업자 비밀번호 재설정
-def reset_company_password(request) -> JsonResponse:
-    try:
-        body = json.loads(request.body.decode())
-        request_data = ResetCompanyPasswordRequest(**body)
-        email = request_data.email
-        phone_number = request_data.phone_number
-        business_registration_number = request_data.business_registration_number
-        new_password = request_data.new_password
-
+# 사업자 비밀번호 재설정 (클래스 기반 뷰)
+class CompanyResetPasswordView(View):
+    def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 사업자등록번호, 이메일, 전화번호로 유저 정보 조회
-            company_info = CompanyInfo.objects.get(
-                manager_email=email, manager_phone_number=phone_number
+            body = json.loads(request.body.decode())
+            request_data = ResetCompanyPasswordRequest(**body)
+            email = request_data.email
+            phone_number = request_data.phone_number
+            business_registration_number = (
+                request_data.business_registration_number
             )
+            new_password = request_data.new_password
 
-            # 사업자등록번호가 일치하는지 확인
-            if (
-                company_info.business_registration_number
-                != business_registration_number
-            ):
-                return JsonResponse(
-                    {
-                        "message": "The provided business registration number does not match."
-                    },
-                    status=400,
+            try:
+                company_info = CompanyInfo.objects.get(
+                    manager_email=email, manager_phone_number=phone_number
                 )
 
-            # 이메일이 일치하는지 확인
-            common_user = company_info.common_user
-            if common_user.email != email:
+                if (
+                    company_info.business_registration_number
+                    != business_registration_number
+                ):
+                    return JsonResponse(
+                        {
+                            "message": "The provided business registration number does not match."
+                        },
+                        status=400,
+                    )
+
+                common_user = company_info.common_user
+                if common_user.email != email:
+                    return JsonResponse(
+                        {
+                            "message": "The provided email and phone number do not match."
+                        },
+                        status=400,
+                    )
+
+                common_user.password = make_password(new_password)
+                common_user.save()
+
+                response_data = ResetCompanyPasswordResponse(
+                    message="Password reset successful."
+                )
+                return JsonResponse(response_data.model_dump())
+
+            except CompanyInfo.DoesNotExist:
                 return JsonResponse(
                     {
-                        "message": "The provided email and phone number do not match."
+                        "message": "No registered company found with the provided information."
                     },
-                    status=400,
+                    status=404,
                 )
-
-            # 새 비밀번호 해싱 후 저장
-            common_user.password = make_password(new_password)
-            common_user.save()
-
-            response_data = ResetCompanyPasswordResponse(
-                message="Password reset successful."
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
             )
-            return JsonResponse(response_data.model_dump())
-
-        except CompanyInfo.DoesNotExist:
+        except ValidationError as e:
             return JsonResponse(
                 {
-                    "message": "No registered company found with the provided information."
+                    "message": "Invalid request data.",
+                    "errors": e.errors(),
                 },
-                status=404,
+                status=400,
             )
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid request format."}, status=400)
-    except ValidationError as e:
-        return JsonResponse(
-            {
-                "message": "Invalid request data.",
-                "errors": e.errors(),
-            },
-            status=400,
-        )
+        except Exception as e:
+            return JsonResponse(
+                {"message": "Server error.", "error": str(e)}, status=500
+            )
