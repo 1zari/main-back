@@ -6,7 +6,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from pydantic import ValidationError
 
 from user.models import CommonUser, CompanyInfo
@@ -264,7 +266,7 @@ class CompanyInfoUpdateView(View):
             )
 
 
-# 사업자 이메일 찾기 (클래스 기반 뷰)
+@method_decorator(csrf_exempt, name="dispatch")
 class CompanyFindEmailView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:

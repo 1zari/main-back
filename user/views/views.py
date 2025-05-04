@@ -7,7 +7,9 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from jwt import ExpiredSignatureError, InvalidTokenError
 from jwt import decode as jwt_decode
 from pydantic import ValidationError
@@ -38,6 +40,7 @@ from utils.common import get_valid_company_user, get_valid_normal_user
 User = get_user_model()
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CommonUserCreateView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
@@ -77,6 +80,7 @@ class CommonUserCreateView(View):
             )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class UserSignupView(View):
     # 일반 사용자 회원가입
     def post(self, request, *args, **kwargs) -> JsonResponse:
