@@ -347,7 +347,6 @@ class LogoutView(View):
             )
 
 
-
 # 일반 유저 이메일 찾기 - 클래스 기반 뷰로 변경
 class UserFindEmailView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
@@ -356,7 +355,9 @@ class UserFindEmailView(View):
             request_data = FindUserEmailRequest(**body)
             phone_number = request_data.phone_number
             name = request_data.name
-            user_info = UserInfo.objects.get(phone_number=phone_number, name=name)
+            user_info = UserInfo.objects.get(
+                phone_number=phone_number, name=name
+            )
             common_user = user_info.common_user
 
             response_data = FindUserEmailResponse(email=common_user.email)
@@ -369,7 +370,9 @@ class UserFindEmailView(View):
                 status=404,
             )
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid request format."}, status=400)
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
+            )
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -378,7 +381,6 @@ class UserFindEmailView(View):
                 },
                 status=400,
             )
-
 
 
 # 일반 유저 비밀번호 재설정 - 클래스 기반 뷰로 변경
@@ -415,7 +417,9 @@ class UserResetPasswordView(View):
                     status=404,
                 )
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid request format."}, status=400)
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
+            )
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -499,6 +503,8 @@ class EmailDuplicateCheckView(View):
             return JsonResponse({"message": "Email is required."}, status=400)
 
         if User.objects.filter(email=email).exists():
-            return JsonResponse({"message": "Email is already registered."}, status=200)
+            return JsonResponse(
+                {"message": "Email is already registered."}, status=200
+            )
         else:
             return JsonResponse({"message": "Email is available."}, status=200)

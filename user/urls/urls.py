@@ -2,23 +2,23 @@ from django.urls.conf import path
 
 from user.views.views import (
     CommonUserCreateView,
+    EmailDuplicateCheckView,
     LogoutView,
     UserDeleteView,
+    UserFindEmailView,
     UserInfoDetailView,
     UserInfoUpdateView,
     UserLoginView,
-    UserSignupView,
-    UserFindEmailView,
     UserResetPasswordView,
-    EmailDuplicateCheckView,
+    UserSignupView,
 )
 from user.views.views_company import (
+    CompanyFindEmailView,
     CompanyInfoDetailView,
     CompanyInfoUpdateView,
     CompanyLoginView,
-    CompanySignupView,
-    CompanyFindEmailView,
     CompanyResetPasswordView,
+    CompanySignupView,
 )
 from user.views.views_oauth import KakaoLoginView, NaverLoginView
 from user.views.views_token import TokenRefreshView
@@ -36,7 +36,11 @@ urlpatterns = [
     path(
         "common/signup/", CommonUserCreateView.as_view(), name="common-signup"
     ),
-    path("email/check/", EmailDuplicateCheckView.as_view(), name="email-duplicate-check"),
+    path(
+        "email/check/",
+        EmailDuplicateCheckView.as_view(),
+        name="email-duplicate-check",
+    ),
     # 일반 유저 (normal)
     path("normal/signup/", UserSignupView.as_view(), name="normal-signup"),
     path("normal/login/", UserLoginView.as_view(), name="normal-login"),
@@ -48,7 +52,11 @@ urlpatterns = [
         UserInfoUpdateView.as_view(),
         name="normal-info-update",
     ),
-    path("normal/find/email/", UserFindEmailView.as_view(), name="normal-find-email"),
+    path(
+        "normal/find/email/",
+        UserFindEmailView.as_view(),
+        name="normal-find-email",
+    ),
     path(
         "normal/reset/password/",
         UserResetPasswordView.as_view(),
@@ -67,7 +75,11 @@ urlpatterns = [
         CompanyInfoUpdateView.as_view(),
         name="company-info-update",
     ),
-    path("company/find/email/", CompanyFindEmailView.as_view(), name="company-find-email"),
+    path(
+        "company/find/email/",
+        CompanyFindEmailView.as_view(),
+        name="company-find-email",
+    ),
     path(
         "company/reset/password/",
         CompanyResetPasswordView.as_view(),

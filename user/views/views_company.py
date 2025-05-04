@@ -264,7 +264,6 @@ class CompanyInfoUpdateView(View):
             )
 
 
-
 # 사업자 이메일 찾기 (클래스 기반 뷰)
 class CompanyFindEmailView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
@@ -273,7 +272,9 @@ class CompanyFindEmailView(View):
             request_data = FindCompanyEmailRequest(**body)
 
             phone_number = request_data.phone_number
-            business_registration_number = request_data.business_registration_number
+            business_registration_number = (
+                request_data.business_registration_number
+            )
             company_name = request_data.company_name
 
             # 회사 정보 존재 여부 먼저 확인
@@ -308,7 +309,9 @@ class CompanyFindEmailView(View):
             return JsonResponse(response_data.model_dump())
 
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid request format."}, status=400)
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
+            )
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -323,7 +326,6 @@ class CompanyFindEmailView(View):
             )
 
 
-
 # 사업자 비밀번호 재설정 (클래스 기반 뷰)
 class CompanyResetPasswordView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
@@ -332,7 +334,9 @@ class CompanyResetPasswordView(View):
             request_data = ResetCompanyPasswordRequest(**body)
             email = request_data.email
             phone_number = request_data.phone_number
-            business_registration_number = request_data.business_registration_number
+            business_registration_number = (
+                request_data.business_registration_number
+            )
             new_password = request_data.new_password
 
             try:
@@ -376,7 +380,9 @@ class CompanyResetPasswordView(View):
                     status=404,
                 )
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid request format."}, status=400)
+            return JsonResponse(
+                {"error": "Invalid request format."}, status=400
+            )
         except ValidationError as e:
             return JsonResponse(
                 {
