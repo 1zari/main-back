@@ -146,7 +146,6 @@ class UserSignupView(View):
 
 
 class UserLoginView(View):
-    # 일반 사용자 로그인
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
             body = json.loads(request.body.decode())
@@ -166,14 +165,23 @@ class UserLoginView(View):
             access_token = create_access_token(user)
             refresh_token = create_refresh_token(user)
 
-            # 응답 데이터 생성
-            response = UserLoginResponse(
-                message="Login successful.",
-                access_token=access_token,
-                refresh_token=refresh_token,
-                token_type="bearer",
-            )
-            return JsonResponse(response.model_dump(), status=200)
+            # 사용자 정보 포함 응답 생성
+            response_data = {
+                "message": "Login successful.",
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+                "user": {
+                    "id": str(user.common_user_id),
+                    "email": user.email,
+                    "name": (
+                        user.userinfo.name if hasattr(user, "userinfo") else ""
+                    ),
+                    "join_type": user.join_type,
+                },
+            }
+
+            return JsonResponse(response_data, status=200)
 
         except ValidationError as e:
             return JsonResponse(

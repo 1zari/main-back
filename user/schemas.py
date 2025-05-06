@@ -188,6 +188,10 @@ class UserLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    id: UUID
+    email: EmailStr
+    name: str
+    join_type: str
 
 
 class CompanyLoginResponse(BaseModel):
