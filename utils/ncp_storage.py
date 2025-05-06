@@ -30,7 +30,7 @@ def upload_to_ncp_storage(file_obj):
             Bucket=bucket_name,
             Key=s3_key,
             ExtraArgs={
-                "ACL": "public-read",
+              # "ACL": "public-read",
                 "ContentType": file_obj.content_type,
             },
         )
