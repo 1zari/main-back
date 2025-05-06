@@ -174,9 +174,7 @@ class UserLoginView(View):
                 "user": {
                     "id": str(user.common_user_id),
                     "email": user.email,
-                    "name": (
-                        user.userinfo.name if hasattr(user, "userinfo") else ""
-                    ),
+                    "name": user.userinfo.name,
                     "join_type": user.join_type,
                 },
             }
