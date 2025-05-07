@@ -29,6 +29,8 @@ class JobPostingSearchQueryModel(BaseModel):
     posting_type: list[str]
     employment_type: list[str]
     education: str
+    job_keyword_main: list[str]
+    job_keyword_sub: list[str]
     search: str
 
 

@@ -27,7 +27,10 @@ r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        start_time = time.time()
+        """
+        검색 api
+        """
+
         current_user: CommonUser | AnonymousUser = request.user
         user_id_for_bookmark = None
         if current_user.is_authenticated:
@@ -43,6 +46,8 @@ class SearchView(View):
                 employment_type=request.GET.getlist("employment_type"),
                 education=request.GET.get("education", ""),
                 search=request.GET.get("search", ""),
+                job_keyword_sub=request.GET.getlist("job_keyword_sub"),
+                job_keyword_main=request.GET.getlist("job_keyword_main"),
             )
         except ValidationError as e:
             return JsonResponse({"errors": e.errors()}, status=400)
@@ -79,6 +84,8 @@ class SearchView(View):
                 "posting_type",
                 "employment_type",
                 "education",
+                "job_keyword_main",
+                "job_keyword_sub",
             )
             .all()
         )
@@ -97,6 +104,10 @@ class SearchView(View):
             qs = qs.filter(employment_type__in=query.employment_type)
         if query.education:
             qs = qs.filter(education=query.education)
+        if query.job_keyword_main:
+            qs = qs.filter(job_keyword_main__in=query.job_keyword_main)
+        if query.job_keyword_sub:
+            qs = qs.filter(job_keyword_sub__in=query.job_keyword_sub)
         if query.search:
             qs = qs.filter(
                 Q(job_posting_title__icontains=query.search)
@@ -168,5 +179,4 @@ class SearchView(View):
             )
 
         response = JobPostingSearchResponseModel(results=results)
-        print(f"Total execution time: {time.time() - start_time:.2f}s")
         return JsonResponse(response.model_dump(), status=200)
