@@ -239,8 +239,6 @@ class CompanyInfoResponse(BaseModel):
     model_config = MY_CONFIG
 
     message: str
-    company_id: UUID
-    common_user_id: UUID
     company_name: str
     establishment: Optional[date]
     company_address: Optional[str]
