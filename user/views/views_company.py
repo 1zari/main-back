@@ -198,8 +198,6 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
             company_info = get_valid_company_user(user)
 
             response = CompanyInfoResponse(
-                company_id=company_info.company_id,
-                common_user_id=company_info.common_user_id,
                 company_name=company_info.company_name,
                 establishment=company_info.establishment,
                 company_address=company_info.company_address,
