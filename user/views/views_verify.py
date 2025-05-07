@@ -45,9 +45,9 @@ class SendVerificationCodeView(View):
 
             # 요청에 필요한 데이터 설정
             data = {
-                "api_key": settings.aligo_api_key,
-                "user_id": settings.aligo_user_id,
-                "sender": settings.aligo_sender,
+                "api_key": settings.ALIGO_API_KEY,
+                "user_id": settings.ALIGO_USER_ID,
+                "sender": settings.ALIGO_SENDER,
                 "receiver": phone_number,
                 "msg": f"[인증번호] {verification_code}를 입력해주세요.",
                 "title": "인증번호 발송",
