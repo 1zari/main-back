@@ -199,7 +199,17 @@ def test_company_signup(mock_upload_func, client, common_company_data):
 
 @pytest.mark.django_db
 def test_user_login(client, common_user_data):
-    CommonUser.objects.create_user(**common_user_data)
+    user = CommonUser.objects.create_user(**common_user_data)
+
+    UserInfo.objects.create(
+        common_user=user,
+        name="홍길동",
+        phone_number="01012345678",
+        gender="male",
+        interest=["음악"],
+        purpose_subscription=["채용정보"],
+        route=["SNS"],
+    )
 
     login_data = {
         "email": common_user_data["email"],
@@ -223,7 +233,20 @@ def test_user_login(client, common_user_data):
 
 @pytest.mark.django_db
 def test_company_login(client, common_company_data):
-    CommonUser.objects.create_user(**common_company_data)
+    user = CommonUser.objects.create_user(**common_company_data)
+
+    CompanyInfo.objects.create(
+        common_user=user,
+        company_name="테스트 회사",
+        establishment="2023-01-01",
+        company_address="서울시 강남구",
+        business_registration_number="123-45-67890",
+        company_introduction="회사 소개",
+        ceo_name="김대표",
+        manager_name="홍길동",
+        manager_phone_number="01012345678",
+        manager_email="test_company@example.com",
+    )
 
     login_data = {
         "email": common_company_data["email"],

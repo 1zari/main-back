@@ -185,15 +185,17 @@ KAKAO_CLIENT_ID = secrets["kakao"]["client_id"]
 KAKAO_SECRET = secrets["kakao"]["secret"]
 KAKAO_REDIRECT_URL = secrets["kakao"]["redirect_url"]
 
-aligo_api_key = secrets["aligo"]["api_key"]
-aligo_user_id = secrets["aligo"]["user_id"]
-aligo_sender = secrets["aligo"]["sender"]
+ALIGO_API_KEY = secrets["aligo"]["api_key"]
+ALIGO_USER_ID = secrets["aligo"]["user_id"]
+ALIGO_SENDER = secrets["aligo"]["sender"]
 
 # NCP object storage 서비스
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 NCP_S3_ENDPOINT = secrets["NCP_S3_ENDPOINT"]
 NCP_S3_ACCESS_KEY = secrets["NCP_S3_ACCESS_KEY"]
 NCP_S3_SECRET_KEY = secrets["NCP_S3_SECRET_KEY"]
 NCP_S3_BUCKET_NAME = secrets["NCP_S3_BUCKET_NAME"]
+NCP_S3_REGION_NAME = secrets["NCP_S3_REGION_NAME"]
 
 REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_HOST = os.environ.get("REDIS_HOST")

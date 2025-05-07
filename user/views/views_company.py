@@ -25,6 +25,7 @@ from user.schemas import (
     CompanySignupRequest,
     FindCompanyEmailRequest,
     FindCompanyEmailResponse,
+    LoginCompanyUserModel,
     ResetCompanyPasswordRequest,
     ResetCompanyPasswordResponse,
 )
@@ -34,6 +35,7 @@ from utils.ncp_storage import upload_to_ncp_storage
 
 logger = logging.getLogger(__name__)
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CompanySignupView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
@@ -146,11 +148,18 @@ class CompanyLoginView(View):
             refresh_token = create_refresh_token(user)
 
             # 응답 데이터 생성
+
             response = CompanyLoginResponse(
                 message="Login successful.",
                 access_token=access_token,
                 refresh_token=refresh_token,
                 token_type="bearer",
+                user=LoginCompanyUserModel(
+                    common_user_id=user.common_user_id,
+                    email=user.email,
+                    join_type=user.join_type,
+                    company_name=user.companyinfo.company_name,
+                ),
             )
             return JsonResponse(response.model_dump(), status=200)
 
@@ -272,7 +281,6 @@ class CompanyInfoUpdateView(View):
             )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class CompanyFindEmailView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:

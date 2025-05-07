@@ -181,6 +181,15 @@ class CompanyLoginRequest(BaseModel):
 # ------------------------
 
 
+class LoginUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    name: str
+    join_type: str
+
+
 class UserLoginResponse(BaseModel):
     model_config = MY_CONFIG
 
@@ -188,6 +197,16 @@ class UserLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: LoginUserModel
+
+
+class LoginCompanyUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    join_type: str
+    company_name: str
 
 
 class CompanyLoginResponse(BaseModel):
@@ -197,6 +216,7 @@ class CompanyLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: LoginCompanyUserModel
 
 
 # ------------------------
@@ -402,6 +422,15 @@ class NaverLoginRequest(BaseModel):
 # ------------------------
 
 
+class OAuthLoginUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    name: str
+    join_type: str
+
+
 class KakaoLoginResponse(BaseModel):
     model_config = MY_CONFIG
 
@@ -409,6 +438,7 @@ class KakaoLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: OAuthLoginUserModel
 
 
 class NaverLoginResponse(BaseModel):
@@ -418,6 +448,7 @@ class NaverLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: OAuthLoginUserModel
 
 
 # ------------------------
