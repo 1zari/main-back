@@ -16,6 +16,7 @@ class JobPostingResultModel(BaseModel):
     district: str
     is_bookmarked: bool
     deadline: date
+    summary: str
 
 
 class JobPostingSearchQueryModel(BaseModel):
