@@ -71,7 +71,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    #"django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -183,10 +183,12 @@ ALIGO_USER_ID = secrets["aligo"]["user_id"]
 ALIGO_SENDER = secrets["aligo"]["sender"]
 
 # NCP object storage 서비스
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 NCP_S3_ENDPOINT = secrets["NCP_S3_ENDPOINT"]
 NCP_S3_ACCESS_KEY = secrets["NCP_S3_ACCESS_KEY"]
 NCP_S3_SECRET_KEY = secrets["NCP_S3_SECRET_KEY"]
 NCP_S3_BUCKET_NAME = secrets["NCP_S3_BUCKET_NAME"]
+NCP_S3_REGION_NAME = secrets["NCP_S3_REGION_NAME"]
 
 REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_HOST = os.environ.get("REDIS_HOST")
