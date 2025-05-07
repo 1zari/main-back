@@ -1,6 +1,7 @@
 import json
 import random
 import string
+from urllib.parse import unquote
 
 import requests
 from django.conf import settings
@@ -148,7 +149,8 @@ class VerifyBusinessRegistrationView(View):
                     status=400,
                 )
 
-            api_key = settings.KOREA_TAX_API_KEY
+            # api_key디코딩 후 사용
+            api_key = unquote(settings.KOREA_TAX_API_KEY)
             if not api_key:
                 return JsonResponse(
                     {"error": "API key is not configured."}, status=500

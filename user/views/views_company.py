@@ -32,6 +32,7 @@ from utils.common import get_valid_company_user
 from utils.ncp_storage import upload_to_ncp_storage
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CompanySignupView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
@@ -266,7 +267,6 @@ class CompanyInfoUpdateView(View):
             )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class CompanyFindEmailView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
