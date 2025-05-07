@@ -172,7 +172,7 @@ class UserLoginView(View):
                 "refresh_token": refresh_token,
                 "token_type": "bearer",
                 "user": {
-                    "id": str(user.common_user_id),
+                    "common_user_id": str(user.common_user_id),
                     "email": user.email,
                     "name": user.userinfo.name,
                     "join_type": user.join_type,

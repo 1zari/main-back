@@ -11,6 +11,7 @@ from user.schemas import (
     KakaoLoginResponse,
     NaverLoginRequest,
     NaverLoginResponse,
+    OAuthLoginUserModel,
 )
 from user.services.token import create_access_token, create_refresh_token
 
@@ -63,12 +64,12 @@ class KakaoLoginView(View):
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
-                        user={
-                            "common_user_id": str(common_user.common_user_id),
-                            "email": common_user.email,
-                            "name": common_user.userinfo.name,
-                            "join_type": common_user.join_type,
-                        },
+                        user=OAuthLoginUserModel(
+                            common_user_id=common_user.common_user_id,
+                            email=common_user.email,
+                            name=common_user.userinfo.name,
+                            join_type=common_user.join_type,
+                        ),
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
@@ -175,12 +176,12 @@ class NaverLoginView(View):
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
-                        user={
-                            "common_user_id": str(common_user.common_user_id),
-                            "email": common_user.email,
-                            "name": common_user.userinfo.name,
-                            "join_type": common_user.join_type,
-                        },
+                        user=OAuthLoginUserModel(
+                            common_user_id=common_user.common_user_id,
+                            email=common_user.email,
+                            name=common_user.userinfo.name,
+                            join_type=common_user.join_type,
+                        ),
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
