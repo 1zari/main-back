@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views import View
 from pydantic import ValidationError
 
-from search.redis_script import r
+from user.redis import r
 from user.schemas import (
     SendVerificationCodeRequest,
     VerifyBusinessRegistrationRequest,
