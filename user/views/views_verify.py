@@ -45,7 +45,7 @@ class SendVerificationCodeView(View):
 
             # 요청에 필요한 데이터 설정
             data = {
-                "api_key": settings.ALIGO_API_KEY,
+                "key": settings.ALIGO_API_KEY,
                 "user_id": settings.ALIGO_USER_ID,
                 "sender": settings.ALIGO_SENDER,
                 "receiver": phone_number,
