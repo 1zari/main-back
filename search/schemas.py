@@ -2,7 +2,7 @@ from datetime import date
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, RootModel
+from pydantic import BaseModel, RootModel
 
 from utils.schemas import MY_CONFIG
 

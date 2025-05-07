@@ -19,7 +19,6 @@ from search.schemas import (
 from user.models import CommonUser
 
 
-
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         """
@@ -50,7 +49,6 @@ class SearchView(View):
             return JsonResponse(
                 {"errors": f"Invalid query parameters: {e}"}, status=400
             )
-
 
         qs = (
             JobPosting.objects.select_related("company_id")
