@@ -1,9 +1,6 @@
-import json
-import time
 from typing import Set
 from uuid import UUID
 
-import redis
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.measure import D
 from django.db.models import Q
@@ -21,7 +18,6 @@ from search.schemas import (
 )
 from user.models import CommonUser
 
-# Redis 연결 (설정에 맞게 수정)
 
 
 class SearchView(View):
@@ -55,17 +51,6 @@ class SearchView(View):
                 {"errors": f"Invalid query parameters: {e}"}, status=400
             )
 
-        # 2. DB에서 geometry 쿼리
-
-        region_qs = District.objects.only(
-            "geometry", "city_name", "district_name", "emd_name"
-        ).all()
-        if query.city:
-            region_qs = region_qs.filter(city_name__in=query.city)
-        if query.district:
-            region_qs = region_qs.filter(district_name__in=query.district)
-        if query.town:
-            region_qs = region_qs.filter(emd_name__in=query.town)
 
         qs = (
             JobPosting.objects.select_related("company_id")
@@ -89,12 +74,6 @@ class SearchView(View):
             .all()
         )
 
-        if query.city:
-            qs = qs.filter(city__in=query.city)
-        if query.district:
-            qs = qs.filter(district__in=query.district)
-        if query.town:
-            qs = qs.filter(town__in=query.town)
         if query.work_day:
             qs = qs.filter(work_day__overlap=query.work_day)
         if query.posting_type:
@@ -114,31 +93,37 @@ class SearchView(View):
                 | Q(company_id__company_name__icontains=query.search)
             )
 
+        region_qs = District.objects.only(
+            "geometry", "city_name", "district_name", "emd_name"
+        ).all()
+        if query.city:
+            region_qs = region_qs.filter(city_name__in=query.city)
+        if query.district:
+            region_qs = region_qs.filter(district_name__in=query.district)
+        if query.town:
+            region_qs = region_qs.filter(emd_name__in=query.town)
+
         job_posting_ids: Set[UUID] = set()
 
         # 공간 검색 (경계면 기준 3km 포함)
-        if region_qs.exists() or (
-            not query.city and not query.district and not query.town
-        ):
-            target_regions = (
-                region_qs if region_qs.exists() else District.objects.all()
-            )
+        if region_qs.exists() and query.town:
             distance_q = Q()
-            for region in target_regions:
+            for region in region_qs:
                 if region.geometry:
-                    # 행정구역 내부 전체 공고
-                    q1 = Q(location__within=region.geometry)
-                    # 행정구역 경계에서 3km 이내 공고
-                    q2 = Q(location__dwithin=(region.geometry, D(km=3)))
+                    # 각 행정구역 경계에서 3km 이내 공고 검색 (공간 인덱스 활용)
+                    distance_q |= Q(
+                        location__dwithin=(region.geometry, D(km=3))
+                    )
+            nearby_qs = qs.filter(distance_q).distinct()
+            job_posting_ids = set(
+                nearby_qs.values_list("job_posting_id", flat=True)
+            )
+        else:
+            job_posting_ids = set(qs.values_list("job_posting_id", flat=True))
 
-                    distance_q |= q1 | q2
-            if distance_q:
-                nearby_qs = qs.filter(distance_q).distinct()
-                job_posting_ids = set(
-                    nearby_qs.values_list("job_posting_id", flat=True)
-                )
         final_qs = (
-            JobPosting.objects.filter(job_posting_id__in=list(job_posting_ids))
+            JobPosting.objects.select_related("company_id")
+            .filter(job_posting_id__in=list(job_posting_ids))
             .only(
                 "job_posting_id",
                 "job_posting_title",
@@ -146,6 +131,7 @@ class SearchView(View):
                 "district",
                 "deadline",
                 "summary",
+                "company_id__company_logo",
             )
             .all()
         )
@@ -175,6 +161,7 @@ class SearchView(View):
                     is_bookmarked=is_bookmarked,
                     deadline=jp.deadline,
                     summary=jp.summary,
+                    company_logo=jp.company_id.company_logo,
                 )
             )
 

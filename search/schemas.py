@@ -2,7 +2,7 @@ from datetime import date
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, HttpUrl, RootModel
 
 from utils.schemas import MY_CONFIG
 
@@ -17,6 +17,7 @@ class JobPostingResultModel(BaseModel):
     is_bookmarked: bool
     deadline: date
     summary: str
+    company_logo: Optional[str]
 
 
 class JobPostingSearchQueryModel(BaseModel):
