@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views import View
 from pydantic import ValidationError
+from urllib.parse import unquote
 
 from user.redis import r
 from user.schemas import (
@@ -148,7 +149,8 @@ class VerifyBusinessRegistrationView(View):
                     status=400,
                 )
 
-            api_key = settings.KOREA_TAX_API_KEY
+            #api_key디코딩 후 사용
+            api_key = unquote(settings.KOREA_TAX_API_KEY)
             if not api_key:
                 return JsonResponse(
                     {"error": "API key is not configured."}, status=500
