@@ -172,14 +172,15 @@ class UserLoginView(View):
                 "refresh_token": refresh_token,
                 "token_type": "bearer",
                 "user": {
-                    "id": str(user.common_user_id),
+                    "common_user_id": str(user.common_user_id),
                     "email": user.email,
                     "name": user.userinfo.name,
                     "join_type": user.join_type,
                 },
             }
 
-            return JsonResponse(response_data, status=200)
+            response = UserLoginResponse(**response_data)
+            return JsonResponse(response.model_dump(), status=200)
 
         except ValidationError as e:
             return JsonResponse(
