@@ -2,7 +2,7 @@ from datetime import date
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, RootModel
 
 from utils.schemas import MY_CONFIG
 
@@ -16,6 +16,8 @@ class JobPostingResultModel(BaseModel):
     district: str
     is_bookmarked: bool
     deadline: date
+    summary: str
+    company_logo: Optional[str]
 
 
 class JobPostingSearchQueryModel(BaseModel):
@@ -28,6 +30,8 @@ class JobPostingSearchQueryModel(BaseModel):
     posting_type: list[str]
     employment_type: list[str]
     education: str
+    job_keyword_main: list[str]
+    job_keyword_sub: list[str]
     search: str
 
 

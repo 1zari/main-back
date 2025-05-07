@@ -57,7 +57,7 @@ def test_get_search_success(
     assert calculated_distance <= 3000
 
     client = Client()
-    response = client.get("/api/search/?town=역삼동")
+    response = client.get("/api/search/?town=역삼동&job_keyword_main=개발")
 
     print(json.loads(response.content))
     assert response.status_code == 200
