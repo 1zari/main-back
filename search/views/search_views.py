@@ -22,13 +22,12 @@ from search.schemas import (
 from user.models import CommonUser
 
 # Redis 연결 (설정에 맞게 수정)
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         """
-        검색 api
+        필터링 검색 api
         """
 
         current_user: CommonUser | AnonymousUser = request.user
@@ -56,7 +55,7 @@ class SearchView(View):
                 {"errors": f"Invalid query parameters: {e}"}, status=400
             )
 
-        # 2. DB에서 geometry 쿼리 (필요할 때만)
+        # 2. DB에서 geometry 쿼리
 
         region_qs = District.objects.only(
             "geometry", "city_name", "district_name", "emd_name"
@@ -117,21 +116,22 @@ class SearchView(View):
 
         job_posting_ids: Set[UUID] = set()
 
-        # 공간 검색 (geometry는 DB에서만 사용)
+        # 공간 검색 (경계면 기준 3km 포함)
         if region_qs.exists() or (
             not query.city and not query.district and not query.town
         ):
             target_regions = (
                 region_qs if region_qs.exists() else District.objects.all()
             )
-            # Q 객체 OR 연산으로 공간 쿼리 한 번에 묶기
             distance_q = Q()
             for region in target_regions:
                 if region.geometry:
-                    center_point = region.geometry.centroid
-                    distance_q |= Q(
-                        location__distance_lte=(center_point, D(km=3))
-                    )
+                    # 행정구역 내부 전체 공고
+                    q1 = Q(location__within=region.geometry)
+                    # 행정구역 경계에서 3km 이내 공고
+                    q2 = Q(location__dwithin=(region.geometry, D(km=3)))
+
+                    distance_q |= q1 | q2
             if distance_q:
                 nearby_qs = qs.filter(distance_q).distinct()
                 job_posting_ids = set(
