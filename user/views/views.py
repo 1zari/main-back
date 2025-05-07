@@ -179,7 +179,8 @@ class UserLoginView(View):
                 },
             }
 
-            return JsonResponse(response_data, status=200)
+            response = UserLoginResponse(**response_data)
+            return JsonResponse(response.model_dump(), status=200)
 
         except ValidationError as e:
             return JsonResponse(

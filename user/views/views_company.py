@@ -146,6 +146,12 @@ class CompanyLoginView(View):
                 access_token=access_token,
                 refresh_token=refresh_token,
                 token_type="bearer",
+                user={
+                    "common_user_id": str(user.common_user_id),
+                    "email": user.email,
+                    "join_type": user.join_type,
+                    "company_name": user.companyinfo.company_name,
+                },
             )
             return JsonResponse(response.model_dump(), status=200)
 

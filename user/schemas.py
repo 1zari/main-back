@@ -188,10 +188,7 @@ class UserLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    id: UUID
-    email: EmailStr
-    name: str
-    join_type: str
+    user: dict
 
 
 class CompanyLoginResponse(BaseModel):
@@ -201,6 +198,7 @@ class CompanyLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: dict
 
 
 # ------------------------
@@ -413,6 +411,7 @@ class KakaoLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: dict
 
 
 class NaverLoginResponse(BaseModel):
@@ -422,6 +421,7 @@ class NaverLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: dict
 
 
 # ------------------------
