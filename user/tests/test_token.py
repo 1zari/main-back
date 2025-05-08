@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import jwt
 import pytest
@@ -6,7 +6,7 @@ from django.conf import settings
 from django.test.client import Client
 
 from user.models import CommonUser
-from user.views.views_token import create_access_token, create_refresh_token
+from user.services.token import create_access_token, create_refresh_token
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def common_user_data():
     return {
         "email": "testuser@example.com",
         "password": "testpassword123",
-        "join_type": "user",
+        "join_type": "normal",
         "is_active": True,
     }
 

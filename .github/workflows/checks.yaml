@@ -78,3 +78,12 @@ jobs:
       - name: Run Django Migration
         run: |
           poetry run python manage.py migrate
+
+      - name: Run Mypy
+        run: |
+          poetry run mypy .
+
+      - name: Run Isort, Black
+        run: |
+          poetry run isort --check --profile black . 
+          poetry run black --check .

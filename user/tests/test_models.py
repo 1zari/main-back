@@ -10,11 +10,11 @@ def test_common_user_creation():
     user = CommonUser.objects.create(
         email="test@example.com",
         password="hashed_pw",
-        join_type="user",
+        join_type="normal",
         is_active=True,
     )
     assert user.email == "test@example.com"
-    assert user.join_type == "user"
+    assert user.join_type == "normal"
     assert user.created_at is not None
     assert user.last_login is None
     assert user.is_active is True
@@ -23,7 +23,7 @@ def test_common_user_creation():
 @pytest.mark.django_db
 def test_user_info_creation():
     user = CommonUser.objects.create(
-        email="user@example.com", password="pw", join_type="user"
+        email="user@example.com", password="pw", join_type="nomal"
     )
     profile = UserInfo.objects.create(
         common_user=user,

@@ -1,8 +1,5 @@
-import json
-
 import pytest
 from django.contrib.gis.geos import Point
-from django.test.client import Client
 from django.utils import timezone
 
 from job_posting.models import JobPosting
@@ -75,7 +72,7 @@ def mock_company_user(db, mock_common_company_user):
 def mock_job_posting(db, mock_company_user):
     p = Point(127.0276, 37.4979)
     p.srid = 4326
-    jon_posting = JobPosting.objects.create(
+    job_posting = JobPosting.objects.create(
         job_posting_title="백엔드 개발자 모집",
         location=p,  # (경도, 위도)
         work_time_start=timezone.now(),
@@ -99,7 +96,7 @@ def mock_job_posting(db, mock_company_user):
         summary="성장하는 IT기업에서 백엔드 개발자를 찾습니다.",
         content="주요 업무: 백엔드 개발 및 유지보수, REST API 설계, 코드 리뷰 등",
     )
-    return jon_posting
+    return job_posting
 
 
 # mock 이력서 생성
@@ -194,209 +191,3 @@ def mock_submission(
         created_at=mock_resume.created_at,
     )
     return submission
-
-
-@pytest.fixture
-def client():
-    """Django 테스트 Client 객체 생성"""
-    return Client()
-
-
-@pytest.mark.django_db
-def test_submission_list_get_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_user,
-    mock_common_user,
-    mock_job_posting,
-    mock_submission,
-):
-    """
-    일반 유저가 자신의 지원 목록 조회
-    """
-
-    url = "/api/submission/"
-    client.force_login(mock_common_user)
-
-    response = client.get(url, content_type="application/json")
-
-    response_data = json.loads(response.content)["submission_list"]
-    assert response.status_code == 200
-    assert (
-        response_data[0]["job_posting"]["company_name"]
-        == mock_submission.job_posting.company_id.company_name
-    )
-
-
-@pytest.mark.django_db
-def test_submiison_company_get_list_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_common_company_user,
-    mock_job_posting,
-    mock_submission,
-    mock_company_user,
-):
-    """
-    기업 유저가 지원자 목록 조회
-    """
-
-    url = "/api/submission/company/"
-
-    client.force_login(mock_common_company_user)
-    response = client.get(url, content_type="application/json")
-    response_data = json.loads(response.content)
-
-    assert response.status_code == 200
-    assert response_data["message"] == "Successfully loaded submission_list"
-    assert response_data["job_posting_list"][0]["job_posting_id"] == str(
-        mock_job_posting.job_posting_id
-    )
-    assert (
-        response_data["submission_list"][0]["resume_title"]
-        == mock_resume.resume_title
-    )
-    assert response_data["submission_list"][0]["job_posting_id"] == str(
-        mock_submission.job_posting.job_posting_id
-    )
-
-
-@pytest.mark.django_db
-def test_update_memo_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_user,
-    mock_submission,
-    mock_job_posting,
-    mock_common_user,
-):
-    """
-    memo update 테스트
-    """
-    new_memo = {"memo": "new_memo"}
-    url = f"/api/submission/memo/{mock_submission.submission_id}/"
-
-    client.force_login(mock_common_user)
-
-    response = client.patch(url, new_memo, content_type="application/json")
-    response_data = json.loads(response.content)
-    assert response.status_code == 200
-    assert response_data["message"] == "Successfully updated memo"
-    assert response_data["memo"] == new_memo["memo"]
-
-
-@pytest.mark.django_db
-def test_delete_memo_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_user,
-    mock_common_user,
-    mock_job_posting,
-    mock_submission,
-):
-    """
-    memo 삭제
-    """
-    client.force_login(mock_common_user)
-    url = f"/api/submission/memo/{mock_submission.submission_id}/"
-
-    response = client.delete(url, content_type="application/json")
-
-    response_data = json.loads(response.content)
-
-    assert response.status_code == 200
-    assert response_data["message"] == "Successfully deleted submission memo"
-
-
-@pytest.mark.django_db
-def test_submission_create_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_common_user,
-    mock_user,
-    mock_job_posting,
-):
-    """
-    공고 지원 api 테스트
-    """
-    client.force_login(mock_common_user)
-    url = "/api/submission/"
-
-    post_data = {
-        "job_posting_id": mock_job_posting.job_posting_id,
-        "resume_id": mock_resume.resume_id,
-    }
-
-    response = client.post(url, post_data, content_type="application/json")
-
-    response_data = json.loads(response.content)
-    assert response.status_code == 201
-
-
-@pytest.mark.django_db
-def test_submission_company_detail_get_success(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_common_company_user,
-    mock_company_user,
-    mock_submission,
-    mock_job_posting,
-):
-    """
-    기업 유저가 지원자 이력서 상세 조회
-    """
-    url = f"/api/submission/company/{mock_submission.submission_id}/"
-
-    client.force_login(mock_common_company_user)
-
-    response = client.get(url, content_type="application/json")
-    response_data = json.loads(response.content)["submission"]
-
-    assert response.status_code == 200
-    assert response_data["name"] == mock_submission.user.name
-    assert (
-        response_data["resume_title"]
-        == mock_submission.snapshot_resume["resume_title"]
-    )
-    refreshed = Submission.objects.get(
-        submission_id=mock_submission.submission_id
-    )
-    # 기업 유저가 이력서 조회 했을 때 읽음 처리 확인
-    assert refreshed.is_read is True
-
-
-@pytest.mark.django_db
-def test_get_submission_detail_nomal_user(
-    client,
-    mock_resume,
-    mock_careers,
-    mock_certifications,
-    mock_common_user,
-    mock_user,
-    mock_submission,
-    mock_job_posting,
-    mock_company_user,
-):
-    url = f"/api/submission/{mock_submission.submission_id}/"
-
-    client.force_login(mock_common_user)
-
-    response = client.get(url, content_type="application/json")
-    response_data = json.loads(response.content)
-
-    assert response.status_code == 200
-    assert response_data["submission"]["submission_id"] == str(
-        mock_submission.submission_id
-    )

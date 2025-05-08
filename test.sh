@@ -11,6 +11,9 @@ echo "Starting black"
 poetry run black .
 echo "OK"
 
+echo "Starting mypy"
+poetry run mypy .
+echo "OK"
 
 
 echo "${COLOR_GREEN}All tests passed successfully!${COLOR_NC}"

@@ -22,7 +22,7 @@ from resume.schemas import (
 from resume.serializer import serialize_careers, serialize_certifications
 from user.models import UserInfo
 from user.schemas import UserInfoModel
-from utils.common import get_valid_nomal_user
+from utils.common import get_valid_normal_user
 
 # ------------------------
 # 이력서 관련 api
@@ -41,7 +41,7 @@ class MyResumeListView(View):
         """
         try:
             token = request.user
-            user: UserInfo = get_valid_nomal_user(token)
+            user: UserInfo = get_valid_normal_user(token)
             resumes: list[Resume] = list(
                 Resume.objects.filter(user=user).prefetch_related(
                     "careers", "certifications"
@@ -86,7 +86,7 @@ class MyResumeListView(View):
 
         try:
             token = request.user
-            user: UserInfo = get_valid_nomal_user(token)
+            user: UserInfo = get_valid_normal_user(token)
             data = json.loads(request.body)
             resume_data: ResumeCreateModel = ResumeCreateModel(**data)
 
@@ -144,7 +144,7 @@ class MyResumeDetailView(View):
         """
         try:
             token = request.user
-            user: UserInfo = get_valid_nomal_user(token)
+            user: UserInfo = get_valid_normal_user(token)
             resume = (
                 Resume.objects.filter(user=user, resume_id=resume_id)
                 .prefetch_related("careers", "certifications")
@@ -185,7 +185,7 @@ class MyResumeDetailView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             data = json.loads(request.body)
             update_data = ResumeUpdateModel(**data)
 
@@ -218,7 +218,7 @@ class MyResumeDetailView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             resume = Resume.objects.get(user_id=user, resume_id=resume_id)  # type: ignore
             resume.delete()
             return JsonResponse(

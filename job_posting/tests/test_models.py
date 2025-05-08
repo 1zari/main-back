@@ -42,7 +42,7 @@ def test_job_posting_creation():
     # 3. JobPosting 생성
     posting = JobPosting.objects.create(
         job_posting_title="백엔드 개발자 모집",
-        location=Point(127.0276, 37.4979),  # (경도, 위도)
+        location=Point(127.0276, 37.4979, srid=5179),  # (경도, 위도)
         work_time_start=timezone.now(),
         work_time_end=timezone.now() + timezone.timedelta(hours=8),
         posting_type="계약직",

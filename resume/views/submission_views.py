@@ -34,7 +34,7 @@ from resume.serializer import (
 )
 from user.models import UserInfo
 from user.schemas import UserInfoModel
-from utils.common import get_valid_company_user, get_valid_nomal_user
+from utils.common import get_valid_company_user, get_valid_normal_user
 
 # ------------------------
 # 지원 관련 api
@@ -53,7 +53,7 @@ class SubmissionListView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             submissions: list[Submission] = list(
                 Submission.objects.filter(user=user).all()
             )
@@ -75,7 +75,7 @@ class SubmissionListView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             data = json.loads(request.body)
             job_posting_id = data.get("job_posting_id")
             resume_id = data.get("resume_id")
@@ -104,6 +104,7 @@ class SubmissionListView(View):
                 job_posting_id=job_posting.job_posting_id,
                 city=job_posting.city,
                 district=job_posting.district,
+                town=job_posting.town,
                 company_name=job_posting.company_id.company_name,
                 company_address=job_posting.company_id.company_address,
                 job_posting_title=job_posting.job_posting_title,
@@ -158,7 +159,7 @@ class SubmissionDetailView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
 
             submission: Submission = Submission.objects.get(
                 user=user, submission_id=submission_id
@@ -167,7 +168,28 @@ class SubmissionDetailView(View):
                 return JsonResponse(
                     {"errors": "Not found submission data"}, status=404
                 )
-            submission_model = SubmissionModel.model_validate(submission)
+            job_posting_model = JobpostingListOutputModel(
+                job_posting_id=submission.job_posting.job_posting_id,
+                city=submission.job_posting.city,
+                district=submission.job_posting.district,
+                town=submission.job_posting.town,
+                company_name=submission.job_posting.company_id.company_name,
+                company_address=submission.job_posting.company_id.company_address,
+                summary=submission.job_posting.summary,
+                deadline=submission.job_posting.deadline,
+                job_posting_title=submission.job_posting.job_posting_title,
+                is_bookmarked=JobPostingBookmark.objects.filter(
+                    user_id=submission.user.user_id
+                ).exists(),
+            )
+            submission_model = SubmissionModel(
+                submission_id=submission.submission_id,
+                snapshot_resume=submission.snapshot_resume,
+                job_posting=job_posting_model,
+                memo=submission.memo,
+                is_read=submission.is_read,
+                created_at=submission.created_at.date(),
+            )
 
             response = SubmissionDetailResponseModel(
                 message="Successfully loaded submission data",
@@ -186,7 +208,7 @@ class SubmissionDetailView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             submission: Submission = Submission.objects.get(
                 submission_id=submission_id
             )
@@ -216,7 +238,7 @@ class SubmissionMemoView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             data = json.loads(request.body)
             update_data = SubmissionMemoUpdateModel(memo=data.get("memo", ""))
 
@@ -246,7 +268,7 @@ class SubmissionMemoView(View):
         """
         try:
             token = request.user
-            user = get_valid_nomal_user(token)
+            user = get_valid_normal_user(token)
             submission = Submission.objects.get(
                 user=user, submission_id=submission_id
             )

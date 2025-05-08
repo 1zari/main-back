@@ -27,6 +27,7 @@ class CommonUserResponseModel(BaseModel):
     join_type: str
     last_login: Optional[str] = None
     is_active: bool = False
+    is_staff: bool = False
 
 
 # ------------------------
@@ -91,13 +92,10 @@ class CompanySignupRequest(BaseModel):
     company_address: str
     business_registration_number: str
     company_introduction: str
-    certificate_image: str
-    company_logo: Optional[str] = None
     ceo_name: str
     manager_name: str
     manager_phone_number: str
     manager_email: EmailStr
-    is_staff: bool
 
 
 # ------------------------
@@ -119,10 +117,11 @@ class CompanyInfoBaseModel(BaseModel):
     manager_name: str
     manager_phone_number: str
     manager_email: EmailStr
-    is_staff: bool
 
 
 class CompanyInfoModel(BaseModel):
+    model_config = MY_CONFIG
+
     company_id: UUID
     company_name: str
     establishment: date
@@ -135,7 +134,6 @@ class CompanyInfoModel(BaseModel):
     manager_name: str
     manager_phone_number: str
     manager_email: EmailStr
-    is_staff: bool
 
 
 # ------------------------
@@ -183,6 +181,15 @@ class CompanyLoginRequest(BaseModel):
 # ------------------------
 
 
+class LoginUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    name: str
+    join_type: str
+
+
 class UserLoginResponse(BaseModel):
     model_config = MY_CONFIG
 
@@ -190,6 +197,16 @@ class UserLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: LoginUserModel
+
+
+class LoginCompanyUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    join_type: str
+    company_name: str
 
 
 class CompanyLoginResponse(BaseModel):
@@ -199,6 +216,40 @@ class CompanyLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: LoginCompanyUserModel
+
+
+# ------------------------
+# 회원정보 조회 응답 모델
+# ------------------------
+class UserInfoResponse(BaseModel):
+    model_config = MY_CONFIG
+
+    message: str
+    name: Optional[str]
+    phone_number: Optional[str]
+    gender: Optional[str]
+    birthday: Optional[date]
+    interest: Optional[List[str]]
+    purpose_subscription: Optional[List[str]]
+    route: Optional[List[str]]
+
+
+class CompanyInfoResponse(BaseModel):
+    model_config = MY_CONFIG
+
+    message: str
+    company_name: str
+    establishment: Optional[date]
+    company_address: Optional[str]
+    business_registration_number: Optional[str]
+    company_introduction: Optional[str]
+    ceo_name: Optional[str]
+    manager_name: Optional[str]
+    manager_phone_number: Optional[str]
+    manager_email: Optional[EmailStr]
+    certificate_image: Optional[str]
+    company_logo: Optional[str]
 
 
 # ------------------------
@@ -207,6 +258,8 @@ class CompanyLoginResponse(BaseModel):
 
 
 class UserInfoUpdateRequest(BaseModel):
+    model_config = MY_CONFIG
+
     name: Optional[str] = None
     phone_number: Optional[str] = None
     gender: Optional[str] = None
@@ -233,7 +286,9 @@ class CompanyInfoUpdateRequest(BaseModel):
 # ------------------------
 
 
-class UserInfoResponse(BaseModel):
+class UserInfoUpdateResponse(BaseModel):
+    model_config = MY_CONFIG
+
     message: str
     name: Optional[str] = None
     phone_number: Optional[str] = None
@@ -244,7 +299,9 @@ class UserInfoResponse(BaseModel):
     route: Optional[List[str]] = None
 
 
-class CompanyInfoResponse(BaseModel):
+class CompanyInfoUpdateResponse(BaseModel):
+    model_config = MY_CONFIG
+
     message: str
     company_name: Optional[str] = None
     establishment: Optional[date] = None
@@ -363,6 +420,15 @@ class NaverLoginRequest(BaseModel):
 # ------------------------
 
 
+class OAuthLoginUserModel(BaseModel):
+    model_config = MY_CONFIG
+
+    common_user_id: UUID
+    email: EmailStr
+    name: str
+    join_type: str
+
+
 class KakaoLoginResponse(BaseModel):
     model_config = MY_CONFIG
 
@@ -370,6 +436,7 @@ class KakaoLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: OAuthLoginUserModel
 
 
 class NaverLoginResponse(BaseModel):
@@ -379,6 +446,7 @@ class NaverLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    user: OAuthLoginUserModel
 
 
 # ------------------------
@@ -390,6 +458,7 @@ class FindUserEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    name: str
 
 
 class ResetUserPasswordRequest(BaseModel):
@@ -404,6 +473,7 @@ class FindCompanyEmailRequest(BaseModel):
     model_config = MY_CONFIG
 
     phone_number: str
+    company_name: str
     business_registration_number: str
 
 

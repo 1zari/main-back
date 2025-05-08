@@ -11,11 +11,66 @@ from user.models import CommonUser, UserInfo
 
 
 @pytest.fixture
+def mock_resume(db, mock_user):
+    return Resume.objects.create(
+        user=mock_user,
+        resume_title="Test Resume",
+        job_category="IT",
+        education_level="Bachelor",
+        school_name="Test University",
+        education_state="Graduated",
+        introduce="Test introduction",
+    )
+
+
+# mock 경력 생성
+@pytest.fixture
+def mock_careers(db, mock_resume):
+    careers = [
+        CareerInfo.objects.create(
+            resume=mock_resume,
+            company_name="Tech Corp",
+            position="백엔드",
+            employment_period_start="2022-01-01",
+            employment_period_end="2023-12-31",
+        ),
+        CareerInfo.objects.create(
+            resume=mock_resume,
+            company_name="Startup ABC",
+            position="Intern",
+            employment_period_start="2021-07-01",
+            employment_period_end="2021-12-31",
+        ),
+    ]
+    return careers
+
+
+# mock 자격증 생성
+@pytest.fixture
+def mock_certifications(db, mock_resume):
+    certifications = [
+        Certification.objects.create(
+            resume=mock_resume,
+            certification_name="OCJP",
+            issuing_organization="Oracle",
+            date_acquired="2022-03-15",
+        ),
+        Certification.objects.create(
+            resume=mock_resume,
+            certification_name="TOEIC",
+            issuing_organization="ETS",
+            date_acquired="2021-09-01",
+        ),
+    ]
+    return certifications
+
+
+@pytest.fixture
 def mock_common_user(db):
     user = CommonUser.objects.create(
         email="test@test.com",
         password="1q2w3e4r",
-        join_type="nomal",
+        join_type="normal",
         is_active=True,
         last_login=None,
     )
@@ -61,10 +116,9 @@ def test_my_resume_list_view_get(client, mock_user, mock_common_user):
     client.force_login(mock_common_user)
 
     response = client.get(url, content_type="application_json")
-
-    print(response.content)
     assert response.status_code == 200
     data = json.loads(response.content)
+
     assert "resume_list" in data
     assert len(data["resume_list"]) >= 1
 
@@ -117,14 +171,10 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
         url, data=json.dumps(post_data), content_type="application/json"
     )
 
-    print(response.status_code)
-    print(response.content)
-
     assert response.status_code == 201
     assert response.get("content-type") == "application/json"
 
     response_data = json.loads(response.content)
-
     assert "message" in response_data
     assert response_data["message"] == "Resume created successfully"
     assert "resume" in response_data
@@ -173,22 +223,19 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
 
 
 @pytest.mark.django_db
-def test_my_resume_detail_get_success(client, mock_user, mock_common_user):
+def test_my_resume_detail_get_success(
+    client,
+    mock_user,
+    mock_common_user,
+    mock_careers,
+    mock_certifications,
+    mock_resume,
+):
     """
     이력서 상세 조회
     """
-    # 이력서 샘플 생성
-    resume = Resume.objects.create(
-        user=mock_user,
-        resume_title="Test Resume",
-        job_category="IT",
-        education_level="Bachelor",
-        school_name="Test University",
-        education_state="Graduated",
-        introduce="Test introduction",
-    )
 
-    url = f"/api/resume/{resume.resume_id}/"
+    url = f"/api/resume/{mock_resume.resume_id}/"
     client.force_login(mock_common_user)
 
     response = client.get(url, content_type="application/json")
@@ -198,28 +245,21 @@ def test_my_resume_detail_get_success(client, mock_user, mock_common_user):
     data = json.loads(response.content)
     assert "resume" in data
     assert len(data["resume"]) >= 1
-    assert get_data["resume_title"] == resume.resume_title
-    assert get_data["job_category"] == resume.job_category
-    assert get_data["user"]["user_id"] == str(resume.user.user_id)
+    assert get_data["resume_title"] == mock_resume.resume_title
+    assert get_data["job_category"] == mock_resume.job_category
+    assert get_data["user"]["user_id"] == str(mock_resume.user.user_id)
 
 
 @pytest.mark.django_db
-def test_my_resume_patch_detail_success(client, mock_user, mock_common_user):
+def test_my_resume_patch_detail_success(
+    client, mock_user, mock_common_user, mock_resume
+):
     """
     patch 테스트
     """
-    resume = Resume.objects.create(
-        user=mock_user,
-        resume_title="Test Resume",
-        job_category="IT",
-        education_level="Bachelor",
-        school_name="Test University",
-        education_state="Graduated",
-        introduce="Test introduction",
-    )
 
     patch_data = {
-        "resume_id": str(resume.resume_id),
+        "resume_id": str(mock_resume.resume_id),
         "job_category": "아이티",
         "resume_title": "바뀐 타이틀",
         "school_name": "경희대",
@@ -240,16 +280,15 @@ def test_my_resume_patch_detail_success(client, mock_user, mock_common_user):
         ],
     }
 
-    url = f"/api/resume/{resume.resume_id}/"
+    url = f"/api/resume/{mock_resume.resume_id}/"
 
     client.force_login(mock_common_user)
 
     response = client.patch(
         url, json.dumps(patch_data), content_type="application/json"
     )
-    print(response.content)
     get_data = json.loads(response.content)["resume"]
-    assert get_data["resume_id"] == str(resume.resume_id)
+    assert get_data["resume_id"] == str(mock_resume.resume_id)
     assert get_data["resume_title"] == patch_data["resume_title"]
     assert get_data["career_list"][0]["company_name"] == "경희의료원"
 
@@ -271,7 +310,6 @@ def test_my_resume_delete_success(client, mock_user, mock_common_user):
     client.force_login(mock_common_user)
 
     response = client.delete(url, content_type="application/json")
-    print(response.content)
     response_data = json.loads(response.content)
     assert response_data["message"] == "Successfully deleted resume"
 

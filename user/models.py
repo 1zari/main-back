@@ -127,13 +127,9 @@ class CompanyInfo(TimestampModel):
     # 회사 소개
     company_introduction = models.TextField()
     # 사업자 등록증 이미지
-    certificate_image = models.ImageField(
-        upload_to="certificate_image/", null=True, blank=True
-    )
+    certificate_image = models.URLField(null=True, blank=True)
     # 회사 로고 이미지
-    company_logo = models.ImageField(
-        upload_to="company_logos/", null=True, blank=True
-    )
+    company_logo = models.URLField(null=True, blank=True)
     # 대표 이름
     ceo_name = models.CharField(max_length=20)
     # 담당자 이름

@@ -7,4 +7,5 @@ urlpatterns = [
     path("api/submission/", include("resume.urls.submission_urls")),
     path("api/job-postings/", include("job_posting.urls.urls")),
     path("api/user/", include("user.urls.urls")),
+    path("api/search/", include("search.urls.search_urls")),
 ]

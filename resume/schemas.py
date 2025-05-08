@@ -109,7 +109,25 @@ class SubmissionOutputModel(BaseModel):
 # ------------------------
 class JobpostingListOutputModel(BaseModel):
     """
-    채용공고 내보내기 모델
+    채용공고 리스트 내보내기 모델
+    """
+
+    model_config = MY_CONFIG
+    job_posting_id: UUID
+    city: str
+    district: str
+    town: str
+    company_name: str
+    company_address: str
+    job_posting_title: str
+    summary: str
+    deadline: date
+    is_bookmarked: bool
+
+
+class JobpostingDetailOutputModel(BaseModel):
+    """
+    채용공고 상세 내보내기 모델
     """
 
     model_config = MY_CONFIG
@@ -181,6 +199,17 @@ class SubmissionGetListModel(BaseModel):
     is_bookmarked: bool
     resume_title: str
     memo: Optional[str] = None
+    created_at: date
+
+
+class SubmissionGetDetailModel(BaseModel):
+    model_config = MY_CONFIG
+
+    submission_id: UUID
+    job_posting: JobpostingListOutputModel
+    snapshot_resume: SnapshotResumeModel
+    memo: Optional[str] = None
+    is_read: bool
     created_at: date
 
 

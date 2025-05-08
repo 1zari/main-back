@@ -1,6 +1,7 @@
 import json
 import random
 import string
+from urllib.parse import unquote
 
 import requests
 from django.conf import settings
@@ -28,7 +29,7 @@ class SendVerificationCodeView(View):
 
             if not phone_number:
                 return JsonResponse(
-                    {"message": "전화번호가 없습니다."}, status=400
+                    {"message": "Phone number is required."}, status=400
                 )
 
             # 인증번호 생성
@@ -37,16 +38,16 @@ class SendVerificationCodeView(View):
 
             # SMS API 요청
             # 알리고 API 요청 URL
-            url = "https://apis.aligo.in/send/"
+            url = settings.ALIGO_API_URL
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             }
 
             # 요청에 필요한 데이터 설정
             data = {
-                "api_key": settings.aligo_api_key,
-                "user_id": settings.aligo_user_id,
-                "sender": settings.aligo_sender,
+                "key": settings.ALIGO_API_KEY,
+                "user_id": settings.ALIGO_USER_ID,
+                "sender": settings.ALIGO_SENDER,
                 "receiver": phone_number,
                 "msg": f"[인증번호] {verification_code}를 입력해주세요.",
                 "title": "인증번호 발송",
@@ -59,25 +60,27 @@ class SendVerificationCodeView(View):
 
                 if result.get("result_code") != 1:
                     return JsonResponse(
-                        {"message": "문자 전송 실패", "response": result},
+                        {"message": "Failed to send SMS", "response": result},
                         status=400,
                     )
             except requests.exceptions.Timeout as e:
                 return JsonResponse(
-                    {"message": "API 요청 시간 초과", "error": str(e)},
+                    {"message": "API request timeout", "error": str(e)},
                     status=500,
                 )
             except requests.exceptions.HTTPError as e:
                 return JsonResponse(
-                    {"message": "HTTP 오류", "error": str(e)},
+                    {"message": "HTTP error", "error": str(e)},
                     status=500,
                 )
             except requests.exceptions.RequestException as e:
                 return JsonResponse(
-                    {"message": "알고 API 요청 오류", "error": str(e)},
+                    {"message": "Aligo API request error", "error": str(e)},
                     status=500,
                 )
-            return JsonResponse({"message": "인증번호 전송 성공"}, status=200)
+            return JsonResponse(
+                {"message": "Verification code sent successfully"}, status=200
+            )
 
         except ValidationError as e:
             return JsonResponse(
@@ -86,7 +89,7 @@ class SendVerificationCodeView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -103,17 +106,19 @@ class VerifyCodeView(View):
             saved_code = r.get(f"verify:{phone_number}")
             if saved_code is None:
                 return JsonResponse(
-                    {"message": "인증 코드가 만료되었습니다."}, status=400
+                    {"message": "Verification code has expired."}, status=400
                 )
 
             if saved_code != code:
                 return JsonResponse(
-                    {"message": "인증 코드가 일치하지 않습니다."}, status=400
+                    {"message": "Verification code does not match."}, status=400
                 )
 
             r.delete(f"verify:{phone_number}")
 
-            return JsonResponse({"message": "인증 성공!"}, status=200)
+            return JsonResponse(
+                {"message": "Verification successful."}, status=200
+            )
         except ValidationError as e:
             return JsonResponse(
                 {"message": "Invalid request data", "errors": e.errors()},
@@ -121,7 +126,7 @@ class VerifyCodeView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
 
@@ -139,19 +144,20 @@ class VerifyBusinessRegistrationView(View):
             if not b_no or not p_nm or not start_dt:
                 return JsonResponse(
                     {
-                        "error": "사업자등록번호, 대표자 이름, 개업일자를 모두 입력해주세요."
+                        "error": "Please provide business number, owner name, and start date."
                     },
                     status=400,
                 )
 
-            api_key = settings.KOREA_TAX_API_KEY
+            # api_key디코딩 후 사용
+            api_key = unquote(settings.KOREA_TAX_API_KEY)
             if not api_key:
                 return JsonResponse(
-                    {"error": "API 키가 설정되지 않았습니다."}, status=500
+                    {"error": "API key is not configured."}, status=500
                 )
 
             # API 엔드포인트
-            url = "https://api.odcloud.kr/api/nts-businessman/v1/validate"
+            url = settings.KOREA_TAX_API_URL
             params = {"serviceKey": api_key, "returnType": "JSON"}
             request_body = {
                 "businesses": [
@@ -166,12 +172,15 @@ class VerifyBusinessRegistrationView(View):
 
             if result.get("data") and result["data"][0].get("valid") == "01":
                 return JsonResponse(
-                    {"valid": True, "message": "사업자 정보가 일치합니다."},
+                    {
+                        "valid": True,
+                        "message": "Business information is valid.",
+                    },
                     status=200,
                 )
             else:
                 msg = result["data"][0].get(
-                    "valid_msg", "사업자 정보가 일치하지 않습니다."
+                    "valid_msg", "Business information is not valid."
                 )
                 return JsonResponse(
                     {"valid": False, "message": msg}, status=200
@@ -179,7 +188,7 @@ class VerifyBusinessRegistrationView(View):
 
         except json.JSONDecodeError:
             return JsonResponse(
-                {"error": "잘못된 요청 형식입니다."}, status=400
+                {"error": "Invalid request format."}, status=400
             )
 
         except ValidationError as e:
@@ -188,4 +197,4 @@ class VerifyBusinessRegistrationView(View):
                 status=400,
             )
         except Exception as e:
-            return JsonResponse({"error": f"서버 오류: {e}"}, status=500)
+            return JsonResponse({"error": f"Server error: {e}"}, status=500)

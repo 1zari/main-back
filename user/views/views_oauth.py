@@ -11,11 +11,12 @@ from user.schemas import (
     KakaoLoginResponse,
     NaverLoginRequest,
     NaverLoginResponse,
+    OAuthLoginUserModel,
 )
-from user.views.views_token import create_access_token, create_refresh_token
+from user.services.token import create_access_token, create_refresh_token
 
 
-def create_dummy_password(common_user):
+def create_dummy_password(common_user: CommonUser) -> None:
     dummy_password = CommonUser.objects.make_random_password()
     common_user.set_password(dummy_password)
     common_user.save()
@@ -31,7 +32,7 @@ class KakaoLoginView(View):
             code = request.GET.get("code")
             if code is None:
                 return JsonResponse(
-                    {"message": "code가 필요합니다."}, status=400
+                    {"message": "Code is required."}, status=400
                 )
             try:
                 Kakao_login_request = KakaoLoginRequest(code=code)
@@ -40,12 +41,15 @@ class KakaoLoginView(View):
 
             kakao_access_token = self.get_kakao_access_token(code)
             if not kakao_access_token:
-                return JsonResponse({"message": "카카오 인증 실패"}, status=400)
+                return JsonResponse(
+                    {"message": "Kakao authentication failed."}, status=400
+                )
 
             user_data = self.get_kakao_user_info(kakao_access_token)
             if not user_data:
                 return JsonResponse(
-                    {"message": "카카오 사용자 정보 요청 실패"}, status=400
+                    {"message": "Failed to retrieve Kakao user info."},
+                    status=400,
                 )
 
             email = user_data.get("kakao_account", {}).get("email")
@@ -56,31 +60,39 @@ class KakaoLoginView(View):
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = KakaoLoginResponse(
-                        message="로그인 성공",
+                        message="Login successful.",
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
+                        user=OAuthLoginUserModel(
+                            common_user_id=common_user.common_user_id,
+                            email=common_user.email,
+                            name=common_user.userinfo.name,
+                            join_type=common_user.join_type,
+                        ),
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
                 return JsonResponse(
                     {
-                        "message": "추가 정보 입력 필요",
+                        "message": "Additional information required.",
                         "email": email,
                     },
                     status=202,
                 )
 
-            return JsonResponse({"message": "사용자 생성 실패"}, status=400)
+            return JsonResponse(
+                {"message": "Failed to create user."}, status=400
+            )
 
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
     def get_kakao_access_token(self, code: str) -> Optional[str]:
         """카카오 액세스 토큰을 발급받는 메서드"""
-        kakao_token_url = "https://kauth.kakao.com/oauth/token"
+        kakao_token_url = settings.KAKAO_TOKEN_URL
         headers = {
             "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
         }
@@ -100,7 +112,7 @@ class KakaoLoginView(View):
         self, kakao_access_token: str
     ) -> Optional[dict[str, Any]]:
         """카카오 액세스 토큰으로 사용자 정보를 가져오는 메서드"""
-        url = "https://kapi.kakao.com/v2/user/me"
+        url = settings.KAKAO_USER_INFO_URL
         headers = {"Authorization": f"Bearer {kakao_access_token}"}
         try:
             response = requests.get(url, headers=headers)
@@ -116,7 +128,7 @@ class KakaoLoginView(View):
             # 커먼유저가 존재하지 않으면 새로 생성하고 더미 비밀번호 추가
             common_user = CommonUser.objects.create(
                 email=email,
-                join_type="user",  # 기본 사용자 설정
+                join_type="normal",
                 is_active=True,
             )
             create_dummy_password(common_user)  # 더미 비밀번호 생성
@@ -132,7 +144,7 @@ class NaverLoginView(View):
             state = request.GET.get("state")
             if code is None or state is None:
                 return JsonResponse(
-                    {"message": "code와 state가 필요합니다."}, status=400
+                    {"message": "Code and state are required."}, status=400
                 )
             try:
                 naver_login_request = NaverLoginRequest(code=code, state=state)
@@ -141,12 +153,15 @@ class NaverLoginView(View):
 
             naver_access_token = self.get_naver_access_token(code, state)
             if not naver_access_token:
-                return JsonResponse({"message": "네이버 인증 실패"}, status=400)
+                return JsonResponse(
+                    {"message": "Naver authentication failed."}, status=400
+                )
 
             user_data = self.get_naver_user_info(naver_access_token)
             if not user_data:
                 return JsonResponse(
-                    {"message": "네이버 사용자 정보 요청 실패"}, status=400
+                    {"message": "Failed to retrieve Naver user info."},
+                    status=400,
                 )
 
             email = user_data.get("response", {}).get("email")
@@ -157,30 +172,38 @@ class NaverLoginView(View):
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = NaverLoginResponse(
-                        message="로그인 성공",
+                        message="Login successful.",
                         access_token=access_token,
                         refresh_token=refresh_token,
                         token_type="bearer",
+                        user=OAuthLoginUserModel(
+                            common_user_id=common_user.common_user_id,
+                            email=common_user.email,
+                            name=common_user.userinfo.name,
+                            join_type=common_user.join_type,
+                        ),
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
                 return JsonResponse(
                     {
-                        "message": "추가 정보 입력 필요",
+                        "message": "Additional information required.",
                         "email": email,
                     },
                     status=202,
                 )
 
-            return JsonResponse({"message": "사용자 생성 실패"}, status=400)
+            return JsonResponse(
+                {"message": "Failed to create user."}, status=400
+            )
 
         except Exception as e:
             return JsonResponse(
-                {"message": "서버 오류", "error": str(e)}, status=500
+                {"message": "Server error", "error": str(e)}, status=500
             )
 
     def get_naver_access_token(self, code: str, state: str) -> Optional[str]:
-        url = "https://nid.naver.com/oauth2.0/token"
+        url = settings.NAVER_TOKEN_URL
         params = {
             "grant_type": "authorization_code",
             "client_id": settings.NAVER_CLIENT_ID,
@@ -196,7 +219,7 @@ class NaverLoginView(View):
     def get_naver_user_info(
         self, access_token: str
     ) -> Optional[dict[str, Any]]:
-        url = "https://openapi.naver.com/v1/nid/me"
+        url = settings.NAVER_USER_INFO_URL
         headers = {"Authorization": f"Bearer {access_token}"}
         try:
             response = requests.get(url, headers=headers)
@@ -210,7 +233,7 @@ class NaverLoginView(View):
         if not common_user:
             common_user = CommonUser.objects.create(
                 email=email,
-                join_type="user",
+                join_type="normal",
                 is_active=True,
             )
             create_dummy_password(common_user)

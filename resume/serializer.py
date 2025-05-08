@@ -52,6 +52,7 @@ def serialize_submissions(
             job_posting_title=submission.job_posting.job_posting_title,
             city=submission.job_posting.city,
             district=submission.job_posting.district,
+            town=submission.job_posting.town,
             company_name=submission.job_posting.company_id.company_name,
             company_address=submission.job_posting.company_id.company_address,
             summary=submission.job_posting.summary,
