@@ -17,11 +17,13 @@ class JobPostingCreateModel(BaseModel):
     address: str
     city: str
     district: str
+    town: str
     location: tuple[float, float]  # (경도, 위도)
     work_time_start: time
     work_time_end: time
     posting_type: str
     employment_type: str
+    work_experience: str
     job_keyword_main: str
     job_keyword_sub: List[str]
     number_of_positions: int
@@ -48,11 +50,13 @@ class JobPostingResponseModel(BaseModel):
     address: str
     city: str
     district: str
+    town: str
     location: tuple[float, float]  # (경도, 위도)
     work_time_start: time
     work_time_end: time
     posting_type: str
     employment_type: str
+    work_experience: str
     job_keyword_main: str
     job_keyword_sub: List[str]
     number_of_positions: int
@@ -113,11 +117,13 @@ class JobPostingUpdateModel(BaseModel):
     address: Optional[str]
     city: Optional[str]
     district: Optional[str]
+    town: Optional[str]
     location: Optional[tuple[float, float]]
     work_time_start: Optional[time]
     work_time_end: Optional[time]
     posting_type: Optional[str]
     employment_type: Optional[str]
+    work_experience: Optional[str]
     job_keyword_main: Optional[str]
     job_keyword_sub: Optional[List[str]]
     number_of_positions: Optional[int]
