@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -97,6 +98,7 @@ class UserSignupView(View):
             return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class UserLoginView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
         try:
@@ -111,6 +113,9 @@ class UserLoginView(View):
                     {"message": "Invalid email or password."},
                     status=400,
                 )
+
+            user.last_login = timezone.now()
+            user.save()
 
             access_token = create_access_token(user)
             refresh_token = create_refresh_token(user)

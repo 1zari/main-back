@@ -3,6 +3,7 @@ from typing import Any, Optional
 import requests
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
+from django.utils import timezone
 from django.views import View
 
 from user.models import CommonUser
@@ -51,6 +52,8 @@ class KakaoLoginView(View):
 
             if common_user:
                 if hasattr(common_user, "userinfo"):
+                    common_user.last_login = timezone.now()
+                    common_user.save()
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = KakaoLoginResponse(
@@ -149,6 +152,8 @@ class NaverLoginView(View):
 
             if common_user:
                 if hasattr(common_user, "userinfo"):
+                    common_user.last_login = timezone.now()
+                    common_user.save()
                     access_token = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = NaverLoginResponse(
