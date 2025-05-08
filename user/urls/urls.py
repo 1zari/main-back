@@ -1,16 +1,10 @@
 from django.urls.conf import path
 
-from user.views.views import (
+from user.views.views_common import (
     CommonUserCreateView,
     EmailDuplicateCheckView,
     LogoutView,
     UserDeleteView,
-    UserFindEmailView,
-    UserInfoDetailView,
-    UserInfoUpdateView,
-    UserLoginView,
-    UserResetPasswordView,
-    UserSignupView,
 )
 from user.views.views_company import (
     CompanyFindEmailView,
@@ -19,6 +13,14 @@ from user.views.views_company import (
     CompanyLoginView,
     CompanyResetPasswordView,
     CompanySignupView,
+)
+from user.views.views_normal import (
+    UserFindEmailView,
+    UserInfoDetailView,
+    UserInfoUpdateView,
+    UserLoginView,
+    UserResetPasswordView,
+    UserSignupView,
 )
 from user.views.views_oauth import KakaoLoginView, NaverLoginView
 from user.views.views_token import TokenRefreshView
