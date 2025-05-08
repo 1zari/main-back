@@ -25,9 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="submission",
             name="snapshot_resume",
-            field=models.JSONField(
-                default=dict, verbose_name="지원 시점 이력서 정보"
-            ),
+            field=models.JSONField(default=dict, verbose_name="지원 시점 이력서 정보"),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -44,8 +42,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="careerinfo",
             name="employment_period_end",
-            field=models.DateField(
-                blank=True, null=True, verbose_name="퇴사일"
-            ),
+            field=models.DateField(blank=True, null=True, verbose_name="퇴사일"),
         ),
     ]

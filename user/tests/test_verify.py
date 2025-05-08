@@ -44,17 +44,12 @@ def test_send_verification_code(client):
 
         with patch("user.redis.r") as mock_r:
             mock_redis_instance = mock_r.return_value
-            mock_redis_instance.setex.return_value = (
-                True  # Redis에 값 저장된 것으로 설정
-            )
+            mock_redis_instance.setex.return_value = True  # Redis에 값 저장된 것으로 설정
 
             response = client.post(url, data, content_type="application/json")
 
             assert response.status_code == 200
-            assert (
-                response.json()["message"]
-                == "Verification code sent successfully"
-            )
+            assert response.json()["message"] == "Verification code sent successfully"
 
 
 @pytest.mark.django_db
@@ -67,9 +62,7 @@ def test_verify_code_success(client, valid_verification_code_data):
     with patch.object(r, "get") as mock_get:
         mock_get.return_value = "123456"  # Redis에서 저장된 인증번호 반환
 
-        response = client.post(
-            url, valid_verification_code_data, content_type="application/json"
-        )
+        response = client.post(url, valid_verification_code_data, content_type="application/json")
 
         assert response.status_code == 200
         assert response.json()["message"] == "Verification successful."
@@ -85,9 +78,7 @@ def test_verify_code_failure(client, invalid_verification_code_data):
     with patch.object(r, "get") as mock_get:
         mock_get.return_value = "123456"  # Redis에 저장된 인증번호
 
-        response = client.post(
-            url, invalid_verification_code_data, content_type="application/json"
-        )
+        response = client.post(url, invalid_verification_code_data, content_type="application/json")
 
         assert response.status_code == 400
         assert response.json()["message"] == "Verification code does not match."

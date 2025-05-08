@@ -30,9 +30,7 @@ class SendVerificationCodeView(View):
             phone_number = request_data.phone_number
 
             if not phone_number:
-                return JsonResponse(
-                    {"message": "Phone number is required."}, status=400
-                )
+                return JsonResponse({"message": "Phone number is required."}, status=400)
 
             # 인증번호 생성
             verification_code = "".join(random.choices(string.digits, k=6))
@@ -65,9 +63,7 @@ class SendVerificationCodeView(View):
                     {"message": "Failed to send SMS", "error": str(e)},
                     status=500,
                 )
-            return JsonResponse(
-                {"message": "Verification code sent successfully"}, status=200
-            )
+            return JsonResponse({"message": "Verification code sent successfully"}, status=200)
 
         except ValidationError as e:
             return JsonResponse(
@@ -75,9 +71,7 @@ class SendVerificationCodeView(View):
                 status=400,
             )
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 class VerifyCodeView(View):
@@ -92,29 +86,21 @@ class VerifyCodeView(View):
 
             saved_code = r.get(f"verify:{phone_number}")
             if saved_code is None:
-                return JsonResponse(
-                    {"message": "Verification code has expired."}, status=400
-                )
+                return JsonResponse({"message": "Verification code has expired."}, status=400)
 
             if saved_code != code:
-                return JsonResponse(
-                    {"message": "Verification code does not match."}, status=400
-                )
+                return JsonResponse({"message": "Verification code does not match."}, status=400)
 
             r.delete(f"verify:{phone_number}")
 
-            return JsonResponse(
-                {"message": "Verification successful."}, status=200
-            )
+            return JsonResponse({"message": "Verification successful."}, status=200)
         except ValidationError as e:
             return JsonResponse(
                 {"message": "Invalid request data", "errors": e.errors()},
                 status=400,
             )
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 class VerifyBusinessRegistrationView(View):
@@ -130,27 +116,19 @@ class VerifyBusinessRegistrationView(View):
 
             if not b_no or not p_nm or not start_dt:
                 return JsonResponse(
-                    {
-                        "error": "Please provide business number, owner name, and start date."
-                    },
+                    {"error": "Please provide business number, owner name, and start date."},
                     status=400,
                 )
 
             # api_key디코딩 후 사용
             api_key = unquote(settings.KOREA_TAX_API_KEY)
             if not api_key:
-                return JsonResponse(
-                    {"error": "API key is not configured."}, status=500
-                )
+                return JsonResponse({"error": "API key is not configured."}, status=500)
 
             # API 엔드포인트
             url = settings.KOREA_TAX_API_URL
             params = {"serviceKey": api_key, "returnType": "JSON"}
-            request_body = {
-                "businesses": [
-                    {"b_no": b_no, "p_nm": p_nm, "start_dt": start_dt}
-                ]
-            }
+            request_body = {"businesses": [{"b_no": b_no, "p_nm": p_nm, "start_dt": start_dt}]}
 
             response = requests.post(url, params=params, json=request_body)
             response.raise_for_status()
@@ -166,17 +144,11 @@ class VerifyBusinessRegistrationView(View):
                     status=200,
                 )
             else:
-                msg = result["data"][0].get(
-                    "valid_msg", "Business information is not valid."
-                )
-                return JsonResponse(
-                    {"valid": False, "message": msg}, status=200
-                )
+                msg = result["data"][0].get("valid_msg", "Business information is not valid.")
+                return JsonResponse({"valid": False, "message": msg}, status=200)
 
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid request format."}, status=400
-            )
+            return JsonResponse({"error": "Invalid request format."}, status=400)
 
         except ValidationError as e:
             return JsonResponse(

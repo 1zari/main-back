@@ -24,15 +24,11 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "job_posting_id",
@@ -46,9 +42,7 @@ class Migration(migrations.Migration):
                 ("job_posting_title", models.CharField(max_length=50)),
                 (
                     "location",
-                    django.contrib.gis.db.models.fields.PointField(
-                        srid=4326, verbose_name="근무지 좌표"
-                    ),
+                    django.contrib.gis.db.models.fields.PointField(srid=4326, verbose_name="근무지 좌표"),
                 ),
                 ("work_time_start", models.DateTimeField()),
                 ("work_time_end", models.DateTimeField()),
@@ -110,15 +104,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "job_posting",

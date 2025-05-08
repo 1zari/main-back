@@ -46,9 +46,7 @@ class SearchView(View):
         except ValidationError as e:
             return JsonResponse({"errors": e.errors()}, status=400)
         except Exception as e:
-            return JsonResponse(
-                {"errors": f"Invalid query parameters: {e}"}, status=400
-            )
+            return JsonResponse({"errors": f"Invalid query parameters: {e}"}, status=400)
 
         qs = (
             JobPosting.objects.select_related("company_id")
@@ -91,9 +89,7 @@ class SearchView(View):
                 | Q(company_id__company_name__icontains=query.search)
             )
 
-        region_qs = District.objects.only(
-            "geometry", "city_name", "district_name", "emd_name"
-        ).all()
+        region_qs = District.objects.only("geometry", "city_name", "district_name", "emd_name").all()
         if query.city:
             region_qs = region_qs.filter(city_name__in=query.city)
         if query.district:
@@ -109,13 +105,9 @@ class SearchView(View):
             for region in region_qs:
                 if region.geometry:
                     # 각 행정구역 경계에서 3km 이내 공고 검색 (공간 인덱스 활용)
-                    distance_q |= Q(
-                        location__dwithin=(region.geometry, D(km=3))
-                    )
+                    distance_q |= Q(location__dwithin=(region.geometry, D(km=3)))
             nearby_qs = qs.filter(distance_q).distinct()
-            job_posting_ids = set(
-                nearby_qs.values_list("job_posting_id", flat=True)
-            )
+            job_posting_ids = set(nearby_qs.values_list("job_posting_id", flat=True))
         else:
             job_posting_ids = set(qs.values_list("job_posting_id", flat=True))
 
@@ -140,9 +132,7 @@ class SearchView(View):
             bookmarked_ids = set(
                 JobPostingBookmark.objects.filter(
                     user_id=user_id_for_bookmark,
-                    job_posting_id__in=final_qs.values_list(
-                        "job_posting_id", flat=True
-                    ),
+                    job_posting_id__in=final_qs.values_list("job_posting_id", flat=True),
                 ).values_list("job_posting_id", flat=True)
             )
 

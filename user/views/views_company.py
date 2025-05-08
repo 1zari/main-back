@@ -44,9 +44,7 @@ class CompanySignupView(View):
             # 2) 파일 업로드 처리
             if "certificate_image" not in request.FILES:
                 return JsonResponse(
-                    {
-                        "message": "Business registration certificate file is required."
-                    },
+                    {"message": "Business registration certificate file is required."},
                     status=400,
                 )
             cert_url = upload_to_ncp_storage(request.FILES["certificate_image"])
@@ -60,9 +58,7 @@ class CompanySignupView(View):
             ci_data = signup_dto.model_dump(exclude={"common_user_id"})
 
             # 4) CommonUser 조회·중복 가입 방지
-            user = CommonUser.objects.get(
-                common_user_id=signup_dto.common_user_id
-            )
+            user = CommonUser.objects.get(common_user_id=signup_dto.common_user_id)
             if CompanyInfo.objects.filter(common_user=user).exists():
                 return JsonResponse(
                     {"message": "Company user is already registered."},
@@ -115,9 +111,7 @@ class CompanySignupView(View):
         except CommonUser.DoesNotExist:
             return JsonResponse({"message": "User not found."}, status=404)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error.", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error.", "error": str(e)}, status=500)
 
 
 class CompanyLoginView(View):
@@ -128,9 +122,7 @@ class CompanyLoginView(View):
             login_data = CompanyLoginRequest(**body)
 
             # 사용자 인증
-            user = authenticate(
-                username=login_data.email, password=login_data.password
-            )
+            user = authenticate(username=login_data.email, password=login_data.password)
 
             if not user or not user.is_active or user.join_type != "company":
                 return JsonResponse(
@@ -158,13 +150,9 @@ class CompanyLoginView(View):
             return JsonResponse(response.model_dump(), status=200)
 
         except ValidationError as e:
-            return JsonResponse(
-                {"message": "Invalid input.", "errors": e.errors()}, status=422
-            )
+            return JsonResponse({"message": "Invalid input.", "errors": e.errors()}, status=422)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error.", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error.", "error": str(e)}, status=500)
 
 
 class CompanyInfoDetailView(View):  # 기업 정보 조회
@@ -210,9 +198,7 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error.", "detail": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error.", "detail": str(e)}, status=500)
 
 
 class CompanyInfoUpdateView(View):
@@ -242,9 +228,7 @@ class CompanyInfoUpdateView(View):
             body = json.loads(request.body)
             validated_data = CompanyInfoUpdateRequest(**body)
 
-            for field, value in validated_data.model_dump(
-                exclude_none=True
-            ).items():
+            for field, value in validated_data.model_dump(exclude_none=True).items():
                 setattr(company_user, field, value)
 
             company_user.save()
@@ -268,9 +252,7 @@ class CompanyInfoUpdateView(View):
         except ValidationError as e:
             return JsonResponse({"message": str(e)}, status=400)
         except Exception as e:
-            return JsonResponse(
-                {"message": f"Error occurred: {str(e)}"}, status=500
-            )
+            return JsonResponse({"message": f"Error occurred: {str(e)}"}, status=500)
 
 
 class CompanyFindEmailView(View):
@@ -280,9 +262,7 @@ class CompanyFindEmailView(View):
             request_data = FindCompanyEmailRequest(**body)
 
             phone_number = request_data.phone_number
-            business_registration_number = (
-                request_data.business_registration_number
-            )
+            business_registration_number = request_data.business_registration_number
             company_name = request_data.company_name
 
             # 회사 정보 존재 여부 먼저 확인
@@ -292,34 +272,23 @@ class CompanyFindEmailView(View):
             )
             if not qs.exists():
                 return JsonResponse(
-                    {
-                        "message": "No registered company found with the provided phone number and company name."
-                    },
+                    {"message": "No registered company found with the provided phone number and company name."},
                     status=404,
                 )
 
             company_info = qs.get()
 
-            if (
-                company_info.business_registration_number
-                != business_registration_number
-            ):
+            if company_info.business_registration_number != business_registration_number:
                 return JsonResponse(
-                    {
-                        "message": "The provided business registration number does not match."
-                    },
+                    {"message": "The provided business registration number does not match."},
                     status=400,
                 )
 
-            response_data = FindCompanyEmailResponse(
-                email=company_info.manager_email
-            )
+            response_data = FindCompanyEmailResponse(email=company_info.manager_email)
             return JsonResponse(response_data.model_dump())
 
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid request format."}, status=400
-            )
+            return JsonResponse({"error": "Invalid request format."}, status=400)
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -329,9 +298,7 @@ class CompanyFindEmailView(View):
                 status=400,
             )
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error.", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error.", "error": str(e)}, status=500)
 
 
 # 사업자 비밀번호 재설정 (클래스 기반 뷰)
@@ -342,55 +309,38 @@ class CompanyResetPasswordView(View):
             request_data = ResetCompanyPasswordRequest(**body)
             email = request_data.email
             phone_number = request_data.phone_number
-            business_registration_number = (
-                request_data.business_registration_number
-            )
+            business_registration_number = request_data.business_registration_number
             new_password = request_data.new_password
 
             try:
-                company_info = CompanyInfo.objects.get(
-                    manager_email=email, manager_phone_number=phone_number
-                )
+                company_info = CompanyInfo.objects.get(manager_email=email, manager_phone_number=phone_number)
 
-                if (
-                    company_info.business_registration_number
-                    != business_registration_number
-                ):
+                if company_info.business_registration_number != business_registration_number:
                     return JsonResponse(
-                        {
-                            "message": "The provided business registration number does not match."
-                        },
+                        {"message": "The provided business registration number does not match."},
                         status=400,
                     )
 
                 common_user = company_info.common_user
                 if common_user.email != email:
                     return JsonResponse(
-                        {
-                            "message": "The provided email and phone number do not match."
-                        },
+                        {"message": "The provided email and phone number do not match."},
                         status=400,
                     )
 
                 common_user.password = make_password(new_password)
                 common_user.save()
 
-                response_data = ResetCompanyPasswordResponse(
-                    message="Password reset successful."
-                )
+                response_data = ResetCompanyPasswordResponse(message="Password reset successful.")
                 return JsonResponse(response_data.model_dump())
 
             except CompanyInfo.DoesNotExist:
                 return JsonResponse(
-                    {
-                        "message": "No registered company found with the provided information."
-                    },
+                    {"message": "No registered company found with the provided information."},
                     status=404,
                 )
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid request format."}, status=400
-            )
+            return JsonResponse({"error": "Invalid request format."}, status=400)
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -400,6 +350,4 @@ class CompanyResetPasswordView(View):
                 status=400,
             )
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error.", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error.", "error": str(e)}, status=500)

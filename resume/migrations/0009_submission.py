@@ -22,15 +22,11 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "submission_id",
@@ -43,15 +39,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "memo",
-                    models.CharField(
-                        blank=True, max_length=50, verbose_name="지원공고 메모"
-                    ),
+                    models.CharField(blank=True, max_length=50, verbose_name="지원공고 메모"),
                 ),
                 (
                     "is_read",
-                    models.BooleanField(
-                        default=False, verbose_name="기업 담당자 읽음 여부"
-                    ),
+                    models.BooleanField(default=False, verbose_name="기업 담당자 읽음 여부"),
                 ),
                 (
                     "job_posting",

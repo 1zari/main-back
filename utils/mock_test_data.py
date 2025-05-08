@@ -176,15 +176,10 @@ def mock_submission(
             "education_state": mock_resume.education_state,
             "introduce": mock_resume.introduce,
             "career_list": [
-                CareerInfoModel.model_validate(mock_career).model_dump(
-                    mode="json"
-                )
-                for mock_career in mock_careers
+                CareerInfoModel.model_validate(mock_career).model_dump(mode="json") for mock_career in mock_careers
             ],
             "certification_list": [
-                CertificationInfoModel.model_validate(mock_certi).model_dump(
-                    mode="json"
-                )
+                CertificationInfoModel.model_validate(mock_certi).model_dump(mode="json")
                 for mock_certi in mock_certifications
             ],
         },

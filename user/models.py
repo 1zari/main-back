@@ -26,9 +26,7 @@ class CustomUserManager(BaseUserManager):
     def make_random_password(self, length=8):
         """랜덤한 비밀번호를 생성하는 함수"""
         characters = string.ascii_letters + string.digits + string.punctuation
-        random_password = "".join(
-            random.choice(characters) for i in range(length)
-        )
+        random_password = "".join(random.choice(characters) for i in range(length))
         return random_password
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -43,9 +41,7 @@ class CommonUser(AbstractBaseUser, PermissionsMixin, TimestampModel):
     """유저 공통 정보 모델 (로그인/비밀번호 등)"""
 
     # 회원 식별자
-    common_user_id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False
-    )
+    common_user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # 회원 이메일
     email = models.EmailField(max_length=50, unique=True)
     # 회원 비밀번호
@@ -75,9 +71,7 @@ class UserInfo(TimestampModel):
     """일반 사용자 상세 정보 모델"""
 
     # 일반 사용자 식별자
-    user_id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False
-    )
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # 공통 유저 정보 참조
     common_user = models.OneToOneField(CommonUser, on_delete=models.CASCADE)
     # 일반 사용자 이름
@@ -90,17 +84,11 @@ class UserInfo(TimestampModel):
     birthday = models.DateField(null=True, blank=True)
 
     # 관심 분야
-    interest = ArrayField(
-        models.CharField(max_length=50), default=list, blank=True
-    )
+    interest = ArrayField(models.CharField(max_length=50), default=list, blank=True)
     # 가입 목적
-    purpose_subscription = ArrayField(
-        models.CharField(max_length=50), default=list, blank=True
-    )
+    purpose_subscription = ArrayField(models.CharField(max_length=50), default=list, blank=True)
     # 유입 경로
-    route = ArrayField(
-        models.CharField(max_length=50), default=list, blank=True
-    )
+    route = ArrayField(models.CharField(max_length=50), default=list, blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.common_user.email})"
@@ -110,9 +98,7 @@ class CompanyInfo(TimestampModel):
     """기업 사용자 상세 정보 모델"""
 
     # 기업 사용자 식별자
-    company_id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False
-    )
+    company_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # 공통 유저 정보 참조
     common_user = models.OneToOneField(CommonUser, on_delete=models.CASCADE)
 
