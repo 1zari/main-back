@@ -1,7 +1,7 @@
 import json
 import logging
-import jwt
 
+import jwt
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
@@ -35,6 +35,7 @@ from utils.ncp_storage import upload_to_ncp_storage
 
 logger = logging.getLogger(__name__)
 
+
 @method_decorator(csrf_exempt, name="dispatch")
 class CompanySignupView(View):
     def post(self, request, *args, **kwargs) -> JsonResponse:
@@ -42,7 +43,7 @@ class CompanySignupView(View):
             # 📌 form-data 디버깅 로그
             logger.info("FILES: %s", request.FILES)
             logger.info("POST: %s", request.POST)
-            
+
             # 1) form-data 텍스트만 가져오고, 테스트용 is_staff 제거
             data = request.POST.dict()
             data.pop("is_staff", None)

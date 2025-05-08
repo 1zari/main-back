@@ -1,6 +1,7 @@
+import json
 import os
 import uuid
-import json
+
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from django.conf import settings
@@ -8,9 +9,9 @@ from django.conf import settings
 
 # secrets.json에서 인증 정보를 로드
 def load_secrets():
-    secrets_path = os.path.join(settings.BASE_DIR, 'secrets.json')  # secrets.json 경로
+    secrets_path = os.path.join(settings.BASE_DIR, "secrets.json")  # secrets.json 경로
     try:
-        with open(secrets_path, 'r') as f:
+        with open(secrets_path, "r") as f:
             secrets = json.load(f)
         return secrets
     except Exception as e:
@@ -32,7 +33,7 @@ def upload_to_ncp_storage(file_obj):
     ext = os.path.splitext(file_obj.name)[1]
 
     # 유효한 확장자만 허용
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+    valid_extensions = [".jpg", ".jpeg", ".png", ".gif"]
     if ext.lower() not in valid_extensions:
         raise ValueError("지원하지 않는 파일 형식입니다.")
 
