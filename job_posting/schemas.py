@@ -11,6 +11,7 @@ class JobPostingCreateModel(BaseModel):
     """
     공고 등록을 위한 스키마
     """
+
     model_config = MY_CONFIG
     job_posting_title: str
     address: str
@@ -41,6 +42,7 @@ class JobPostingResponseModel(BaseModel):
     """
     공고 상세 조회를 위한 모델
     """
+
     model_config = MY_CONFIG
     job_posting_id: UUID
     company_id: UUID
@@ -74,6 +76,7 @@ class JobPostingDetailResponseModel(BaseModel):
     """
     공고 상세 조회 응답 스키마
     """
+
     model_config = MY_CONFIG
     message: str
     job_posting: JobPostingResponseModel
@@ -83,6 +86,7 @@ class JobPostingListModel(BaseModel):
     """
     공고 리스트 항목 스키마
     """
+
     model_config = MY_CONFIG
     job_posting_id: UUID
     company_name: str
@@ -97,6 +101,7 @@ class JobPostingListResponseModel(BaseModel):
     """
     공고 리스트 조회 응답 스키마
     """
+
     model_config = MY_CONFIG
     message: str
     data: List[JobPostingListModel]
@@ -106,6 +111,7 @@ class JobPostingUpdateModel(BaseModel):
     """
     공고 수정 스키마
     """
+
     model_config = MY_CONFIG
     job_posting_title: Optional[str]
     address: Optional[str]
@@ -136,6 +142,7 @@ class BookmarkResponseModel(BaseModel):
     """
     북마크 등록/삭제 기본 응답 스키마
     """
+
     message: str
 
 
@@ -143,6 +150,7 @@ class JobPostingBookmarkListItemModel(BaseModel):
     """
     북마크 목록 항목 스키마
     """
+
     job_posting_id: UUID
     job_posting_title: str
     company_name: str
@@ -154,5 +162,6 @@ class JobPostingBookmarkListResponseModel(BaseModel):
     """
     북마크 리스트 조회 응답 스키마
     """
+
     message: str
     data: List[JobPostingBookmarkListItemModel]

@@ -27,9 +27,18 @@ class JobPosting(TimestampModel):
     )  # 근무지 위치 x,y (위도,경도)
     work_time_start = models.TimeField()  # 근무 시작 시간
     work_time_end = models.TimeField()  # 근무 종료 시간
-    posting_type = models.CharField(max_length=10)  # 고용글 종류
-    employment_type = models.CharField(max_length=10)  # 고용 형태
-    work_experience = models.CharField(max_length=10)  # 경력 여부
+    posting_type = models.CharField(
+        max_length=10,
+        default="기업,공공",
+    )  # 고용글 종류
+    employment_type = models.CharField(
+        max_length=10,
+        default="정규직, 비정규직",
+    )  # 고용 형태
+    work_experience = models.CharField(
+        max_length=10,
+        default="경력, 경력무관",
+    )  # 경력 여부
     job_keyword_main = models.CharField(max_length=20)  # 직종 대분류
     job_keyword_sub = ArrayField(
         models.CharField(max_length=50), blank=True, default=list
