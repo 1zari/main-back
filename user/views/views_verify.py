@@ -6,9 +6,7 @@ from urllib.parse import unquote
 import requests
 from django.conf import settings
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 from pydantic import ValidationError
 from solapi import SolapiMessageService  # type: ignore
 from solapi.model import Message  # type: ignore
@@ -21,7 +19,6 @@ from user.schemas import (
 )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class SendVerificationCodeView(View):
     # 인증코드 생성, 발송
     def post(self, request, *args, **kwargs):
