@@ -14,6 +14,7 @@ class CommonUserAdmin(admin.ModelAdmin):
         "email",
         "join_type",
         "created_at",
+        "last_login",
         "is_active",
         "is_staff",
         "is_superuser",
@@ -34,9 +35,9 @@ class CommonUserAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        (_("Important dates"), {"fields": ("created_at",)}),
+        (_("Important dates"), {"fields": ("created_at", "last_login")}),
     )
-    readonly_fields = ("common_user_id", "created_at")
+    readonly_fields = ("common_user_id", "created_at", "last_login")
 
 
 @admin.register(UserInfo)
