@@ -28,13 +28,14 @@ class JobPostingSearchQueryModel(BaseModel):
     district_no: list[str]
     town_no: list[str]
     work_day: list[str]
-    posting_type: list[str]
+    posting_type: str
     employment_type: list[str]
-    education: str
+    education: list[str]
     job_keyword_main: list[str]
     job_keyword_sub: list[str]
     search: str
-    work_experience: str
+    work_experience: list[str]
+    day_discussion: bool
 
 
 class JobPostingSearchResponseModel(BaseModel):
