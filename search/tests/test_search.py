@@ -15,9 +15,7 @@ from utils.mock_test_data import (
 
 
 @pytest.mark.django_db
-def test_get_search_success(
-    mock_job_posting, mock_company_user, mock_common_company_user
-):
+def test_get_search_success(mock_job_posting, mock_company_user, mock_common_company_user):
     center_lon, center_lat = 127.0473, 37.5172
     delta = 0.03  # 약 3km (위도 0.01도 ≈ 1.11km)
     polygon = Polygon(
@@ -51,9 +49,7 @@ def test_get_search_success(
     calculated_distance = (
         district.geometry.centroid.distance(mock_job_posting.location) * 111000
     )  # Approximate conversion degrees to meters
-    print(
-        f"Distance between District centroid and Job Posting location (meters): {calculated_distance}"
-    )
+    print(f"Distance between District centroid and Job Posting location (meters): {calculated_distance}")
     assert calculated_distance <= 3000
 
     client = Client()
@@ -69,10 +65,5 @@ def test_get_search_success(
     assert len(response_data["results"]) == 1
 
     result_job_posting = response_data["results"][0]
-    assert result_job_posting["job_posting_id"] == str(
-        mock_job_posting.job_posting_id
-    )  # UUID는 보통 문자열로 직렬화됨
-    assert (
-        result_job_posting["job_posting_title"]
-        == mock_job_posting.job_posting_title
-    )
+    assert result_job_posting["job_posting_id"] == str(mock_job_posting.job_posting_id)  # UUID는 보통 문자열로 직렬화됨
+    assert result_job_posting["job_posting_title"] == mock_job_posting.job_posting_title

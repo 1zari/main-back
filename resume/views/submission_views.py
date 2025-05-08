@@ -54,9 +54,7 @@ class SubmissionListView(View):
         try:
             token = request.user
             user = get_valid_normal_user(token)
-            submissions: list[Submission] = list(
-                Submission.objects.filter(user=user).all()
-            )
+            submissions: list[Submission] = list(Submission.objects.filter(user=user).all())
 
             submission_model = serialize_submissions(submissions)
 
@@ -81,24 +79,14 @@ class SubmissionListView(View):
             resume_id = data.get("resume_id")
 
             job_posting = get_object_or_404(JobPosting, pk=job_posting_id)
-            resume = (
-                Resume.objects.filter(resume_id=resume_id)
-                .prefetch_related("careers", "certifications")
-                .first()
-            )
+            resume = Resume.objects.filter(resume_id=resume_id).prefetch_related("careers", "certifications").first()
             if job_posting is None:
-                return JsonResponse(
-                    {"errors": "Not founded job_posting data"}, status=404
-                )
+                return JsonResponse({"errors": "Not founded job_posting data"}, status=404)
             if resume is None:
-                return JsonResponse(
-                    {"errors": "Not founded resume data"}, status=404
-                )
+                return JsonResponse({"errors": "Not founded resume data"}, status=404)
 
             # Submission 생성
-            submission = save_submission(
-                job_posting=job_posting, resume=resume, user=user
-            )
+            submission = save_submission(job_posting=job_posting, resume=resume, user=user)
 
             job_posting_model = JobpostingListOutputModel(
                 job_posting_id=job_posting.job_posting_id,
@@ -111,20 +99,14 @@ class SubmissionListView(View):
                 summary=job_posting.summary,
                 deadline=job_posting.deadline,
                 is_bookmarked=(
-                    True
-                    if JobPostingBookmark.objects.filter(
-                        job_posting_id=job_posting
-                    ).exists()
-                    else False
+                    True if JobPostingBookmark.objects.filter(job_posting_id=job_posting).exists() else False
                 ),
             )
 
             submission_model = SubmissionModel(
                 submission_id=submission.submission_id,
                 job_posting=job_posting_model,
-                snapshot_resume=SnapshotResumeModel.model_validate(
-                    submission.snapshot_resume
-                ),
+                snapshot_resume=SnapshotResumeModel.model_validate(submission.snapshot_resume),
                 memo=submission.memo,
                 is_read=submission.is_read,
                 created_at=submission.created_at.date(),
@@ -151,9 +133,7 @@ class SubmissionDetailView(View):
     지원 공고 상세
     """
 
-    def get(
-        self, request: HttpRequest, submission_id: uuid.UUID
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         상세 데이터 조회
         """
@@ -161,13 +141,9 @@ class SubmissionDetailView(View):
             token = request.user
             user = get_valid_normal_user(token)
 
-            submission: Submission = Submission.objects.get(
-                user=user, submission_id=submission_id
-            )
+            submission: Submission = Submission.objects.get(user=user, submission_id=submission_id)
             if submission is None:
-                return JsonResponse(
-                    {"errors": "Not found submission data"}, status=404
-                )
+                return JsonResponse({"errors": "Not found submission data"}, status=404)
             job_posting_model = JobpostingListOutputModel(
                 job_posting_id=submission.job_posting.job_posting_id,
                 city=submission.job_posting.city,
@@ -178,9 +154,7 @@ class SubmissionDetailView(View):
                 summary=submission.job_posting.summary,
                 deadline=submission.job_posting.deadline,
                 job_posting_title=submission.job_posting.job_posting_title,
-                is_bookmarked=JobPostingBookmark.objects.filter(
-                    user_id=submission.user.user_id
-                ).exists(),
+                is_bookmarked=JobPostingBookmark.objects.filter(user_id=submission.user.user_id).exists(),
             )
             submission_model = SubmissionModel(
                 submission_id=submission.submission_id,
@@ -200,26 +174,18 @@ class SubmissionDetailView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
-    def delete(
-        self, request: HttpRequest, submission_id: uuid.UUID
-    ) -> JsonResponse:
+    def delete(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         지원공고 삭제
         """
         try:
             token = request.user
             user = get_valid_normal_user(token)
-            submission: Submission = Submission.objects.get(
-                submission_id=submission_id
-            )
+            submission: Submission = Submission.objects.get(submission_id=submission_id)
             if submission is None:
-                return JsonResponse(
-                    {"errors": "Not found submission data"}, status=404
-                )
+                return JsonResponse({"errors": "Not found submission data"}, status=404)
             submission.delete()
-            return JsonResponse(
-                {"message": "Successfully data deleted"}, status=200
-            )
+            return JsonResponse({"message": "Successfully data deleted"}, status=200)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -230,9 +196,7 @@ class SubmissionMemoView(View):
     memo update 및 delete 뷰
     """
 
-    def patch(
-        self, request: HttpRequest, submission_id: uuid.UUID
-    ) -> JsonResponse:
+    def patch(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         memo 수정
         """
@@ -242,47 +206,33 @@ class SubmissionMemoView(View):
             data = json.loads(request.body)
             update_data = SubmissionMemoUpdateModel(memo=data.get("memo", ""))
 
-            submission: Submission = Submission.objects.get(
-                submission_id=submission_id
-            )
+            submission: Submission = Submission.objects.get(submission_id=submission_id)
             if submission is None:
-                return JsonResponse(
-                    {"errors": "Not found submission data"}, status=404
-                )
+                return JsonResponse({"errors": "Not found submission data"}, status=404)
             if update_data is not None:
                 submission.memo = str(update_data.memo)
                 submission.save()
 
-            response = SubmissionMemoResponseModel(
-                message="Successfully updated memo", memo=submission.memo
-            )
+            response = SubmissionMemoResponseModel(message="Successfully updated memo", memo=submission.memo)
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
-    def delete(
-        self, request: HttpRequest, submission_id: uuid.UUID
-    ) -> JsonResponse:
+    def delete(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         memo 삭제
         """
         try:
             token = request.user
             user = get_valid_normal_user(token)
-            submission = Submission.objects.get(
-                user=user, submission_id=submission_id
-            )
+            submission = Submission.objects.get(user=user, submission_id=submission_id)
             if submission is not None:
                 submission.memo = None
                 submission.save()
             else:
-                return JsonResponse(
-                    {"errors": "Not found submission data"}, status=404
-                )
+                return JsonResponse({"errors": "Not found submission data"}, status=404)
 
-            return JsonResponse(
-                {"message": "Successfully deleted submission memo"}, status=200
-            )
+            return JsonResponse({"message": "Successfully deleted submission memo"}, status=200)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -299,12 +249,9 @@ class SubmissionCompanyListView(View):
         try:
             token = request.user
             user = get_valid_company_user(token)
-            submission_list = Submission.objects.filter(
-                job_posting__company_id=user.company_id
-            ).all()
+            submission_list = Submission.objects.filter(job_posting__company_id=user.company_id).all()
             job_posting_list_model: list[JobpostingGetListModel] = [
-                JobpostingGetListModel.model_validate(submission.job_posting)
-                for submission in submission_list
+                JobpostingGetListModel.model_validate(submission.job_posting) for submission in submission_list
             ]
             submission_list_model: list[SubmissionCompanyGetListInfoModel] = [
                 SubmissionCompanyGetListInfoModel(
@@ -335,17 +282,13 @@ class SubmissionCompanyDetialView(View):
     기업회원 지원자 이력서 조회
     """
 
-    def get(
-        self, request: HttpRequest, submission_id: uuid.UUID
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         try:
             token = request.user
             user = get_valid_company_user(token)
             submission = Submission.objects.get(submission_id=submission_id)
             if submission is None:
-                return JsonResponse(
-                    {"errors": "Not found submission data"}, status=404
-                )
+                return JsonResponse({"errors": "Not found submission data"}, status=404)
             submission.is_read = True
             submission.save()
 
@@ -358,9 +301,7 @@ class SubmissionCompanyDetialView(View):
                 school_name=submission.snapshot_resume["school_name"],
                 introduce=submission.snapshot_resume["introduce"],
                 career_list=submission.snapshot_resume["career_list"],
-                certification_list=submission.snapshot_resume[
-                    "certification_list"
-                ],
+                certification_list=submission.snapshot_resume["certification_list"],
             )
 
             response = SubmissionCompanyDetailModel(
@@ -373,16 +314,10 @@ class SubmissionCompanyDetialView(View):
             return JsonResponse({"errors": str(e)}, status=400)
 
 
-def save_submission(
-    job_posting: JobPosting, user: UserInfo, resume: Resume
-) -> Submission:
+def save_submission(job_posting: JobPosting, user: UserInfo, resume: Resume) -> Submission:
     # 이력서 정보 dict로 직렬화
-    career_model: list[CareerInfoModel] = serialize_careers(
-        list(resume.careers.all())
-    )
-    certification_model: list[CertificationInfoModel] = (
-        serialize_certifications(list(resume.certifications.all()))
-    )
+    career_model: list[CareerInfoModel] = serialize_careers(list(resume.careers.all()))
+    certification_model: list[CertificationInfoModel] = serialize_certifications(list(resume.certifications.all()))
 
     resume_model = SubmissionOutputModel(
         job_category=resume.job_category,

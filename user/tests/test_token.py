@@ -22,9 +22,7 @@ def common_user_data():
 @pytest.fixture
 def create_common_user(common_user_data):
     user = CommonUser.objects.create_user(**common_user_data)
-    assert user.check_password(
-        common_user_data["password"]
-    ), "Password was not hashed correctly"
+    assert user.check_password(common_user_data["password"]), "Password was not hashed correctly"
     return user
 
 

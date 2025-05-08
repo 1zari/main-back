@@ -8,9 +8,7 @@ from ..views.views import (
 
 urlpatterns = [
     # 공고 리스트 조회 API
-    path(
-        "job-postings/", JobPostingListView.as_view(), name="job_posting_list"
-    ),
+    path("job-postings/", JobPostingListView.as_view(), name="job_posting_list"),
     # 공고 상세 조회, 생성, 수정, 삭제 API
     path(
         "job-postings/<uuid:job_posting_id>/",

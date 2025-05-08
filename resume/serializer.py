@@ -41,11 +41,7 @@ def serialize_submissions(
     result = []
     for submission in submissions:
         is_bookmarked = (
-            True
-            if JobPostingBookmark.objects.filter(
-                job_posting=submission.job_posting
-            ).exists()
-            else False
+            True if JobPostingBookmark.objects.filter(job_posting=submission.job_posting).exists() else False
         )
         job_posting = JobpostingListOutputModel(
             job_posting_id=submission.job_posting.job_posting_id,

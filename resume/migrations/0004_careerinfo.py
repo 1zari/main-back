@@ -18,15 +18,11 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "career_info_id",
@@ -40,9 +36,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "company_name",
-                    models.CharField(
-                        max_length=20, verbose_name="근무 회사 이름"
-                    ),
+                    models.CharField(max_length=20, verbose_name="근무 회사 이름"),
                 ),
                 (
                     "position",

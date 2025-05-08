@@ -39,9 +39,7 @@ def common_company_data():
 
 @pytest.fixture
 def user_info():
-    common_user = CommonUser.objects.create_user(
-        email="test@example.com", password="oldpassword"
-    )
+    common_user = CommonUser.objects.create_user(email="test@example.com", password="oldpassword")
     return UserInfo.objects.create(
         common_user=common_user,
         name="테스트 사용자",
@@ -53,9 +51,7 @@ def user_info():
 
 @pytest.fixture
 def company_info():
-    common_user = CommonUser.objects.create_user(
-        email="company@example.com", password="oldpassword"
-    )
+    common_user = CommonUser.objects.create_user(email="company@example.com", password="oldpassword")
     return CompanyInfo.objects.create(
         common_user=common_user,
         company_name="테스트 회사",
@@ -138,9 +134,7 @@ def test_user_signup(client, common_user_data):
 @patch("user.views.views_company.upload_to_ncp_storage")
 def test_company_signup(mock_upload_func, client, common_company_data):
     # mock_upload_func의 반환 값 설정
-    mock_upload_func.return_value = (
-        "https://fake-s3.naver.com/bucket/fake_image.png"
-    )
+    mock_upload_func.return_value = "https://fake-s3.naver.com/bucket/fake_image.png"
 
     # CommonUser 생성
     common_user = CommonUser.objects.create_user(**common_company_data)
@@ -164,12 +158,8 @@ def test_company_signup(mock_upload_func, client, common_company_data):
     logo_content = b"fake_logo_content"
     certificate_content = b"fake_certificate_content"
     files = {
-        "company_logo": SimpleUploadedFile(
-            "logo.png", logo_content, content_type="image/png"
-        ),
-        "certificate_image": SimpleUploadedFile(
-            "certificate.png", certificate_content, content_type="image/png"
-        ),
+        "company_logo": SimpleUploadedFile("logo.png", logo_content, content_type="image/png"),
+        "certificate_image": SimpleUploadedFile("certificate.png", certificate_content, content_type="image/png"),
     }
 
     response = client.post(
@@ -186,15 +176,9 @@ def test_company_signup(mock_upload_func, client, common_company_data):
     # 응답에서 URL 확인
     response_data = response.json()
     assert "certificate_image" in response_data["company_info"]
-    assert (
-        response_data["company_info"]["certificate_image"]
-        == "https://fake-s3.naver.com/bucket/fake_image.png"
-    )
+    assert response_data["company_info"]["certificate_image"] == "https://fake-s3.naver.com/bucket/fake_image.png"
     assert "company_logo" in response_data["company_info"]
-    assert (
-        response_data["company_info"]["company_logo"]
-        == "https://fake-s3.naver.com/bucket/fake_image.png"
-    )
+    assert response_data["company_info"]["company_logo"] == "https://fake-s3.naver.com/bucket/fake_image.png"
 
 
 @pytest.mark.django_db
@@ -290,29 +274,20 @@ def test_find_user_email(client, user_info):
         "name": user_info.name,
         "phone_number": user_info.phone_number,
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 200  # OK
     assert response.json()["email"] == user_info.common_user.email
 
     # 실패
     data = {"phone_number": "01099998888"}
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     data_fail = {
         "name": "잘못된 이름",
         "phone_number": user_info.phone_number,
     }
-    response_fail = client.post(
-        url, json.dumps(data_fail), content_type="application/json"
-    )
+    response_fail = client.post(url, json.dumps(data_fail), content_type="application/json")
     assert response_fail.status_code == 404
-    assert (
-        response_fail.json()["message"]
-        == "No user found with the provided phone number and email."
-    )
+    assert response_fail.json()["message"] == "No user found with the provided phone number and email."
 
 
 @pytest.mark.django_db
@@ -326,9 +301,7 @@ def test_reset_user_password(client, user_info):
         "phone_number": user_info.phone_number,
         "new_password": new_password,
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 200  # OK
     user_info.common_user.refresh_from_db()
     assert check_password(new_password, user_info.common_user.password)
@@ -339,14 +312,9 @@ def test_reset_user_password(client, user_info):
         "phone_number": "01099998888",
         "new_password": "newpassword",
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 404  # Not Found
-    assert (
-        response.json()["message"]
-        == "No user registered with this phone number."
-    )
+    assert response.json()["message"] == "No user registered with this phone number."
 
     # 실패 (이메일 불일치)
     data = {
@@ -354,9 +322,7 @@ def test_reset_user_password(client, user_info):
         "phone_number": user_info.phone_number,
         "new_password": "newpassword",
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 400  # Bad Request
     assert response.json()["message"] == "Email and phone number do not match."
 
@@ -372,9 +338,7 @@ def test_find_company_email(client, company_info):
         "business_registration_number": company_info.business_registration_number,
         "company_name": company_info.company_name,
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 200  # OK
     assert response.json()["email"] == company_info.manager_email
 
@@ -384,9 +348,7 @@ def test_find_company_email(client, company_info):
         "business_registration_number": "1234567890",
         "company_name": "없는 회사",
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 404  # Not Found
 
     # 실패 (사업자등록번호 불일치)
@@ -395,9 +357,7 @@ def test_find_company_email(client, company_info):
         "business_registration_number": "9999999999",
         "company_name": company_info.company_name,
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 400  # Bad Request
 
 
@@ -414,9 +374,7 @@ def test_reset_company_password(client, company_info):
         "business_registration_number": company_info.business_registration_number,
         "new_password": new_password,
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 200  # OK
     company_info.common_user.refresh_from_db()
     assert check_password(new_password, company_info.common_user.password)
@@ -428,9 +386,7 @@ def test_reset_company_password(client, company_info):
         "business_registration_number": "1234567890",
         "new_password": "newpassword",
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 404  # Not Found
 
     # 실패 (사업자등록번호 불일치)
@@ -440,21 +396,15 @@ def test_reset_company_password(client, company_info):
         "business_registration_number": "9999999999",
         "new_password": "newpassword",
     }
-    response = client.post(
-        url, json.dumps(data), content_type="application/json"
-    )
+    response = client.post(url, json.dumps(data), content_type="application/json")
     assert response.status_code == 400  # Bad Request
 
 
 @pytest.mark.django_db
 @patch("utils.common.get_valid_normal_user")
-def test_normal_user_delete_success(
-    mock_get_valid_normal_user, client, common_user, user_token
-):
+def test_normal_user_delete_success(mock_get_valid_normal_user, client, common_user, user_token):
     """일반 유저 회원 탈퇴 성공 테스트 (get_valid_normal_user 사용)"""
-    user_info = UserInfo.objects.create(
-        common_user=common_user, name="일반유저"
-    )
+    user_info = UserInfo.objects.create(common_user=common_user, name="일반유저")
     mock_get_valid_normal_user.return_value = user_info
     url = reverse("user:user-delete")
     response = client.delete(
@@ -464,18 +414,14 @@ def test_normal_user_delete_success(
     print(f"Response status code: {response.status_code}")
     print(f"Response content: {response.content}")
     assert response.status_code == 200
-    assert json.loads(response.content) == {
-        "message": "User deletion successful."
-    }
+    assert json.loads(response.content) == {"message": "User deletion successful."}
     assert not CommonUser.objects.filter(pk=common_user.pk).exists()
     assert not UserInfo.objects.filter(pk=user_info.pk).exists()
 
 
 @pytest.mark.django_db
 @patch("utils.common.get_valid_company_user")
-def test_company_user_delete_success(
-    mock_get_valid_company_user, client, common_company, company_token
-):
+def test_company_user_delete_success(mock_get_valid_company_user, client, common_company, company_token):
     """기업 유저 회원 탈퇴 성공 테스트 (get_valid_company_user 사용)"""
     company_info = CompanyInfo.objects.create(
         common_user=common_company,
@@ -492,9 +438,7 @@ def test_company_user_delete_success(
     print(f"Response status code: {response.status_code}")
     print(f"Response content: {response.content}")
     assert response.status_code == 200
-    assert json.loads(response.content) == {
-        "message": "User deletion successful."
-    }
+    assert json.loads(response.content) == {"message": "User deletion successful."}
     assert not CommonUser.objects.filter(pk=common_company.pk).exists()
     assert not CompanyInfo.objects.filter(pk=company_info.pk).exists()
 
@@ -502,9 +446,7 @@ def test_company_user_delete_success(
 @pytest.mark.django_db
 def test_user_info_update_success(client, common_user):
     """일반 유저 정보 수정 성공 테스트"""
-    user_info = UserInfo.objects.create(
-        common_user=common_user, name="기존 이름", phone_number="01011112222"
-    )
+    user_info = UserInfo.objects.create(common_user=common_user, name="기존 이름", phone_number="01011112222")
     url = reverse("user:normal-info-update")
     token = create_access_token(common_user)
     updated_data = {

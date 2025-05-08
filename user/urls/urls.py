@@ -33,9 +33,7 @@ app_name = "user"
 
 urlpatterns = [
     # 공통 유저 (common)
-    path(
-        "common/signup/", CommonUserCreateView.as_view(), name="common-signup"
-    ),
+    path("common/signup/", CommonUserCreateView.as_view(), name="common-signup"),
     path(
         "email/check/",
         EmailDuplicateCheckView.as_view(),
@@ -44,9 +42,7 @@ urlpatterns = [
     # 일반 유저 (normal)
     path("normal/signup/", UserSignupView.as_view(), name="normal-signup"),
     path("normal/login/", UserLoginView.as_view(), name="normal-login"),
-    path(
-        "normal/info/", UserInfoDetailView.as_view(), name="normal-info-detail"
-    ),
+    path("normal/info/", UserInfoDetailView.as_view(), name="normal-info-detail"),
     path(
         "normal/info/update/",
         UserInfoUpdateView.as_view(),
