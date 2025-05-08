@@ -38,11 +38,17 @@ def serialize_certifications(
 def serialize_submissions(
     submissions: list[Submission],
 ) -> list[SubmissionModel]:
+
+    job_posting_ids = [submission.job_posting.job_posting_id for submission in
+                       submissions]
+    bookmarked_ids = set(
+        JobPostingBookmark.objects.filter(job_posting_id__in=job_posting_ids)
+        .values_list("job_posting_id", flat=True)
+    )
     result = []
     for submission in submissions:
-        is_bookmarked = (
-            True if JobPostingBookmark.objects.filter(job_posting=submission.job_posting).exists() else False
-        )
+        jp = submission.job_posting
+        is_bookmarked = jp.job_posting_id in bookmarked_ids
         job_posting = JobpostingListOutputModel(
             job_posting_id=submission.job_posting.job_posting_id,
             job_posting_title=submission.job_posting.job_posting_title,
