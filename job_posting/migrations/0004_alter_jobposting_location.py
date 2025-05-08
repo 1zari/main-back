@@ -17,8 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="jobposting",
             name="location",
-            field=django.contrib.gis.db.models.fields.PointField(
-                srid=5179, verbose_name="근무지 좌표"
-            ),
+            field=django.contrib.gis.db.models.fields.PointField(srid=5179, verbose_name="근무지 좌표"),
         ),
     ]

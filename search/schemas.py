@@ -2,6 +2,7 @@ from datetime import date
 from typing import Dict, List, Optional
 from uuid import UUID
 
+from geojson_pydantic import MultiPolygon
 from pydantic import BaseModel, RootModel
 
 from utils.schemas import MY_CONFIG
@@ -23,9 +24,9 @@ class JobPostingResultModel(BaseModel):
 class JobPostingSearchQueryModel(BaseModel):
     model_config = MY_CONFIG
 
-    city: list[str]
-    district: list[str]
-    town: list[str]
+    city_no: list[str]
+    district_no: list[str]
+    town_no: list[str]
     work_day: list[str]
     posting_type: list[str]
     employment_type: list[str]
@@ -33,6 +34,7 @@ class JobPostingSearchQueryModel(BaseModel):
     job_keyword_main: list[str]
     job_keyword_sub: list[str]
     search: str
+    work_experience: str
 
 
 class JobPostingSearchResponseModel(BaseModel):
@@ -103,3 +105,19 @@ class JobTreeResponse(RootModel):
     """
 
     root: List[JobCategoryBig]
+
+
+class DistrictModelDTO(BaseModel):
+    geometry: str  # WKT 문자열
+    city_no: str
+    district_no: str
+    emd_no: str
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            geometry=obj.geometry.wkt,
+            city_no=obj.city_no,
+            district_no=obj.district_no,
+            emd_no=obj.emd_no,
+        )

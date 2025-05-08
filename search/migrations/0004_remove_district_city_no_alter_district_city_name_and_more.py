@@ -17,30 +17,22 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="district",
             name="city_name",
-            field=models.CharField(
-                db_index=True, max_length=40, verbose_name="시 이름"
-            ),
+            field=models.CharField(db_index=True, max_length=40, verbose_name="시 이름"),
         ),
         migrations.AlterField(
             model_name="district",
             name="district_name",
-            field=models.CharField(
-                db_index=True, max_length=40, verbose_name="구 이름"
-            ),
+            field=models.CharField(db_index=True, max_length=40, verbose_name="구 이름"),
         ),
         migrations.AlterField(
             model_name="district",
             name="district_no",
-            field=models.CharField(
-                db_index=True, max_length=10, verbose_name="구 고유번호"
-            ),
+            field=models.CharField(db_index=True, max_length=10, verbose_name="구 고유번호"),
         ),
         migrations.AlterField(
             model_name="district",
             name="emd_name",
-            field=models.CharField(
-                db_index=True, max_length=40, verbose_name="읍면동 이름"
-            ),
+            field=models.CharField(db_index=True, max_length=40, verbose_name="읍면동 이름"),
         ),
         migrations.AlterField(
             model_name="district",

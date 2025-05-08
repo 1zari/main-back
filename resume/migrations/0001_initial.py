@@ -20,15 +20,11 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "resume_id",

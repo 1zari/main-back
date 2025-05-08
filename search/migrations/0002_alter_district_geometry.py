@@ -14,8 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="district",
             name="geometry",
-            field=django.contrib.gis.db.models.fields.MultiPolygonField(
-                srid=5179, verbose_name="구 경계"
-            ),
+            field=django.contrib.gis.db.models.fields.MultiPolygonField(srid=5179, verbose_name="구 경계"),
         ),
     ]

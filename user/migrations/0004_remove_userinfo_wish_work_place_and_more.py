@@ -17,15 +17,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="companyinfo",
             name="company_logo",
-            field=models.ImageField(
-                blank=True, null=True, upload_to="company_logos/"
-            ),
+            field=models.ImageField(blank=True, null=True, upload_to="company_logos/"),
         ),
         migrations.AlterField(
             model_name="companyinfo",
             name="certificate_image",
-            field=models.ImageField(
-                blank=True, null=True, upload_to="certificate_image/"
-            ),
+            field=models.ImageField(blank=True, null=True, upload_to="certificate_image/"),
         ),
     ]
