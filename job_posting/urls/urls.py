@@ -7,23 +7,22 @@ from ..views.views import (
 )
 
 urlpatterns = [
-    # 공고 리스트 조회 API
-    path("job-postings/", JobPostingListView.as_view(), name="job_posting_list"),
-    # 공고 상세 조회, 생성, 수정, 삭제 API
+    # 공고 리스트 조회
+    path("", JobPostingListView.as_view(), name="job_posting_list"),
+    # 공고 상세 조회, 수정, 삭제
     path(
-        "job-postings/<uuid:job_posting_id>/",
+        "<uuid:job_posting_id>/",
         JobPostingDetailView.as_view(),
         name="job_posting_detail",
     ),
-    # 공고 북마크 등록, 삭제, 조회 API
+    # 공고 생성
+    path("create/", JobPostingDetailView.as_view(), name="job_posting_create"),
+    # 북마크 목록 조회
+    path("bookmark/", JobPostingBookmarkView.as_view(), name="bookmark_list"),
+    # 북마크 등록/삭제
     path(
-        "job-postings/bookmark/",
+        "bookmark/<uuid:job_posting_id>/",
         JobPostingBookmarkView.as_view(),
-        name="job_posting_bookmark_list",
-    ),
-    path(
-        "job-postings/bookmark/<uuid:job_posting_id>/",
-        JobPostingBookmarkView.as_view(),
-        name="job_posting_bookmark",
+        name="bookmark_toggle",
     ),
 ]
