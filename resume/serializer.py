@@ -39,11 +39,9 @@ def serialize_submissions(
     submissions: list[Submission],
 ) -> list[SubmissionModel]:
 
-    job_posting_ids = [submission.job_posting.job_posting_id for submission in
-                       submissions]
+    job_posting_ids = [submission.job_posting.job_posting_id for submission in submissions]
     bookmarked_ids = set(
-        JobPostingBookmark.objects.filter(job_posting_id__in=job_posting_ids)
-        .values_list("job_posting_id", flat=True)
+        JobPostingBookmark.objects.filter(job_posting_id__in=job_posting_ids).values_list("job_posting_id", flat=True)
     )
     result = []
     for submission in submissions:
