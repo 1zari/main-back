@@ -18,7 +18,7 @@ shp_file = str(BASE_DIR / "search/logical_data/new_logical_data.shp")
 
 def run(verbose=True):
     try:
-        # District.objects.all().delete()
+        District.objects.all().delete()
         lm = LayerMapping(
             District,
             shp_file,
