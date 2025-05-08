@@ -20,9 +20,7 @@ def create_access_token(user):
         "is_active": user.is_active,
         "exp": expiration,
     }
-    return jwt.encode(
-        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
-    )
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(user):
@@ -35,6 +33,4 @@ def create_refresh_token(user):
         "is_active": user.is_active,
         "exp": expiration,
     }
-    return jwt.encode(
-        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
-    )
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)

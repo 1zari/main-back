@@ -22,9 +22,7 @@ def test_common_user_creation():
 
 @pytest.mark.django_db
 def test_user_info_creation():
-    user = CommonUser.objects.create(
-        email="user@example.com", password="pw", join_type="nomal"
-    )
+    user = CommonUser.objects.create(email="user@example.com", password="pw", join_type="nomal")
     profile = UserInfo.objects.create(
         common_user=user,
         name="홍길동",
@@ -41,9 +39,7 @@ def test_user_info_creation():
 
 @pytest.mark.django_db
 def test_company_info_creation():
-    company_user = CommonUser.objects.create(
-        email="biz@example.com", password="pw", join_type="company"
-    )
+    company_user = CommonUser.objects.create(email="biz@example.com", password="pw", join_type="company")
     company = CompanyInfo.objects.create(
         common_user=company_user,
         company_name="테스트주식회사",

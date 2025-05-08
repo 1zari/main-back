@@ -13,22 +13,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="jobposting",
             name="city",
-            field=models.CharField(
-                db_index=True, default="시,도", max_length=10
-            ),
+            field=models.CharField(db_index=True, default="시,도", max_length=10),
         ),
         migrations.AlterField(
             model_name="jobposting",
             name="district",
-            field=models.CharField(
-                db_index=True, default="시,군,구", max_length=10
-            ),
+            field=models.CharField(db_index=True, default="시,군,구", max_length=10),
         ),
         migrations.AlterField(
             model_name="jobposting",
             name="town",
-            field=models.CharField(
-                db_index=True, default="읍,면,동", max_length=10
-            ),
+            field=models.CharField(db_index=True, default="읍,면,동", max_length=10),
         ),
     ]

@@ -33,9 +33,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "district_no",
-                    models.CharField(
-                        max_length=10, unique=True, verbose_name="구 고유번호"
-                    ),
+                    models.CharField(max_length=10, unique=True, verbose_name="구 고유번호"),
                 ),
                 (
                     "district_name",
@@ -43,9 +41,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "geometry",
-                    django.contrib.gis.db.models.fields.PolygonField(
-                        srid=5179, verbose_name="구 경계"
-                    ),
+                    django.contrib.gis.db.models.fields.PolygonField(srid=5179, verbose_name="구 경계"),
                 ),
             ],
         ),

@@ -20,40 +20,30 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="resume",
             name="education_level",
-            field=models.CharField(
-                default="", max_length=20, verbose_name="학력 구분"
-            ),
+            field=models.CharField(default="", max_length=20, verbose_name="학력 구분"),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="resume",
             name="education_state",
-            field=models.CharField(
-                default="", max_length=20, verbose_name="학적"
-            ),
+            field=models.CharField(default="", max_length=20, verbose_name="학적"),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="resume",
             name="job_category",
-            field=models.CharField(
-                blank=True, max_length=20, verbose_name="직무 분야"
-            ),
+            field=models.CharField(blank=True, max_length=20, verbose_name="직무 분야"),
         ),
         migrations.AddField(
             model_name="resume",
             name="resume_title",
-            field=models.CharField(
-                default="", max_length=20, verbose_name="이력서 제목"
-            ),
+            field=models.CharField(default="", max_length=20, verbose_name="이력서 제목"),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="resume",
             name="school_name",
-            field=models.CharField(
-                default="asd", max_length=20, verbose_name="학교명"
-            ),
+            field=models.CharField(default="asd", max_length=20, verbose_name="학교명"),
             preserve_default=False,
         ),
         migrations.AlterField(
@@ -71,15 +61,11 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "created_at",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="작성일자"),
                 ),
                 (
                     "updated_at",
-                    models.DateTimeField(
-                        auto_now=True, verbose_name="작성일자"
-                    ),
+                    models.DateTimeField(auto_now=True, verbose_name="작성일자"),
                 ),
                 (
                     "certification_id",

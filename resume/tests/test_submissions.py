@@ -179,15 +179,10 @@ def mock_submission(
             "education_state": mock_resume.education_state,
             "introduce": mock_resume.introduce,
             "career_list": [
-                CareerInfoModel.model_validate(mock_career).model_dump(
-                    mode="json"
-                )
-                for mock_career in mock_careers
+                CareerInfoModel.model_validate(mock_career).model_dump(mode="json") for mock_career in mock_careers
             ],
             "certification_list": [
-                CertificationInfoModel.model_validate(mock_certi).model_dump(
-                    mode="json"
-                )
+                CertificationInfoModel.model_validate(mock_certi).model_dump(mode="json")
                 for mock_certi in mock_certifications
             ],
         },
@@ -224,10 +219,7 @@ def test_submission_list_get_success(
 
     response_data = json.loads(response.content)["submission_list"]
     assert response.status_code == 200
-    assert (
-        response_data[0]["job_posting"]["company_name"]
-        == mock_submission.job_posting.company_id.company_name
-    )
+    assert response_data[0]["job_posting"]["company_name"] == mock_submission.job_posting.company_id.company_name
 
 
 @pytest.mark.django_db
@@ -253,16 +245,9 @@ def test_submiison_company_get_list_success(
 
     assert response.status_code == 200
     assert response_data["message"] == "Successfully loaded submission_list"
-    assert response_data["job_posting_list"][0]["job_posting_id"] == str(
-        mock_job_posting.job_posting_id
-    )
-    assert (
-        response_data["submission_list"][0]["resume_title"]
-        == mock_resume.resume_title
-    )
-    assert response_data["submission_list"][0]["job_posting_id"] == str(
-        mock_submission.job_posting.job_posting_id
-    )
+    assert response_data["job_posting_list"][0]["job_posting_id"] == str(mock_job_posting.job_posting_id)
+    assert response_data["submission_list"][0]["resume_title"] == mock_resume.resume_title
+    assert response_data["submission_list"][0]["job_posting_id"] == str(mock_submission.job_posting.job_posting_id)
 
 
 @pytest.mark.django_db
@@ -366,13 +351,8 @@ def test_submission_company_detail_get_success(
 
     assert response.status_code == 200
     assert response_data["name"] == mock_submission.user.name
-    assert (
-        response_data["resume_title"]
-        == mock_submission.snapshot_resume["resume_title"]
-    )
-    refreshed = Submission.objects.get(
-        submission_id=mock_submission.submission_id
-    )
+    assert response_data["resume_title"] == mock_submission.snapshot_resume["resume_title"]
+    refreshed = Submission.objects.get(submission_id=mock_submission.submission_id)
     # 기업 유저가 이력서 조회 했을 때 읽음 처리 확인
     assert refreshed.is_read is True
 
@@ -397,6 +377,4 @@ def test_get_submission_detail_nomal_user(
     response_data = json.loads(response.content)
 
     assert response.status_code == 200
-    assert response_data["submission"]["submission_id"] == str(
-        mock_submission.submission_id
-    )
+    assert response_data["submission"]["submission_id"] == str(mock_submission.submission_id)

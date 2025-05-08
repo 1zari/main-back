@@ -49,9 +49,7 @@ class CommonUserCreateView(View):
 
             # 중복 체크
             if User.objects.filter(email=data.email).exists():
-                return JsonResponse(
-                    {"message": "Email is already registered."}, status=400
-                )
+                return JsonResponse({"message": "Email is already registered."}, status=400)
 
             # CommonUser 생성
             user = User.objects.create(
@@ -75,9 +73,7 @@ class CommonUserCreateView(View):
                 status=422,
             )
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -90,17 +86,13 @@ class UserSignupView(View):
 
             # CommonUser 존재 여부 확인
             try:
-                user = CommonUser.objects.get(
-                    common_user_id=signup_data.common_user_id
-                )
+                user = CommonUser.objects.get(common_user_id=signup_data.common_user_id)
             except CommonUser.DoesNotExist:
                 return JsonResponse({"message": "User not found."}, status=400)
 
             # 이미 UserInfo가 존재하는지 확인
             if UserInfo.objects.filter(common_user=user).exists():
-                return JsonResponse(
-                    {"message": "User already registered."}, status=400
-                )
+                return JsonResponse({"message": "User already registered."}, status=400)
 
             # UserInfo 생성
             user_info = UserInfo.objects.create(
@@ -136,13 +128,9 @@ class UserSignupView(View):
             return JsonResponse(response.model_dump(), status=201)
 
         except ValidationError as e:
-            return JsonResponse(
-                {"message": "Invalid input", "errors": e.errors()}, status=422
-            )
+            return JsonResponse({"message": "Invalid input", "errors": e.errors()}, status=422)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 class UserLoginView(View):
@@ -152,9 +140,7 @@ class UserLoginView(View):
             login_data = UserLoginRequest(**body)
 
             # 사용자 인증
-            user = authenticate(
-                username=login_data.email, password=login_data.password
-            )
+            user = authenticate(username=login_data.email, password=login_data.password)
 
             if not user or not user.is_active or user.join_type != "normal":
                 return JsonResponse(
@@ -183,13 +169,9 @@ class UserLoginView(View):
             return JsonResponse(response.model_dump(), status=200)
 
         except ValidationError as e:
-            return JsonResponse(
-                {"message": "Invalid input", "errors": e.errors()}, status=422
-            )
+            return JsonResponse({"message": "Invalid input", "errors": e.errors()}, status=422)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 class UserInfoDetailView(View):  # 유저 정보 조회
@@ -242,9 +224,7 @@ class UserInfoDetailView(View):  # 유저 정보 조회
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "detail": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "detail": str(e)}, status=500)
 
 
 class UserInfoUpdateView(View):
@@ -302,9 +282,7 @@ class UserInfoUpdateView(View):
         except PermissionDenied as e:
             return JsonResponse({"message": str(e)}, status=403)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "detail": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "detail": str(e)}, status=500)
 
 
 class LogoutView(View):
@@ -314,9 +292,7 @@ class LogoutView(View):
             logout_data = LogoutRequest(**body)
             refresh_token = logout_data.refresh_token
             if not refresh_token:
-                return JsonResponse(
-                    {"message": "Refresh token is required."}, status=400
-                )
+                return JsonResponse({"message": "Refresh token is required."}, status=400)
 
             # 토큰 디코딩해서 남은 시간 확인
             decoded = jwt.decode(
@@ -330,9 +306,7 @@ class LogoutView(View):
                 ttl = int(exp - now)
 
                 if ttl <= 0:
-                    return JsonResponse(
-                        {"message": "Token is already expired."}, status=400
-                    )
+                    return JsonResponse({"message": "Token is already expired."}, status=400)
                 # Redis에 블랙리스트 등록
                 r.setex(f"blacklist:refresh:{refresh_token}", ttl, "true")
 
@@ -347,15 +321,11 @@ class LogoutView(View):
                 )
 
         except jwt.ExpiredSignatureError:
-            return JsonResponse(
-                {"message": "Token is already expired."}, status=400
-            )
+            return JsonResponse({"message": "Token is already expired."}, status=400)
         except jwt.InvalidTokenError:
             return JsonResponse({"message": "Invalid token."}, status=400)
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
 
 # 일반 유저 이메일 찾기 - 클래스 기반 뷰로 변경
@@ -366,24 +336,18 @@ class UserFindEmailView(View):
             request_data = FindUserEmailRequest(**body)
             phone_number = request_data.phone_number
             name = request_data.name
-            user_info = UserInfo.objects.get(
-                phone_number=phone_number, name=name
-            )
+            user_info = UserInfo.objects.get(phone_number=phone_number, name=name)
             common_user = user_info.common_user
 
             response_data = FindUserEmailResponse(email=common_user.email)
             return JsonResponse(response_data.model_dump())
         except UserInfo.DoesNotExist:
             return JsonResponse(
-                {
-                    "message": "No user found with the provided phone number and email."
-                },
+                {"message": "No user found with the provided phone number and email."},
                 status=404,
             )
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid request format."}, status=400
-            )
+            return JsonResponse({"error": "Invalid request format."}, status=400)
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -417,9 +381,7 @@ class UserResetPasswordView(View):
                 common_user.password = make_password(new_password)
                 common_user.save()
 
-                response_data = ResetUserPasswordResponse(
-                    message="Password reset successful."
-                )
+                response_data = ResetUserPasswordResponse(message="Password reset successful.")
                 return JsonResponse(response_data.model_dump())
 
             except UserInfo.DoesNotExist:
@@ -428,9 +390,7 @@ class UserResetPasswordView(View):
                     status=404,
                 )
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid request format."}, status=400
-            )
+            return JsonResponse({"error": "Invalid request format."}, status=400)
         except ValidationError as e:
             return JsonResponse(
                 {
@@ -467,17 +427,13 @@ class UserDeleteView(View):
             # 'normal' 또는 'company' 유저에 대한 처리
             if common_user.join_type == "normal":
                 # 정상 사용자 처리
-                user_info = get_valid_normal_user(
-                    common_user
-                )  # 정상 유저 정보 가져오기
+                user_info = get_valid_normal_user(common_user)  # 정상 유저 정보 가져오기
                 user_info.delete()  # 정상 유저 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
             elif common_user.join_type == "company":
                 # 기업 사용자 처리
-                company_info = get_valid_company_user(
-                    common_user
-                )  # 기업 유저 정보 가져오기
+                company_info = get_valid_company_user(common_user)  # 기업 유저 정보 가져오기
                 company_info.delete()  # 기업 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
@@ -485,9 +441,7 @@ class UserDeleteView(View):
                 raise PermissionDenied("Invalid user type.")
 
             # 성공적으로 삭제 완료
-            return JsonResponse(
-                {"message": "User deletion successful."}, status=200
-            )
+            return JsonResponse({"message": "User deletion successful."}, status=200)
 
         except CommonUser.DoesNotExist:
             return JsonResponse({"message": "User not found."}, status=404)
@@ -514,8 +468,6 @@ class EmailDuplicateCheckView(View):
             return JsonResponse({"message": "Email is required."}, status=400)
 
         if User.objects.filter(email=email).exists():
-            return JsonResponse(
-                {"message": "Email is already registered."}, status=200
-            )
+            return JsonResponse({"message": "Email is already registered."}, status=200)
         else:
             return JsonResponse({"message": "Email is available."}, status=200)

@@ -81,9 +81,7 @@ def test_kakao_login_new_user(
         "message": "Additional information required.",
         "email": "test@example.com",
     }
-    assert CommonUser.objects.filter(
-        email="test@example.com", join_type="normal"
-    ).exists()
+    assert CommonUser.objects.filter(email="test@example.com", join_type="normal").exists()
 
 
 # 2. 신규 사용자 로그인 (네이버)
@@ -109,9 +107,7 @@ def test_naver_login_new_user(
         "message": "Additional information required.",
         "email": "test@example.com",
     }
-    assert CommonUser.objects.filter(
-        email="test@example.com", join_type="normal"
-    ).exists()
+    assert CommonUser.objects.filter(email="test@example.com", join_type="normal").exists()
 
 
 # 3. 기존 사용자 로그인 (카카오)
@@ -127,9 +123,7 @@ def test_kakao_login_existing_user(
     mock_kakao_user_data,
 ):
     # 기존 사용자 생성
-    common_user = CommonUser.objects.create(
-        email="test@example.com", join_type="user", password="test_password"
-    )
+    common_user = CommonUser.objects.create(email="test@example.com", join_type="user", password="test_password")
     # UserInfo 객체 생성: 추가 정보 입력이 완료된 상태로 설정
     UserInfo.objects.create(
         common_user=common_user,
@@ -167,9 +161,7 @@ def test_naver_login_existing_user(
     mock_naver_user_data,
 ):
     # 기존 사용자 생성
-    common_user = CommonUser.objects.create(
-        email="test@example.com", join_type="user", password="test_password"
-    )
+    common_user = CommonUser.objects.create(email="test@example.com", join_type="user", password="test_password")
     # UserInfo 객체 생성: 추가 정보 입력이 완료된 상태로 설정
     UserInfo.objects.create(
         common_user=common_user,

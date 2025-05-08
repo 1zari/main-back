@@ -7,7 +7,5 @@ app_name = "resume"
 
 urlpatterns = [
     path("", MyResumeListView.as_view(), name="resume"),
-    path(
-        "<uuid:resume_id>/", MyResumeDetailView.as_view(), name="resume_detail"
-    ),
+    path("<uuid:resume_id>/", MyResumeDetailView.as_view(), name="resume_detail"),
 ]

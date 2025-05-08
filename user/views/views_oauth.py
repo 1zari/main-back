@@ -25,15 +25,11 @@ def create_dummy_password(common_user: CommonUser) -> None:
 
 class KakaoLoginView(View):
 
-    def get(
-        self, request: HttpRequest, *args: Any, **kwargs: Any
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
             code = request.GET.get("code")
             if code is None:
-                return JsonResponse(
-                    {"message": "Code is required."}, status=400
-                )
+                return JsonResponse({"message": "Code is required."}, status=400)
             try:
                 Kakao_login_request = KakaoLoginRequest(code=code)
             except ValueError as e:
@@ -41,9 +37,7 @@ class KakaoLoginView(View):
 
             kakao_access_token = self.get_kakao_access_token(code)
             if not kakao_access_token:
-                return JsonResponse(
-                    {"message": "Kakao authentication failed."}, status=400
-                )
+                return JsonResponse({"message": "Kakao authentication failed."}, status=400)
 
             user_data = self.get_kakao_user_info(kakao_access_token)
             if not user_data:
@@ -81,21 +75,15 @@ class KakaoLoginView(View):
                     status=202,
                 )
 
-            return JsonResponse(
-                {"message": "Failed to create user."}, status=400
-            )
+            return JsonResponse({"message": "Failed to create user."}, status=400)
 
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
     def get_kakao_access_token(self, code: str) -> Optional[str]:
         """카카오 액세스 토큰을 발급받는 메서드"""
         kakao_token_url = settings.KAKAO_TOKEN_URL
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
-        }
+        headers = {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}
         data = {
             "grant_type": "authorization_code",
             "client_id": settings.KAKAO_CLIENT_ID,
@@ -108,9 +96,7 @@ class KakaoLoginView(View):
             return response.json().get("access_token")
         return None
 
-    def get_kakao_user_info(
-        self, kakao_access_token: str
-    ) -> Optional[dict[str, Any]]:
+    def get_kakao_user_info(self, kakao_access_token: str) -> Optional[dict[str, Any]]:
         """카카오 액세스 토큰으로 사용자 정보를 가져오는 메서드"""
         url = settings.KAKAO_USER_INFO_URL
         headers = {"Authorization": f"Bearer {kakao_access_token}"}
@@ -136,16 +122,12 @@ class KakaoLoginView(View):
 
 
 class NaverLoginView(View):
-    def get(
-        self, request: HttpRequest, *args: Any, **kwargs: Any
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
             code = request.GET.get("code")
             state = request.GET.get("state")
             if code is None or state is None:
-                return JsonResponse(
-                    {"message": "Code and state are required."}, status=400
-                )
+                return JsonResponse({"message": "Code and state are required."}, status=400)
             try:
                 naver_login_request = NaverLoginRequest(code=code, state=state)
             except ValueError as e:
@@ -153,9 +135,7 @@ class NaverLoginView(View):
 
             naver_access_token = self.get_naver_access_token(code, state)
             if not naver_access_token:
-                return JsonResponse(
-                    {"message": "Naver authentication failed."}, status=400
-                )
+                return JsonResponse({"message": "Naver authentication failed."}, status=400)
 
             user_data = self.get_naver_user_info(naver_access_token)
             if not user_data:
@@ -193,14 +173,10 @@ class NaverLoginView(View):
                     status=202,
                 )
 
-            return JsonResponse(
-                {"message": "Failed to create user."}, status=400
-            )
+            return JsonResponse({"message": "Failed to create user."}, status=400)
 
         except Exception as e:
-            return JsonResponse(
-                {"message": "Server error", "error": str(e)}, status=500
-            )
+            return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
 
     def get_naver_access_token(self, code: str, state: str) -> Optional[str]:
         url = settings.NAVER_TOKEN_URL
@@ -216,9 +192,7 @@ class NaverLoginView(View):
             return response.json().get("access_token")
         return None
 
-    def get_naver_user_info(
-        self, access_token: str
-    ) -> Optional[dict[str, Any]]:
+    def get_naver_user_info(self, access_token: str) -> Optional[dict[str, Any]]:
         url = settings.NAVER_USER_INFO_URL
         headers = {"Authorization": f"Bearer {access_token}"}
         try:

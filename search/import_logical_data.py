@@ -17,13 +17,16 @@ shp_file = str(BASE_DIR / "search/logical_data/new_logical_data.shp")
 
 
 def run(verbose=True):
-    District.objects.all().delete()
-    lm = LayerMapping(
-        District,
-        shp_file,
-        district_mapping,
-        transform=True,
-        source_srs="ESRI:102080",
-        encoding="utf-8",
-    )
-    lm.save(strict=True, verbose=verbose)
+    try:
+        District.objects.all().delete()
+        lm = LayerMapping(
+            District,
+            shp_file,
+            district_mapping,
+            transform=True,
+            source_srs="ESRI:102080",
+            encoding="utf-8",
+        )
+        lm.save(strict=True, verbose=verbose)
+    except Exception as e:
+        print(str(e))

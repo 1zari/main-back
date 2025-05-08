@@ -1,17 +1,18 @@
-from typing import Set
+from typing import List, Set
 from uuid import UUID
 
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.measure import D
 from django.db.models import Q
-from django.http.request import HttpRequest
-from django.http.response import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.views import View
 from pydantic import ValidationError
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from search.models import District
 from search.schemas import (
+    DistrictModelDTO,
     JobPostingResultModel,
     JobPostingSearchQueryModel,
     JobPostingSearchResponseModel,
@@ -21,55 +22,45 @@ from user.models import CommonUser
 
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        """
-        필터링 검색 api
-        """
-
         current_user: CommonUser | AnonymousUser = request.user
-        user_id_for_bookmark = None
-        if current_user.is_authenticated:
-            user_id_for_bookmark = current_user.common_user_id
+        user_id_for_bookmark = current_user.common_user_id if current_user.is_authenticated else None
 
         try:
             query = JobPostingSearchQueryModel(
-                city=request.GET.getlist("city"),
-                district=request.GET.getlist("district"),
-                town=request.GET.getlist("town"),
+                city_no=request.GET.getlist("city_no"),
+                district_no=request.GET.getlist("district_no"),
+                town_no=request.GET.getlist("town_no"),
                 work_day=request.GET.getlist("work_day"),
                 posting_type=request.GET.getlist("posting_type"),
-                employment_type=request.GET.getlist("employment_type"),
-                education=request.GET.get("education", ""),
+                employment_type=request.GET.getlist("employment_type"),  # 고용형태
+                education=request.GET.get("education", ""),  # 학력사항
                 search=request.GET.get("search", ""),
                 job_keyword_sub=request.GET.getlist("job_keyword_sub"),
                 job_keyword_main=request.GET.getlist("job_keyword_main"),
+                work_experience=request.GET.get("work_experience", ""),
             )
         except ValidationError as e:
             return JsonResponse({"errors": e.errors()}, status=400)
         except Exception as e:
-            return JsonResponse(
-                {"errors": f"Invalid query parameters: {e}"}, status=400
-            )
+            return JsonResponse({"errors": f"Invalid query parameters: {e}"}, status=400)
 
-        qs = (
-            JobPosting.objects.select_related("company_id")
-            .only(
-                "job_posting_id",
-                "job_posting_title",
-                "city",
-                "district",
-                "town",
-                "deadline",
-                "location",
-                "summary",
-                "company_id__company_name",
-                "work_day",
-                "posting_type",
-                "employment_type",
-                "education",
-                "job_keyword_main",
-                "job_keyword_sub",
-            )
-            .all()
+        # 1. 공고 기본 쿼리셋
+        qs = JobPosting.objects.select_related("company_id").only(
+            "job_posting_id",
+            "job_posting_title",
+            "city",
+            "district",
+            "town",
+            "deadline",
+            "location",
+            "summary",
+            "company_id__company_logo",
+            "work_day",
+            "posting_type",
+            "employment_type",
+            "education",
+            "job_keyword_main",
+            "job_keyword_sub",
         )
 
         if query.work_day:
@@ -91,34 +82,31 @@ class SearchView(View):
                 | Q(company_id__company_name__icontains=query.search)
             )
 
-        region_qs = District.objects.only(
-            "geometry", "city_name", "district_name", "emd_name"
-        ).all()
-        if query.city:
-            region_qs = region_qs.filter(city_name__in=query.city)
-        if query.district:
-            region_qs = region_qs.filter(district_name__in=query.district)
-        if query.town:
-            region_qs = region_qs.filter(emd_name__in=query.town)
+        # 2. District를 DTO로 변환 (only로 필드 제한)
+        region_model = District.objects.only("geometry", "city_no", "district_no", "emd_no").all()
+        region_dtos: List[DistrictModelDTO] = [DistrictModelDTO.from_orm(obj) for obj in region_model]
+
+        # 3. 지역 필터링 (메모리 내에서 안전하게)
+        if query.city_no:
+            region_dtos = [dto for dto in region_dtos if dto.city_no in query.city_no]
+        if query.district_no:
+            region_dtos = [dto for dto in region_dtos if dto.district_no in query.district_no]
+        if query.town_no:
+            region_dtos = [dto for dto in region_dtos if dto.emd_no in query.town_no]
 
         job_posting_ids: Set[UUID] = set()
 
-        # 공간 검색 (경계면 기준 3km 포함)
-        if region_qs.exists() and query.town:
+        # 4. 공간검색 (town_no 있을 때만)
+        if region_dtos and query.town_no:
             distance_q = Q()
-            for region in region_qs:
-                if region.geometry:
-                    # 각 행정구역 경계에서 3km 이내 공고 검색 (공간 인덱스 활용)
-                    distance_q |= Q(
-                        location__dwithin=(region.geometry, D(km=3))
-                    )
-            nearby_qs = qs.filter(distance_q).distinct()
-            job_posting_ids = set(
-                nearby_qs.values_list("job_posting_id", flat=True)
-            )
+            for region in region_dtos:
+                geom = GEOSGeometry(region.geometry, srid=5179)
+                distance_q |= Q(location__dwithin=(geom, D(km=3)))
+            job_posting_ids = set(qs.filter(distance_q).values_list("job_posting_id", flat=True))
         else:
             job_posting_ids = set(qs.values_list("job_posting_id", flat=True))
 
+        # 5. 최종 공고 쿼리
         final_qs = (
             JobPosting.objects.select_related("company_id")
             .filter(job_posting_id__in=list(job_posting_ids))
@@ -131,37 +119,30 @@ class SearchView(View):
                 "summary",
                 "company_id__company_logo",
             )
-            .all()
         )
 
-        # 북마크 일괄 조회 (N+1 방지)
         bookmarked_ids = set()
         if user_id_for_bookmark:
             bookmarked_ids = set(
                 JobPostingBookmark.objects.filter(
                     user_id=user_id_for_bookmark,
-                    job_posting_id__in=final_qs.values_list(
-                        "job_posting_id", flat=True
-                    ),
+                    job_posting_id__in=final_qs.values_list("job_posting_id", flat=True),
                 ).values_list("job_posting_id", flat=True)
             )
 
-        # 결과 생성
-        results: list[JobPostingResultModel] = []
-        for jp in final_qs:
-            is_bookmarked = jp.job_posting_id in bookmarked_ids
-            results.append(
-                JobPostingResultModel(
-                    job_posting_id=jp.job_posting_id,
-                    job_posting_title=jp.job_posting_title,
-                    city=jp.city,
-                    district=jp.district,
-                    is_bookmarked=is_bookmarked,
-                    deadline=jp.deadline,
-                    summary=jp.summary,
-                    company_logo=jp.company_id.company_logo,
-                )
+        results = [
+            JobPostingResultModel(
+                job_posting_id=jp.job_posting_id,
+                job_posting_title=jp.job_posting_title,
+                city=jp.city,
+                district=jp.district,
+                is_bookmarked=jp.job_posting_id in bookmarked_ids,
+                deadline=jp.deadline,
+                summary=jp.summary,
+                company_logo=jp.company_id.company_logo,
             )
+            for jp in final_qs
+        ]
 
         response = JobPostingSearchResponseModel(results=results)
-        return JsonResponse(response.model_dump(), status=200)
+        return JsonResponse(response.model_dump(), safe=False)

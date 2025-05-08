@@ -167,9 +167,7 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
 
     client.force_login(mock_common_user)
 
-    response = client.post(
-        url, data=json.dumps(post_data), content_type="application/json"
-    )
+    response = client.post(url, data=json.dumps(post_data), content_type="application/json")
 
     assert response.status_code == 201
     assert response.get("content-type") == "application/json"
@@ -192,9 +190,7 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
 
     assert "certification_list" in created_resume
     assert isinstance(created_resume["certification_list"], list)
-    assert len(created_resume["certification_list"]) == len(
-        post_data["certification_list"]
-    )
+    assert len(created_resume["certification_list"]) == len(post_data["certification_list"])
     if created_resume["certification_list"]:
         assert "certification_name" in created_resume["certification_list"][0]
 
@@ -205,21 +201,13 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
 
     saved_careers = CareerInfo.objects.filter(resume=saved_resume)
     assert saved_careers.count() == len(post_data["career_list"])
-    assert saved_careers.filter(
-        company_name="Tech Corp", position="백엔드"
-    ).exists()
-    assert saved_careers.filter(
-        company_name="Startup ABC", position="Intern"
-    ).exists()
+    assert saved_careers.filter(company_name="Tech Corp", position="백엔드").exists()
+    assert saved_careers.filter(company_name="Startup ABC", position="Intern").exists()
 
     saved_certifications = Certification.objects.filter(resume=saved_resume)
     assert saved_certifications.count() == len(post_data["certification_list"])
-    assert saved_certifications.filter(
-        certification_name="OCJP", issuing_organization="Oracle"
-    ).exists()
-    assert saved_certifications.filter(
-        certification_name="TOEIC", issuing_organization="ETS"
-    ).exists()
+    assert saved_certifications.filter(certification_name="OCJP", issuing_organization="Oracle").exists()
+    assert saved_certifications.filter(certification_name="TOEIC", issuing_organization="ETS").exists()
 
 
 @pytest.mark.django_db
@@ -251,9 +239,7 @@ def test_my_resume_detail_get_success(
 
 
 @pytest.mark.django_db
-def test_my_resume_patch_detail_success(
-    client, mock_user, mock_common_user, mock_resume
-):
+def test_my_resume_patch_detail_success(client, mock_user, mock_common_user, mock_resume):
     """
     patch 테스트
     """
@@ -284,9 +270,7 @@ def test_my_resume_patch_detail_success(
 
     client.force_login(mock_common_user)
 
-    response = client.patch(
-        url, json.dumps(patch_data), content_type="application/json"
-    )
+    response = client.patch(url, json.dumps(patch_data), content_type="application/json")
     get_data = json.loads(response.content)["resume"]
     assert get_data["resume_id"] == str(mock_resume.resume_id)
     assert get_data["resume_title"] == patch_data["resume_title"]

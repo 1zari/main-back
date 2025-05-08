@@ -14,9 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="district",
             name="emd_name",
-            field=models.CharField(
-                default="a", max_length=40, verbose_name="읍면동 이름"
-            ),
+            field=models.CharField(default="a", max_length=40, verbose_name="읍면동 이름"),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -48,8 +46,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="district",
             name="geometry",
-            field=django.contrib.gis.db.models.fields.MultiPolygonField(
-                srid=5179, verbose_name="읍면동 경계"
-            ),
+            field=django.contrib.gis.db.models.fields.MultiPolygonField(srid=5179, verbose_name="읍면동 경계"),
         ),
     ]

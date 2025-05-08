@@ -42,19 +42,13 @@ class MyResumeListView(View):
         try:
             token = request.user
             user: UserInfo = get_valid_normal_user(token)
-            resumes: list[Resume] = list(
-                Resume.objects.filter(user=user).prefetch_related(
-                    "careers", "certifications"
-                )
-            )
+            resumes: list[Resume] = list(Resume.objects.filter(user=user).prefetch_related("careers", "certifications"))
 
             resume_models: List[ResumeOutputModel] = []
             for resume in resumes:
-                careers: list[CareerInfoModel] = serialize_careers(
-                    list(resume.careers.all())
-                )
-                certifications: list[CertificationInfoModel] = (
-                    serialize_certifications(list(resume.certifications.all()))
+                careers: list[CareerInfoModel] = serialize_careers(list(resume.careers.all()))
+                certifications: list[CertificationInfoModel] = serialize_certifications(
+                    list(resume.certifications.all())
                 )
                 resume_models.append(
                     ResumeOutputModel(
@@ -93,14 +87,10 @@ class MyResumeListView(View):
             with transaction.atomic():
                 new_resume = create_new_resume(user, resume_data)
                 career_models: list[CareerInfoModel] = (
-                    resume_data.career_list
-                    if resume_data.career_list is not None
-                    else []
+                    resume_data.career_list if resume_data.career_list is not None else []
                 )
                 certification_models: list[CertificationInfoModel] = (
-                    resume_data.certification_list
-                    if resume_data.certification_list is not None
-                    else []
+                    resume_data.certification_list if resume_data.certification_list is not None else []
                 )
                 resume_model = ResumeOutputModel(
                     resume_id=new_resume.resume_id,
@@ -114,19 +104,13 @@ class MyResumeListView(View):
                     career_list=career_models or [],
                     certification_list=certification_models or [],
                 )
-                response = ResumeResponseModel(
-                    message="Resume created successfully", resume=resume_model
-                )
+                response = ResumeResponseModel(message="Resume created successfully", resume=resume_model)
                 return JsonResponse(response.model_dump(), status=201)
         except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
             return JsonResponse({"errors": "Invalid JSON format"}, status=400)
         except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
-            return JsonResponse(
-                {"errors": e.errors()}, status=400
-            )  # 상세 오류 반환
-        except (
-            PermissionDenied
-        ) as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
             return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
@@ -151,15 +135,9 @@ class MyResumeDetailView(View):
                 .first()
             )
             if not resume:
-                return JsonResponse(
-                    {"error": "Not found resume data"}, status=404
-                )
-            career_models: list[CareerInfoModel] = serialize_careers(
-                list(resume.careers.all())
-            )
-            certification_models = serialize_certifications(
-                list(resume.certifications.all())
-            )
+                return JsonResponse({"error": "Not found resume data"}, status=404)
+            career_models: list[CareerInfoModel] = serialize_careers(list(resume.careers.all()))
+            certification_models = serialize_certifications(list(resume.certifications.all()))
             resume_model: ResumeOutputModel = ResumeOutputModel(
                 resume_id=resume.resume_id,
                 job_category=resume.job_category,
@@ -172,9 +150,7 @@ class MyResumeDetailView(View):
                 career_list=career_models,
                 certification_list=certification_models,
             )
-            response = ResumeResponseModel(
-                message="Resume loaded successfully", resume=resume_model
-            )
+            response = ResumeResponseModel(message="Resume loaded successfully", resume=resume_model)
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
@@ -195,24 +171,18 @@ class MyResumeDetailView(View):
                 .first()
             )
             if not resume_to_update:
-                return JsonResponse(
-                    {"error": "Not found resume data"}, status=404
-                )
+                return JsonResponse({"error": "Not found resume data"}, status=404)
 
             # 업데이트 및 직렬화 포함
             updated_resume = update_resume(resume_to_update, update_data)
 
-            response = ResumeResponseModel(
-                message="Resume updated successfully", resume=updated_resume
-            )
+            response = ResumeResponseModel(message="Resume updated successfully", resume=updated_resume)
             return JsonResponse(response.model_dump(), status=200)
 
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
-    def delete(
-        self, request: HttpRequest, resume_id: uuid.UUID
-    ) -> JsonResponse:
+    def delete(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 삭제
         """
@@ -221,9 +191,7 @@ class MyResumeDetailView(View):
             user = get_valid_normal_user(token)
             resume = Resume.objects.get(user_id=user, resume_id=resume_id)  # type: ignore
             resume.delete()
-            return JsonResponse(
-                {"message": "Successfully deleted resume"}, status=200
-            )
+            return JsonResponse({"message": "Successfully deleted resume"}, status=200)
         except Resume.DoesNotExist:
             return JsonResponse({"error": "Resume not found"}, status=404)
         except Exception as e:
@@ -262,9 +230,7 @@ def create_new_resume(user: UserInfo, resume_data: ResumeCreateModel):
     return new_resume
 
 
-def update_resume(
-    resume: Resume, update_data: ResumeUpdateModel
-) -> ResumeOutputModel:
+def update_resume(resume: Resume, update_data: ResumeUpdateModel) -> ResumeOutputModel:
     # 기본 정보 수정
     for field in [
         "job_category",
@@ -304,19 +270,13 @@ def update_resume(
             )
 
     updated_resume = (
-        Resume.objects.filter(resume_id=resume.resume_id)
-        .prefetch_related("careers", "certifications")
-        .first()
+        Resume.objects.filter(resume_id=resume.resume_id).prefetch_related("careers", "certifications").first()
     )
 
     if updated_resume is None:
-        raise Resume.DoesNotExist(
-            f"Resume with id {resume.resume_id} does not exist."
-        )
+        raise Resume.DoesNotExist(f"Resume with id {resume.resume_id} does not exist.")
     career_models = serialize_careers(list(updated_resume.careers.all()))
-    certification_models = serialize_certifications(
-        list(updated_resume.certifications.all())
-    )
+    certification_models = serialize_certifications(list(updated_resume.certifications.all()))
 
     return ResumeOutputModel(
         resume_id=updated_resume.resume_id,

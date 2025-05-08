@@ -35,9 +35,7 @@ class JobPostingListView(View):
             bookmarked_ids = set()
             if isinstance(user, CommonUser):
                 bookmarked_ids = set(
-                    JobPostingBookmark.objects.filter(user=user).values_list(
-                        "job_posting_id", flat=True
-                    )
+                    JobPostingBookmark.objects.filter(user=user).values_list("job_posting_id", flat=True)
                 )
 
             items: List[JobPostingListModel] = [
@@ -66,26 +64,16 @@ class JobPostingDetailView(View):
     공고 상세 조회 / 생성 / 수정 / 삭제 API
     """
 
-    def get(
-        self, request: HttpRequest, job_posting_id: uuid.UUID
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
-            post = (
-                JobPosting.objects.select_related("company_id")
-                .filter(job_posting_id=job_posting_id)
-                .first()
-            )
+            post = JobPosting.objects.select_related("company_id").filter(job_posting_id=job_posting_id).first()
             if not post:
-                return JsonResponse(
-                    {"error": "공고를 찾을 수 없습니다."}, status=404
-                )
+                return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
             user = request.user
             is_bookmarked = False
             if isinstance(user, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(
-                    user=user, job_posting=post
-                ).exists()
+                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
@@ -94,11 +82,13 @@ class JobPostingDetailView(View):
                 address=post.address,
                 city=post.city,
                 district=post.district,
+                town=post.town,
                 location=(post.location.x, post.location.y),
                 work_time_start=post.work_time_start,
                 work_time_end=post.work_time_end,
                 posting_type=post.posting_type,
                 employment_type=post.employment_type,
+                work_experience=post.work_experience,
                 job_keyword_main=post.job_keyword_main,
                 job_keyword_sub=post.job_keyword_sub,
                 number_of_positions=post.number_of_positions,
@@ -144,11 +134,13 @@ class JobPostingDetailView(View):
                     address=payload.address,
                     city=payload.city,
                     district=payload.district,
+                    town=payload.town,
                     location=location,
                     work_time_start=payload.work_time_start,
                     work_time_end=payload.work_time_end,
                     posting_type=payload.posting_type,
                     employment_type=payload.employment_type,
+                    work_experience=payload.work_experience,
                     job_keyword_main=payload.job_keyword_main,
                     job_keyword_sub=payload.job_keyword_sub,
                     number_of_positions=payload.number_of_positions,
@@ -170,11 +162,13 @@ class JobPostingDetailView(View):
                 address=post.address,
                 city=post.city,
                 district=post.district,
+                town=post.town,
                 location=(post.location.x, post.location.y),
                 work_time_start=post.work_time_start,
                 work_time_end=post.work_time_end,
                 posting_type=post.posting_type,
                 employment_type=post.employment_type,
+                work_experience=post.work_experience,
                 job_keyword_main=post.job_keyword_main,
                 job_keyword_sub=post.job_keyword_sub,
                 number_of_positions=post.number_of_positions,
@@ -197,9 +191,7 @@ class JobPostingDetailView(View):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    def patch(
-        self, request: HttpRequest, job_posting_id: uuid.UUID
-    ) -> JsonResponse:
+    def patch(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             user = request.user
             if not hasattr(user, "companyinfo"):
@@ -209,9 +201,7 @@ class JobPostingDetailView(View):
                 )
             company = user.companyinfo
 
-            post = JobPosting.objects.filter(
-                job_posting_id=job_posting_id
-            ).first()
+            post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
             if not post or post.company_id != company:
                 return JsonResponse(
                     {"error": "수정 권한이 없거나 공고를 찾을 수 없습니다."},
@@ -232,9 +222,7 @@ class JobPostingDetailView(View):
 
             is_bookmarked = False
             if isinstance(user, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(
-                    user=user, job_posting=post
-                ).exists()
+                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
@@ -243,11 +231,13 @@ class JobPostingDetailView(View):
                 address=post.address,
                 city=post.city,
                 district=post.district,
+                town=post.town,
                 location=(post.location.x, post.location.y),
                 work_time_start=post.work_time_start,
                 work_time_end=post.work_time_end,
                 posting_type=post.posting_type,
                 employment_type=post.employment_type,
+                work_experience=post.work_experience,
                 job_keyword_main=post.job_keyword_main,
                 job_keyword_sub=post.job_keyword_sub,
                 number_of_positions=post.number_of_positions,
@@ -270,9 +260,7 @@ class JobPostingDetailView(View):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    def delete(
-        self, request: HttpRequest, job_posting_id: uuid.UUID
-    ) -> JsonResponse:
+    def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             user = request.user
             if not hasattr(user, "companyinfo"):
@@ -282,9 +270,7 @@ class JobPostingDetailView(View):
                 )
             company = user.companyinfo
 
-            post = JobPosting.objects.filter(
-                job_posting_id=job_posting_id
-            ).first()
+            post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
             if not post or post.company_id != company:
                 return JsonResponse(
                     {"error": "삭제 권한이 없거나 공고를 찾을 수 없습니다."},
@@ -292,9 +278,7 @@ class JobPostingDetailView(View):
                 )
 
             post.delete()
-            response = BookmarkResponseModel(
-                message="공고가 성공적으로 삭제되었습니다."
-            )
+            response = BookmarkResponseModel(message="공고가 성공적으로 삭제되었습니다.")
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
@@ -309,13 +293,9 @@ class JobPostingBookmarkView(View):
         try:
             user = request.user
             if not isinstance(user, CommonUser):
-                return JsonResponse(
-                    {"error": "인증된 사용자만 접근할 수 있습니다."}, status=403
-                )
+                return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            bookmarks = JobPostingBookmark.objects.select_related(
-                "job_posting__company_id"
-            ).filter(user=user)
+            bookmarks = JobPostingBookmark.objects.select_related("job_posting__company_id").filter(user=user)
 
             items = [
                 JobPostingBookmarkListItemModel(
@@ -335,57 +315,33 @@ class JobPostingBookmarkView(View):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    def post(
-        self, request: HttpRequest, job_posting_id: uuid.UUID
-    ) -> JsonResponse:
+    def post(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             user = request.user
             if not isinstance(user, CommonUser):
-                return JsonResponse(
-                    {"error": "인증된 사용자만 접근할 수 있습니다."}, status=403
-                )
+                return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            post = JobPosting.objects.filter(
-                job_posting_id=job_posting_id
-            ).first()
+            post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
             if not post:
-                return JsonResponse(
-                    {"error": "공고를 찾을 수 없습니다."}, status=404
-                )
+                return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
-            _, created = JobPostingBookmark.objects.get_or_create(
-                user=user, job_posting=post
-            )
+            _, created = JobPostingBookmark.objects.get_or_create(user=user, job_posting=post)
             response = BookmarkResponseModel(
-                message=(
-                    "북마크가 등록되었습니다."
-                    if created
-                    else "이미 북마크한 공고입니다."
-                )
+                message=("북마크가 등록되었습니다." if created else "이미 북마크한 공고입니다.")
             )
-            return JsonResponse(
-                response.model_dump(), status=201 if created else 200
-            )
+            return JsonResponse(response.model_dump(), status=201 if created else 200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    def delete(
-        self, request: HttpRequest, job_posting_id: uuid.UUID
-    ) -> JsonResponse:
+    def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             user = request.user
             if not isinstance(user, CommonUser):
-                return JsonResponse(
-                    {"error": "인증된 사용자만 접근할 수 있습니다."}, status=403
-                )
+                return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            bookmark = JobPostingBookmark.objects.filter(
-                user=user, job_posting_id=job_posting_id
-            ).first()
+            bookmark = JobPostingBookmark.objects.filter(user=user, job_posting_id=job_posting_id).first()
             if not bookmark:
-                response = BookmarkResponseModel(
-                    message="해당 공고는 북마크되어 있지 않습니다."
-                )
+                response = BookmarkResponseModel(message="해당 공고는 북마크되어 있지 않습니다.")
                 return JsonResponse(response.model_dump(), status=404)
 
             bookmark.delete()
