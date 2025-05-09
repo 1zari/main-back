@@ -160,11 +160,8 @@ class CompanyLoginView(View):
 class CompanyInfoDetailView(View):  # 기업 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 1. 사용자 인증
-            user = get_user_from_token(request)
-
-            # 2. CompanyInfo 가져오기
-            company_info = get_valid_company_user(user)
+            valid_user: CommonUser = get_user_from_token(request)
+            company_info: CompanyInfo = get_valid_company_user(valid_user)
 
             response = CompanyInfoResponse(
                 company_name=company_info.company_name,
@@ -191,13 +188,9 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
 class CompanyInfoUpdateView(View):
     def patch(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 1. 사용자 인증
-            user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
+            company_user: CompanyInfo = get_valid_company_user(valid_user)
 
-            # 2. 회사 정보 조회
-            company_user = get_valid_company_user(user)
-
-            # 3. 본문 처리
             body = json.loads(request.body)
             validated_data = CompanyInfoUpdateRequest(**body)
 

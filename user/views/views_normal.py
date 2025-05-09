@@ -137,19 +137,19 @@ class UserLoginView(View):
 class UserInfoDetailView(View):  # 유저 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            valid_user = get_user_from_token(request)
-            user_info = get_valid_normal_user(valid_user)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
 
             #  응답 생성
             response = UserInfoResponse(
                 message="User info retrieved successfully.",
-                name=user_info.name,
-                phone_number=user_info.phone_number,
-                gender=user_info.gender,
-                birthday=user_info.birthday,
-                interest=user_info.interest,
-                purpose_subscription=user_info.purpose_subscription,
-                route=user_info.route,
+                name=user.name,
+                phone_number=user.phone_number,
+                gender=user.gender,
+                birthday=user.birthday,
+                interest=user.interest,
+                purpose_subscription=user.purpose_subscription,
+                route=user.route,
             )
             return JsonResponse(response.model_dump(), status=200)
 
@@ -164,8 +164,8 @@ class UserInfoDetailView(View):  # 유저 정보 조회
 class UserInfoUpdateView(View):
     def patch(self, request, *args, **kwargs):
         try:
-            valid_user = get_user_from_token(request)
-            user_info = get_valid_normal_user(valid_user)
+            valid_user: CommonUser = get_user_from_token(request)
+            user_info: UserInfo = get_valid_normal_user(valid_user)
 
             #  요청 본문 파싱
             body = json.loads(request.body)
