@@ -1,9 +1,4 @@
-from typing import List, Set
-from uuid import UUID
-
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.db.models.aggregates import Union
-from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.measure import D
 from django.db.models import Q
 from django.db.models.expressions import Exists, OuterRef
@@ -14,18 +9,18 @@ from pydantic import ValidationError
 from job_posting.models import JobPosting, JobPostingBookmark
 from search.models import District
 from search.schemas import (
-    DistrictModelDTO,
     JobPostingResultModel,
     JobPostingSearchQueryModel,
     JobPostingSearchResponseModel,
 )
 from user.models import CommonUser
+from utils.common import get_user_from_token, get_valid_normal_user
 
 
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        current_user: CommonUser | AnonymousUser = request.user
-        user_id_for_bookmark = current_user.common_user_id if current_user.is_authenticated else None
+        valid_user: CommonUser = get_user_from_token(request)
+        current_user = get_valid_normal_user(valid_user) if valid_user else None
 
         try:
             query = JobPostingSearchQueryModel(
@@ -107,8 +102,10 @@ class SearchView(View):
             qs = qs.filter(location__dwithin=(regions_3km, D(km=0)))
 
         # 5. 북마크 정보 서브쿼리
-        if user_id_for_bookmark:
-            bookmarked = JobPostingBookmark.objects.filter(user_id=user_id_for_bookmark, job_posting_id=OuterRef("pk"))
+        if current_user:
+            bookmarked = JobPostingBookmark.objects.filter(
+                user_id=current_user.common_user_id, job_posting_id=OuterRef("pk")
+            )
             qs = qs.annotate(is_bookmarked=Exists(bookmarked))
 
         # 6. 최종 결과 쿼리
