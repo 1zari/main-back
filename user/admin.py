@@ -37,7 +37,7 @@ class CommonUserAdmin(admin.ModelAdmin):
         ),
         (_("Important dates"), {"fields": ("created_at", "last_login")}),
     )
-    readonly_fields = ("common_user_id", "created_at", "last_login")
+    readonly_fields = ("created_at", "last_login")
 
 
 @admin.register(UserInfo)
@@ -56,7 +56,7 @@ class UserInfoAdmin(admin.ModelAdmin):
     list_filter = ("gender",)
     ordering = ("name",)
     # filter_horizontal은 ArrayField에 사용할 수 없으므로 제거
-    readonly_fields = ("user_id", "common_user")
+    readonly_fields = ("user_id",)
 
 
 @admin.register(CompanyInfo)
@@ -82,4 +82,4 @@ class CompanyInfoAdmin(admin.ModelAdmin):
     )
     list_filter = ("establishment",)
     ordering = ("company_name",)
-    readonly_fields = ("company_id", "common_user")
+    readonly_fields = ("company_id",)
