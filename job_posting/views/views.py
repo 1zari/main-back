@@ -20,8 +20,12 @@ from job_posting.schemas import (
     JobPostingResponseModel,
     JobPostingUpdateModel,
 )
-from user.models import CommonUser,UserInfo, CompanyInfo
-from utils.common import get_valid_company_user, get_valid_normal_user, get_user_from_token
+from user.models import CommonUser, CompanyInfo, UserInfo
+from utils.common import (
+    get_user_from_token,
+    get_valid_company_user,
+    get_valid_normal_user,
+)
 
 
 class JobPostingListView(View):
@@ -36,7 +40,7 @@ class JobPostingListView(View):
                 user = get_valid_normal_user(valid_user) if valid_user else None
             postings = JobPosting.objects.select_related("company_id").all()
 
-            bookmarked_ids = set()
+            bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
                 bookmarked_ids = set(
                     JobPostingBookmark.objects.filter(user=user).values_list("job_posting_id", flat=True)
@@ -305,7 +309,7 @@ class JobPostingBookmarkView(View):
             if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            bookmarks = JobPostingBookmark.objects.select_related("job_posting__company_id").filter(user=user)
+            bookmarks = JobPostingBookmark.objects.select_related("job_posting__company_id").filter(user=current_user)
 
             items = [
                 JobPostingBookmarkListItemModel(
@@ -336,7 +340,7 @@ class JobPostingBookmarkView(View):
             if not post:
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
-            _, created = JobPostingBookmark.objects.get_or_create(user=user, job_posting=post)
+            _, created = JobPostingBookmark.objects.get_or_create(user=current_user, job_posting=post)
             response = BookmarkResponseModel(
                 message=("북마크가 등록되었습니다." if created else "이미 북마크한 공고입니다.")
             )
@@ -351,7 +355,7 @@ class JobPostingBookmarkView(View):
             if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            bookmark = JobPostingBookmark.objects.filter(user=user, job_posting_id=job_posting_id).first()
+            bookmark = JobPostingBookmark.objects.filter(user=current_user, job_posting_id=job_posting_id).first()
             if not bookmark:
                 response = BookmarkResponseModel(message="해당 공고는 북마크되어 있지 않습니다.")
                 return JsonResponse(response.model_dump(), status=404)
