@@ -13,13 +13,14 @@ from search.schemas import (
     JobPostingSearchQueryModel,
     JobPostingSearchResponseModel,
 )
+from user.models import CommonUser
 from utils.common import get_user_from_token, get_valid_normal_user
 
 
 class SearchView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        validate_user = get_user_from_token(request)
-        current_user = get_valid_normal_user(validate_user) if validate_user else None
+        valid_user: CommonUser = get_user_from_token(request)
+        current_user = get_valid_normal_user(valid_user) if valid_user else None
 
         try:
             query = JobPostingSearchQueryModel(

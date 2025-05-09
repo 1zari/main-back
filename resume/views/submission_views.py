@@ -31,7 +31,7 @@ from resume.serializer import (
     serialize_certifications,
     serialize_submissions,
 )
-from user.models import CompanyInfo, UserInfo
+from user.models import CommonUser, CompanyInfo, UserInfo
 from utils.common import (
     get_user_from_token,
     get_valid_company_user,
@@ -54,7 +54,7 @@ class SubmissionListView(View):
         지원한 공고 리스트 조회
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             submissions: list[Submission] = list(Submission.objects.filter(user=user).all())
 
@@ -74,7 +74,7 @@ class SubmissionListView(View):
         공고 지원 (유저)
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             data = json.loads(request.body)
             job_posting_id = data.get("job_posting_id")
@@ -140,7 +140,7 @@ class SubmissionDetailView(View):
         상세 데이터 조회
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
 
             submission: Submission = Submission.objects.get(user=user, submission_id=submission_id)
@@ -181,7 +181,7 @@ class SubmissionDetailView(View):
         지원공고 삭제
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             submission: Submission = Submission.objects.get(submission_id=submission_id)
             if submission is None:
@@ -203,7 +203,7 @@ class SubmissionMemoView(View):
         memo 수정
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             data = json.loads(request.body)
             update_data = SubmissionMemoUpdateModel(memo=data.get("memo", ""))
@@ -225,7 +225,7 @@ class SubmissionMemoView(View):
         memo 삭제
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             submission = Submission.objects.get(user=user, submission_id=submission_id)
             if submission is not None:
@@ -249,7 +249,7 @@ class SubmissionCompanyListView(View):
         공고 제목 및 지원서 목록 리스트 조회
         """
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: CompanyInfo = get_valid_company_user(valid_user)
             submission_list = Submission.objects.filter(job_posting__company_id=user.company_id).all()
             job_posting_list_model: list[JobpostingGetListModel] = [
@@ -286,7 +286,7 @@ class SubmissionCompanyDetialView(View):
 
     def get(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         try:
-            valid_user = get_user_from_token(request)
+            valid_user: CommonUser = get_user_from_token(request)
             user: CompanyInfo = get_valid_company_user(valid_user)
             submission = Submission.objects.get(submission_id=submission_id)
             if submission is None:
