@@ -59,7 +59,7 @@ class MyResumeListView(View):
                         job_category=resume.job_category,
                         resume_id=resume.resume_id,
                         resume_title=resume.resume_title,
-                        updated_at=resume.updated_at,
+                        updated_at=resume.updated_at.date(),
                     )
                 )
             response = ResumeListResponseModel(
