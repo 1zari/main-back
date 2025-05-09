@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, cast
+from typing import cast
 
 import redis
 from django.http import JsonResponse

@@ -20,9 +20,9 @@ from resume.schemas import (
     ResumeUpdateModel,
 )
 from resume.serializer import serialize_careers, serialize_certifications
-from user.models import UserInfo
+from user.models import CommonUser, UserInfo
 from user.schemas import UserInfoModel
-from utils.common import get_valid_normal_user
+from utils.common import get_user_from_token, get_valid_normal_user
 
 # ------------------------
 # 이력서 관련 api
@@ -40,8 +40,8 @@ class MyResumeListView(View):
         내 이력서 리스트 조회
         """
         try:
-            token = request.user
-            user: UserInfo = get_valid_normal_user(token)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             resumes: list[Resume] = list(Resume.objects.filter(user=user).prefetch_related("careers", "certifications"))
 
             resume_models: List[ResumeOutputModel] = []
@@ -79,8 +79,8 @@ class MyResumeListView(View):
         from pydantic_core._pydantic_core import ValidationError
 
         try:
-            token = request.user
-            user: UserInfo = get_valid_normal_user(token)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             data = json.loads(request.body)
             resume_data: ResumeCreateModel = ResumeCreateModel(**data)
 
@@ -127,8 +127,8 @@ class MyResumeDetailView(View):
         이력서 상세 조회
         """
         try:
-            token = request.user
-            user: UserInfo = get_valid_normal_user(token)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             resume = (
                 Resume.objects.filter(user=user, resume_id=resume_id)
                 .prefetch_related("careers", "certifications")
@@ -160,8 +160,8 @@ class MyResumeDetailView(View):
         이력서 수정
         """
         try:
-            token = request.user
-            user = get_valid_normal_user(token)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             data = json.loads(request.body)
             update_data = ResumeUpdateModel(**data)
 
@@ -187,8 +187,8 @@ class MyResumeDetailView(View):
         이력서 삭제
         """
         try:
-            token = request.user
-            user = get_valid_normal_user(token)
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             resume = Resume.objects.get(user_id=user, resume_id=resume_id)  # type: ignore
             resume.delete()
             return JsonResponse({"message": "Successfully deleted resume"}, status=200)
