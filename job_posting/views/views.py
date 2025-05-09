@@ -19,7 +19,8 @@ from job_posting.schemas import (
     JobPostingResponseModel,
     JobPostingUpdateModel,
 )
-from user.models import CommonUser
+from user.models import CommonUser,UserInfo, CompanyInfo
+from utils.common import get_valid_company_user, get_valid_normal_user, get_user_from_token
 
 
 class JobPostingListView(View):
@@ -29,7 +30,8 @@ class JobPostingListView(View):
 
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             postings = JobPosting.objects.select_related("company_id").all()
 
             bookmarked_ids = set()
@@ -70,7 +72,8 @@ class JobPostingDetailView(View):
             if not post:
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             is_bookmarked = False
             if isinstance(user, CommonUser):
                 is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
@@ -113,7 +116,8 @@ class JobPostingDetailView(View):
 
     def post(self, request: HttpRequest) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: CompanyInfo = get_valid_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
@@ -193,7 +197,8 @@ class JobPostingDetailView(View):
 
     def patch(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: CompanyInfo = get_valid_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 수정할 수 있습니다."},
@@ -262,7 +267,8 @@ class JobPostingDetailView(View):
 
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: CompanyInfo = get_valid_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 삭제할 수 있습니다."},
@@ -291,7 +297,8 @@ class JobPostingBookmarkView(View):
 
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             if not isinstance(user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
@@ -317,7 +324,8 @@ class JobPostingBookmarkView(View):
 
     def post(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             if not isinstance(user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
@@ -335,7 +343,8 @@ class JobPostingBookmarkView(View):
 
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
-            user = request.user
+            valid_user: CommonUser = get_user_from_token(request)
+            user: UserInfo = get_valid_normal_user(valid_user)
             if not isinstance(user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
