@@ -7,7 +7,7 @@ from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from resume.models import CareerInfo, Certification, Resume
 from resume.schemas import (
@@ -29,7 +29,7 @@ from utils.common import get_valid_normal_user
 # ------------------------
 
 
-@method_decorator(csrf_protect, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeListView(View):
     """
     이력서
@@ -116,7 +116,7 @@ class MyResumeListView(View):
             return JsonResponse({"errors": str(e)}, status=400)
 
 
-@method_decorator(csrf_protect, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeDetailView(View):
     """
     이력서 단일 조회 / 수정 / 삭제
