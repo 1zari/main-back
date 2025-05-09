@@ -6,6 +6,7 @@ from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views import View
+from mypy.join import join_types
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from job_posting.schemas import (
@@ -31,7 +32,8 @@ class JobPostingListView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            if valid_user.join_type == "normal":
+                user = get_valid_normal_user(valid_user) if valid_user else None
             postings = JobPosting.objects.select_related("company_id").all()
 
             bookmarked_ids = set()
@@ -73,7 +75,8 @@ class JobPostingDetailView(View):
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            if valid_user.join_type == "normal":
+                user = get_valid_normal_user(valid_user) if valid_user else None
             is_bookmarked = False
             if isinstance(user, CommonUser):
                 is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
@@ -298,8 +301,8 @@ class JobPostingBookmarkView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
-            if not isinstance(user, CommonUser):
+            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
             bookmarks = JobPostingBookmark.objects.select_related("job_posting__company_id").filter(user=user)
@@ -325,8 +328,8 @@ class JobPostingBookmarkView(View):
     def post(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
-            if not isinstance(user, CommonUser):
+            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
             post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
@@ -344,8 +347,8 @@ class JobPostingBookmarkView(View):
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
-            if not isinstance(user, CommonUser):
+            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
             bookmark = JobPostingBookmark.objects.filter(user=user, job_posting_id=job_posting_id).first()
