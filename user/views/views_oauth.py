@@ -1,5 +1,5 @@
 from typing import Any, Optional
-
+import json
 import requests
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
@@ -26,9 +26,11 @@ def create_dummy_password(common_user: CommonUser) -> None:
 
 class KakaoLoginView(View):
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            code = request.GET.get("code")
+            data = json.loads(request.body)
+            code = data.get("code")
+            #code = request.GET.get("code")
             if code is None:
                 return JsonResponse({"message": "Code is required."}, status=400)
             try:
@@ -125,9 +127,11 @@ class KakaoLoginView(View):
 
 
 class NaverLoginView(View):
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            code = request.GET.get("code")
+            data = json.loads(request.body)
+            code = data.get("code")
+            #code = request.GET.get("code")
             state = request.GET.get("state")
             if code is None or state is None:
                 return JsonResponse({"message": "Code and state are required."}, status=400)

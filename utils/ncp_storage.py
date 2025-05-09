@@ -59,7 +59,7 @@ def upload_to_ncp_storage(file_obj):
             Key=s3_key,
             ExtraArgs={
                 "ContentType": file_obj.content_type,
-                # "ACL": "public-read",  # 파일을 공개적으로 접근할 수 있도록 설정
+                "ACL": "public-read",  # 파일을 공개적으로 접근할 수 있도록 설정
             },
         )
 
