@@ -6,7 +6,7 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from resume.models import Resume, Submission
@@ -41,7 +41,7 @@ from utils.common import get_valid_company_user, get_valid_normal_user
 # ------------------------
 
 
-@method_decorator(csrf_protect, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
 class SubmissionListView(View):
     """
     지원한 공고 리스트 API (유저)
