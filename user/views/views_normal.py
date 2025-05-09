@@ -1,8 +1,5 @@
 import json
-from datetime import datetime
 
-import jwt
-from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
@@ -11,19 +8,13 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from jwt import ExpiredSignatureError, InvalidTokenError
-from jwt import decode as jwt_decode
 from pydantic import ValidationError
 
 from user.models import CommonUser, UserInfo
-from user.redis import r
 from user.schemas import (
-    CommonUserBaseModel,
     CommonUserResponseModel,
     FindUserEmailRequest,
     FindUserEmailResponse,
-    LogoutRequest,
-    LogoutResponse,
     ResetUserPasswordRequest,
     ResetUserPasswordResponse,
     UserInfoModel,
@@ -36,7 +27,7 @@ from user.schemas import (
     UserSignupRequest,
 )
 from user.services.token import create_access_token, create_refresh_token
-from utils.common import get_valid_company_user, get_valid_normal_user
+from utils.common import get_user_from_token, get_valid_normal_user
 
 User = get_user_model()
 
@@ -146,34 +137,8 @@ class UserLoginView(View):
 class UserInfoDetailView(View):  # 유저 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 토큰 추출
-            auth_header = request.META.get("HTTP_AUTHORIZATION")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise PermissionDenied("Authentication is required.")
-
-            token = auth_header.split(" ")[1]
-
-            # JWT 디코딩
-            try:
-                payload = jwt_decode(
-                    token,
-                    settings.JWT_SECRET_KEY,
-                    algorithms=[settings.JWT_ALGORITHM],
-                )
-            except ExpiredSignatureError:
-                raise PermissionDenied("Token has expired.")
-            except InvalidTokenError:
-                raise PermissionDenied("Invalid token.")
-
-            user_id = payload.get("sub")
-            if not user_id:
-                raise PermissionDenied("Invalid token payload.")
-
-            # CommonUser 조회
-            user = CommonUser.objects.get(common_user_id=user_id)
-
-            # UserInfo 조회
-            user_info = get_valid_normal_user(user)
+            valid_user = get_user_from_token(request)
+            user_info = get_valid_normal_user(valid_user)
 
             #  응답 생성
             response = UserInfoResponse(
@@ -199,32 +164,8 @@ class UserInfoDetailView(View):  # 유저 정보 조회
 class UserInfoUpdateView(View):
     def patch(self, request, *args, **kwargs):
         try:
-            #  토큰 파싱
-            auth_header = request.META.get("HTTP_AUTHORIZATION")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise PermissionDenied("Authentication is required.")
-
-            token = auth_header.split(" ")[1]
-            try:
-                payload = jwt_decode(
-                    token,
-                    settings.JWT_SECRET_KEY,
-                    algorithms=[settings.JWT_ALGORITHM],
-                )
-            except ExpiredSignatureError:
-                raise PermissionDenied("Token has expired.")
-            except InvalidTokenError:
-                raise PermissionDenied("Invalid token.")
-
-            user_id = payload.get("sub")
-            if not user_id:
-                raise PermissionDenied("Invalid token payload.")
-
-            #  공통 유저 가져오기
-            user = CommonUser.objects.get(common_user_id=user_id)
-
-            #  유저 정보 가져오기
-            user_info = get_valid_normal_user(user)
+            valid_user = get_user_from_token(request)
+            user_info = get_valid_normal_user(valid_user)
 
             #  요청 본문 파싱
             body = json.loads(request.body)

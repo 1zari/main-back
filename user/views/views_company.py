@@ -1,7 +1,5 @@
 import json
 
-import jwt
-from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
@@ -30,7 +28,7 @@ from user.schemas import (
     ResetCompanyPasswordResponse,
 )
 from user.services.token import create_access_token, create_refresh_token
-from utils.common import get_valid_company_user
+from utils.common import get_user_from_token, get_valid_company_user
 from utils.ncp_storage import upload_to_ncp_storage
 
 
@@ -162,25 +160,10 @@ class CompanyLoginView(View):
 class CompanyInfoDetailView(View):  # 기업 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 1. JWT 토큰 수동 파싱
-            auth_header = request.META.get("HTTP_AUTHORIZATION")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise PermissionDenied("Authentication is required.")
-            token = auth_header.split(" ")[1]
+            # 1. 사용자 인증
+            user = get_user_from_token(request)
 
-            payload = jwt.decode(
-                token,
-                settings.JWT_SECRET_KEY,
-                algorithms=[settings.JWT_ALGORITHM],
-            )
-            user_id = payload.get("sub")
-            if not user_id:
-                raise PermissionDenied("Invalid token.")
-
-            # 2. CommonUser 인스턴스 조회
-            user = CommonUser.objects.get(common_user_id=user_id)
-
-            # 3. CompanyInfo 가져오기
+            # 2. CompanyInfo 가져오기
             company_info = get_valid_company_user(user)
 
             response = CompanyInfoResponse(
@@ -208,22 +191,8 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
 class CompanyInfoUpdateView(View):
     def patch(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # 1. 토큰 파싱
-            auth_header = request.META.get("HTTP_AUTHORIZATION")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise PermissionDenied("Authentication is required.")
-            token = auth_header.split(" ")[1]
-
-            payload = jwt.decode(
-                token,
-                settings.JWT_SECRET_KEY,
-                algorithms=[settings.JWT_ALGORITHM],
-            )
-            user_id = payload.get("sub")
-            if not user_id:
-                raise PermissionDenied("Invalid token.")
-
-            user = CommonUser.objects.get(common_user_id=user_id)
+            # 1. 사용자 인증
+            user = get_user_from_token(request)
 
             # 2. 회사 정보 조회
             company_user = get_valid_company_user(user)
