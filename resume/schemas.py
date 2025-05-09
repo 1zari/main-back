@@ -74,6 +74,18 @@ class ResumeUpdateModel(BaseModel):
     certification_list: Optional[List[CertificationInfoModel]] = None
 
 
+class ResumeListOutputModel(BaseModel):
+    """
+    이력서 리스트 조회
+    """
+
+    model_config = MY_CONFIG
+    resume_id: UUID
+    resume_title: str
+    job_category: str
+    updated_at: date
+
+
 class ResumeOutputModel(BaseModel):
     """
     이력서
@@ -271,7 +283,7 @@ class ResumeResponseModel(BaseModel):
 
 class ResumeListResponseModel(BaseModel):
     message: str
-    resume_list: List[ResumeOutputModel]
+    resume_list: List[ResumeListOutputModel]
 
 
 class SubmissionListResponseModel(BaseModel):
