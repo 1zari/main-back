@@ -75,9 +75,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -222,21 +222,43 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True  # SSL 적용시 True 해야함.
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
-CORS_ALLOW_CREDENTIALS = True
-
+# CORS_ALLOW_HEADERS = [
+#     "accept",
+#     "accept-encoding",
+#     "authorization",
+#     "content-type",
+#     "dnt",
+#     "origin",
+#     "user-agent",
+#     "x-csrftoken",
+#     "x-requested-with",
+#     "x-user-role",
+# ]
 
 # CORS 설정
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://senior-tomorrow.kro.kr",
-    "https://1zari.kro.kr",
-    "https://senior-tomorrow.vercel.app",
-    "https://senior-naeil.life",
-    "https://www.senior-naeil.life",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = [
+#     "https://1zari.dev1.garam.xyz",
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "https://senior-tomorrow.kro.kr",
+#     "https://1zari.kro.kr",
+#     "https://senior-tomorrow.vercel.app",
+#     "https://senior-naeil.life",
+#     "https://www.senior-naeil.life",
+#     "http://localhost:8000",
+#     "http://127.0.0.1:8000",
+# ]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
+
 
 # LOGGING 설정
 LOGGING = {
