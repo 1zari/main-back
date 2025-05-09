@@ -9,6 +9,7 @@ from job_posting.models import JobPosting
 from resume.models import CareerInfo, Certification, Resume, Submission
 from resume.schemas import CareerInfoModel, CertificationInfoModel
 from user.models import CommonUser, CompanyInfo, UserInfo
+from user.services.token import create_access_token
 
 
 # mock 일반 common_user 생성
@@ -211,11 +212,11 @@ def test_submission_list_get_success(
     """
     일반 유저가 자신의 지원 목록 조회
     """
+    token = create_access_token(mock_common_user)
 
     url = "/api/submission/"
-    client.force_login(mock_common_user)
 
-    response = client.get(url, content_type="application/json")
+    response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
 
     response_data = json.loads(response.content)["submission_list"]
     assert response.status_code == 200
@@ -236,11 +237,11 @@ def test_submiison_company_get_list_success(
     """
     기업 유저가 지원자 목록 조회
     """
+    token = create_access_token(mock_common_company_user)
 
     url = "/api/submission/company/"
 
-    client.force_login(mock_common_company_user)
-    response = client.get(url, content_type="application/json")
+    response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     response_data = json.loads(response.content)
 
     assert response.status_code == 200
@@ -264,12 +265,12 @@ def test_update_memo_success(
     """
     memo update 테스트
     """
+    token = create_access_token(mock_common_user)
+
     new_memo = {"memo": "new_memo"}
     url = f"/api/submission/memo/{mock_submission.submission_id}/"
 
-    client.force_login(mock_common_user)
-
-    response = client.patch(url, new_memo, content_type="application/json")
+    response = client.patch(url, new_memo, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     response_data = json.loads(response.content)
     assert response.status_code == 200
     assert response_data["message"] == "Successfully updated memo"
@@ -290,10 +291,11 @@ def test_delete_memo_success(
     """
     memo 삭제
     """
-    client.force_login(mock_common_user)
+    token = create_access_token(mock_common_user)
+
     url = f"/api/submission/memo/{mock_submission.submission_id}/"
 
-    response = client.delete(url, content_type="application/json")
+    response = client.delete(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
 
     response_data = json.loads(response.content)
 
@@ -314,7 +316,8 @@ def test_submission_create_success(
     """
     공고 지원 api 테스트
     """
-    client.force_login(mock_common_user)
+    token = create_access_token(mock_common_user)
+
     url = "/api/submission/"
 
     post_data = {
@@ -322,7 +325,7 @@ def test_submission_create_success(
         "resume_id": mock_resume.resume_id,
     }
 
-    response = client.post(url, post_data, content_type="application/json")
+    response = client.post(url, post_data, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
 
     response_data = json.loads(response.content)
     assert response.status_code == 201
@@ -342,11 +345,11 @@ def test_submission_company_detail_get_success(
     """
     기업 유저가 지원자 이력서 상세 조회
     """
+    token = create_access_token(mock_common_company_user)
+
     url = f"/api/submission/company/{mock_submission.submission_id}/"
 
-    client.force_login(mock_common_company_user)
-
-    response = client.get(url, content_type="application/json")
+    response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     response_data = json.loads(response.content)["submission"]
 
     assert response.status_code == 200
@@ -369,11 +372,11 @@ def test_get_submission_detail_nomal_user(
     mock_job_posting,
     mock_company_user,
 ):
+    token = create_access_token(mock_common_user)
+
     url = f"/api/submission/{mock_submission.submission_id}/"
 
-    client.force_login(mock_common_user)
-
-    response = client.get(url, content_type="application/json")
+    response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     response_data = json.loads(response.content)
 
     assert response.status_code == 200
