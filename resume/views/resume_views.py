@@ -14,6 +14,7 @@ from resume.schemas import (
     CareerInfoModel,
     CertificationInfoModel,
     ResumeCreateModel,
+    ResumeListOutputModel,
     ResumeListResponseModel,
     ResumeOutputModel,
     ResumeResponseModel,
@@ -42,28 +43,18 @@ class MyResumeListView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
-            resumes: list[Resume] = list(Resume.objects.filter(user=user).prefetch_related("careers", "certifications"))
+            resumes: list[Resume] = list(Resume.objects.filter(user=user))
 
-            resume_models: List[ResumeOutputModel] = []
+            resume_models: List[ResumeListOutputModel] = []
             for resume in resumes:
-                careers: list[CareerInfoModel] = serialize_careers(list(resume.careers.all()))
-                certifications: list[CertificationInfoModel] = serialize_certifications(
-                    list(resume.certifications.all())
-                )
                 resume_models.append(
-                    ResumeOutputModel(
-                        user=UserInfoModel.model_validate(resume.user),
+                    ResumeListOutputModel(
+                        job_category=resume.job_category,
                         resume_id=resume.resume_id,
                         resume_title=resume.resume_title,
-                        education_level=resume.education_level,
-                        school_name=resume.school_name,
-                        education_state=resume.education_state,
-                        introduce=resume.introduce,
-                        career_list=careers,
-                        certification_list=certifications,
+                        updated_at=resume.updated_at,
                     )
                 )
-
             response = ResumeListResponseModel(
                 message="Resume list loaded successfully",
                 resume_list=resume_models,
@@ -130,7 +121,8 @@ class MyResumeDetailView(View):
             valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = get_valid_normal_user(valid_user)
             resume = (
-                Resume.objects.filter(user=user, resume_id=resume_id)
+                Resume.objects.select_related("user")
+                .filter(user=user, resume_id=resume_id)
                 .prefetch_related("careers", "certifications")
                 .first()
             )

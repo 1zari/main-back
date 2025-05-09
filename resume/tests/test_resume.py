@@ -8,6 +8,7 @@ from django.test.client import Client
 
 from resume.models import CareerInfo, Certification, Resume
 from user.models import CommonUser, UserInfo
+from user.services.token import create_access_token
 
 
 @pytest.fixture
@@ -98,26 +99,15 @@ def client():
 
 
 @pytest.mark.django_db
-def test_my_resume_list_view_get(client, mock_user, mock_common_user):
-
-    # 이력서 샘플 생성
-    resume = Resume.objects.create(
-        user=mock_user,
-        resume_title="Test Resume",
-        job_category="IT",
-        education_level="Bachelor",
-        school_name="Test University",
-        education_state="Graduated",
-        introduce="Test introduction",
-    )
+def test_my_resume_list_view_get(client, mock_user, mock_common_user, mock_resume):
+    token = create_access_token(mock_common_user)
 
     url = "/api/resume/"
 
-    client.force_login(mock_common_user)
-
-    response = client.get(url, content_type="application_json")
+    response = client.get(url, content_type="application_json", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
     data = json.loads(response.content)
+    print(data)
 
     assert "resume_list" in data
     assert len(data["resume_list"]) >= 1
@@ -128,6 +118,9 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
     """
     이력서 등록
     """
+
+    token = create_access_token(mock_common_user)
+
     url = "/api/resume/"
 
     post_data = {
@@ -165,9 +158,9 @@ def test_my_resume_list_view_post_success(client, mock_user, mock_common_user):
         ],
     }
 
-    client.force_login(mock_common_user)
-
-    response = client.post(url, data=json.dumps(post_data), content_type="application/json")
+    response = client.post(
+        url, data=json.dumps(post_data), content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}"
+    )
 
     assert response.status_code == 201
     assert response.get("content-type") == "application/json"
@@ -222,11 +215,11 @@ def test_my_resume_detail_get_success(
     """
     이력서 상세 조회
     """
+    token = create_access_token(mock_common_user)
 
     url = f"/api/resume/{mock_resume.resume_id}/"
-    client.force_login(mock_common_user)
 
-    response = client.get(url, content_type="application/json")
+    response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     get_data = json.loads(response.content)["resume"]
 
     assert response.status_code == 200
@@ -243,6 +236,7 @@ def test_my_resume_patch_detail_success(client, mock_user, mock_common_user, moc
     """
     patch 테스트
     """
+    token = create_access_token(mock_common_user)
 
     patch_data = {
         "resume_id": str(mock_resume.resume_id),
@@ -268,9 +262,9 @@ def test_my_resume_patch_detail_success(client, mock_user, mock_common_user, moc
 
     url = f"/api/resume/{mock_resume.resume_id}/"
 
-    client.force_login(mock_common_user)
-
-    response = client.patch(url, json.dumps(patch_data), content_type="application/json")
+    response = client.patch(
+        url, json.dumps(patch_data), content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}"
+    )
     get_data = json.loads(response.content)["resume"]
     assert get_data["resume_id"] == str(mock_resume.resume_id)
     assert get_data["resume_title"] == patch_data["resume_title"]
@@ -278,25 +272,15 @@ def test_my_resume_patch_detail_success(client, mock_user, mock_common_user, moc
 
 
 @pytest.mark.django_db
-def test_my_resume_delete_success(client, mock_user, mock_common_user):
-    resume = Resume.objects.create(
-        user=mock_user,
-        resume_title="Test Resume",
-        job_category="IT",
-        education_level="Bachelor",
-        school_name="Test University",
-        education_state="Graduated",
-        introduce="Test introduction",
-    )
+def test_my_resume_delete_success(client, mock_user, mock_common_user, mock_resume):
+    token = create_access_token(mock_common_user)
 
-    url = f"/api/resume/{resume.resume_id}/"
+    url = f"/api/resume/{mock_resume.resume_id}/"
 
-    client.force_login(mock_common_user)
-
-    response = client.delete(url, content_type="application/json")
+    response = client.delete(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     response_data = json.loads(response.content)
     assert response_data["message"] == "Successfully deleted resume"
 
     # db에 조회 되는지 확인
     with pytest.raises(Http404):
-        get_object_or_404(Resume, pk=resume.resume_id)
+        get_object_or_404(Resume, pk=mock_resume.resume_id)
