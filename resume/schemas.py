@@ -281,6 +281,44 @@ class ResumeResponseModel(BaseModel):
     resume: ResumeOutputModel
 
 
+class MyResume(BaseModel):
+    """
+    이력서 상세보기 시 id, title
+    """
+
+    model_config = MY_CONFIG
+    resume_id: UUID
+    resume_title: str
+
+
+class MyResumeListOutput(BaseModel):
+    """
+    이력서 상세보기 시 id, title 리스트
+    """
+
+    model_config = MY_CONFIG
+    resume_id: UUID
+    job_category: str = ""
+    resume_title: str
+    education_level: str
+    school_name: str
+    education_state: str
+    introduce: str
+    user: UserInfoModel
+    career_list: Optional[List[CareerInfoModel]]
+    certification_list: Optional[List[CertificationInfoModel]]
+    resume_list: list[MyResume]
+
+
+class MyResumeMixinResponse(BaseModel):
+    """
+    resume 상세 조회 시 유저의 resume 목록(id, title)포함 모델
+    """
+
+    message: str
+    resume: MyResumeListOutput
+
+
 class ResumeListResponseModel(BaseModel):
     message: str
     resume_list: List[ResumeListOutputModel]

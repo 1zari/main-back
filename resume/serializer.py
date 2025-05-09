@@ -1,13 +1,18 @@
 from typing import List
 
 from job_posting.models import JobPostingBookmark
-from resume.models import CareerInfo, Certification, Submission
+from resume.models import CareerInfo, Certification, Resume, Submission
 from resume.schemas import (
     CareerInfoModel,
     CertificationInfoModel,
     JobpostingListOutputModel,
+    MyResume,
     SubmissionModel,
 )
+
+
+def serialize_resume_list(resume: list[Resume]) -> list[MyResume]:
+    return [MyResume(resume_id=re.resume_id, resume_title=re.resume_title) for re in resume]
 
 
 def serialize_careers(careers: List[CareerInfo]) -> List[CareerInfoModel]:
