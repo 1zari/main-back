@@ -41,8 +41,8 @@ def get_valid_normal_user(valid_user: CommonUser) -> UserInfo:
 
 
 def get_valid_company_user(valid_user: CommonUser) -> CompanyInfo:
-    if valid_user.join_type != "normal":
-        raise PermissionDenied("Only 'normal' users are allowed.")
+    if valid_user.join_type != "company":
+        raise PermissionDenied("Only 'company' users are allowed.")
     user = CompanyInfo.objects.select_related("common_user").filter(common_user=valid_user).first()
     if user is None:
         raise PermissionDenied("UserInfo does not exist.")
