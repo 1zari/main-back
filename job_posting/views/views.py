@@ -359,10 +359,10 @@ class JobPostingBookmarkView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             current_user = check_and_return_normal_user(valid_user) if valid_user else None
-            if not isinstance(current_user, CommonUser):
+            if not isinstance(current_user, UserInfo):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
-            bookmark = JobPostingBookmark.objects.filter(user=current_user, job_posting_id=job_posting_id).first()
+            bookmark = JobPostingBookmark.objects.filter(user=valid_user, job_posting_id=job_posting_id).first()
             if not bookmark:
                 response = BookmarkResponseModel(message="해당 공고는 북마크되어 있지 않습니다.")
                 return JsonResponse(response.model_dump(), status=404)
