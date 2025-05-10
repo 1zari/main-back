@@ -5,6 +5,8 @@ from django.db.models.expressions import Exists, OuterRef
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from pydantic import ValidationError
+from django.db.models import Func, CharField
+from django.contrib.postgres.fields import ArrayField
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from search.models import District
@@ -72,7 +74,12 @@ class SearchView(View):
                 Q(work_experience__in=query.work_experience) if query.work_experience else Q(),
                 Q(day_discussion__in=query.day_discussion) if query.day_discussion else Q(),
                 Q(job_keyword_main__in=query.job_keyword_main) if query.job_keyword_main else Q(),
-                Q(job_keyword_sub__in=query.job_keyword_sub) if query.job_keyword_sub else Q(),
+                Q(job_keyword_sub__overlap=Func(
+                    query.job_keyword_sub,
+                    function='ARRAY',
+                    template="%(function)s[%(expressions)s]::varchar[]",
+                    output_field=ArrayField(CharField())
+                )) if query.job_keyword_sub else Q(),
                 Q(work_experience__in=query.work_experience) if query.work_experience else Q(),
             )
         )
