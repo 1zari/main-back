@@ -30,7 +30,7 @@ from resume.serializer import (
 )
 from user.models import CommonUser, UserInfo
 from user.schemas import UserInfoModel
-from utils.common import get_user_from_token, get_valid_normal_user
+from utils.common import check_and_return_normal_user, get_user_from_token
 
 # ------------------------
 # 이력서 관련 api
@@ -49,7 +49,7 @@ class MyResumeListView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             resumes: list[Resume] = list(Resume.objects.filter(user=user))
 
             resume_models: List[ResumeListOutputModel] = []
@@ -78,7 +78,7 @@ class MyResumeListView(View):
 
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             data = json.loads(request.body)
             resume_data: ResumeCreateModel = ResumeCreateModel(**data)
 
@@ -126,7 +126,7 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             resume_list = (
                 Resume.objects.select_related("user").filter(user=user).prefetch_related("careers", "certifications")
             ).all()
@@ -163,7 +163,7 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             data = json.loads(request.body)
             update_data = ResumeUpdateModel(**data)
 
@@ -190,7 +190,7 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             resume = Resume.objects.get(user_id=user, resume_id=resume_id)  # type: ignore
             resume.delete()
             return JsonResponse({"message": "Successfully deleted resume"}, status=200)

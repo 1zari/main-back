@@ -20,7 +20,7 @@ from user.schemas import (
     LogoutRequest,
     LogoutResponse,
 )
-from utils.common import get_valid_company_user, get_valid_normal_user
+from utils.common import check_and_return_company_user, check_and_return_normal_user
 
 User = get_user_model()
 
@@ -130,13 +130,13 @@ class UserDeleteView(View):
             # 'normal' 또는 'company' 유저에 대한 처리
             if common_user.join_type == "normal":
                 # 정상 사용자 처리
-                user_info = get_valid_normal_user(common_user)  # 정상 유저 정보 가져오기
+                user_info = check_and_return_normal_user(common_user)  # 정상 유저 정보 가져오기
                 user_info.delete()  # 정상 유저 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 
             elif common_user.join_type == "company":
                 # 기업 사용자 처리
-                company_info = get_valid_company_user(common_user)  # 기업 유저 정보 가져오기
+                company_info = check_and_return_company_user(common_user)  # 기업 유저 정보 가져오기
                 company_info.delete()  # 기업 정보 삭제
                 common_user.delete()  # 기본 사용자 삭제
 

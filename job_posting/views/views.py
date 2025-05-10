@@ -22,9 +22,9 @@ from job_posting.schemas import (
 )
 from user.models import CommonUser, CompanyInfo, UserInfo
 from utils.common import (
+    check_and_return_company_user,
+    check_and_return_normal_user,
     get_user_from_token,
-    get_valid_company_user,
-    get_valid_normal_user,
 )
 
 
@@ -37,7 +37,7 @@ class JobPostingListView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             if valid_user.join_type == "normal":
-                user = get_valid_normal_user(valid_user) if valid_user else None
+                user = check_and_return_normal_user(valid_user) if valid_user else None
             postings = JobPosting.objects.select_related("company_id").all()
 
             bookmarked_ids: set[int] = set()
@@ -80,7 +80,7 @@ class JobPostingDetailView(View):
 
             valid_user: CommonUser = get_user_from_token(request)
             if valid_user.join_type == "normal":
-                user = get_valid_normal_user(valid_user) if valid_user else None
+                user = check_and_return_normal_user(valid_user) if valid_user else None
             is_bookmarked = False
             if isinstance(user, CommonUser):
                 is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
@@ -124,7 +124,7 @@ class JobPostingDetailView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = get_valid_company_user(valid_user)
+            user: CompanyInfo = check_and_return_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
@@ -205,7 +205,7 @@ class JobPostingDetailView(View):
     def patch(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = get_valid_company_user(valid_user)
+            user: CompanyInfo = check_and_return_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 수정할 수 있습니다."},
@@ -275,7 +275,7 @@ class JobPostingDetailView(View):
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = get_valid_company_user(valid_user)
+            user: CompanyInfo = check_and_return_company_user(valid_user)
             if not hasattr(user, "companyinfo"):
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 삭제할 수 있습니다."},
@@ -305,7 +305,7 @@ class JobPostingBookmarkView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            current_user = check_and_return_normal_user(valid_user) if valid_user else None
             if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
@@ -332,7 +332,7 @@ class JobPostingBookmarkView(View):
     def post(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            current_user = check_and_return_normal_user(valid_user) if valid_user else None
             if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
@@ -351,7 +351,7 @@ class JobPostingBookmarkView(View):
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            current_user = get_valid_normal_user(valid_user) if valid_user else None
+            current_user = check_and_return_normal_user(valid_user) if valid_user else None
             if not isinstance(current_user, CommonUser):
                 return JsonResponse({"error": "인증된 사용자만 접근할 수 있습니다."}, status=403)
 
