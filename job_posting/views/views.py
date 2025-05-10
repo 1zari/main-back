@@ -36,9 +36,15 @@ class JobPostingListView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
+            user = None
             if valid_user.join_type == "normal":
-                user = get_valid_normal_user(valid_user) if valid_user else None
-            postings = JobPosting.objects.select_related("company_id").all()
+                user = get_valid_normal_user(valid_user)
+                postings = JobPosting.objects.select_related("company_id").all()
+            elif valid_user.join_type == "company":
+                user = get_valid_company_user(valid_user)
+                postings = JobPosting.objects.select_related("company_id").filter(company_id=user)
+            else:
+                postings = JobPosting.objects.select_related("company_id").all()
 
             bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
