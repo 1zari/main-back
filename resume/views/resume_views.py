@@ -13,6 +13,9 @@ from resume.models import CareerInfo, Certification, Resume
 from resume.schemas import (
     CareerInfoModel,
     CertificationInfoModel,
+    MyResume,
+    MyResumeListOutput,
+    MyResumeMixinResponse,
     ResumeCreateModel,
     ResumeListOutputModel,
     ResumeListResponseModel,
@@ -20,10 +23,14 @@ from resume.schemas import (
     ResumeResponseModel,
     ResumeUpdateModel,
 )
-from resume.serializer import serialize_careers, serialize_certifications
+from resume.serializer import (
+    serialize_careers,
+    serialize_certifications,
+    serialize_resume_list,
+)
 from user.models import CommonUser, UserInfo
 from user.schemas import UserInfoModel
-from utils.common import get_user_from_token, get_valid_normal_user
+from utils.common import check_and_return_normal_user, get_user_from_token
 
 # ------------------------
 # 이력서 관련 api
@@ -42,7 +49,7 @@ class MyResumeListView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             resumes: list[Resume] = list(Resume.objects.filter(user=user))
 
             resume_models: List[ResumeListOutputModel] = []
@@ -52,7 +59,7 @@ class MyResumeListView(View):
                         job_category=resume.job_category,
                         resume_id=resume.resume_id,
                         resume_title=resume.resume_title,
-                        updated_at=resume.updated_at,
+                        updated_at=resume.updated_at.date(),
                     )
                 )
             response = ResumeListResponseModel(
@@ -71,7 +78,7 @@ class MyResumeListView(View):
 
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             data = json.loads(request.body)
             resume_data: ResumeCreateModel = ResumeCreateModel(**data)
 
@@ -119,18 +126,20 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
-            resume = (
-                Resume.objects.select_related("user")
-                .filter(user=user, resume_id=resume_id)
-                .prefetch_related("careers", "certifications")
-                .first()
-            )
+            user: UserInfo = check_and_return_normal_user(valid_user)
+            resume_list = (
+                Resume.objects.select_related("user").filter(user=user).prefetch_related("careers", "certifications")
+            ).all()
+            if not resume_list:
+                return JsonResponse({"error": "Not found resume data"}, status=404)
+            resume = resume_list.filter(resume_id=resume_id).first()
             if not resume:
                 return JsonResponse({"error": "Not found resume data"}, status=404)
+
+            resume_list_output: list[MyResume] = serialize_resume_list(list(resume_list.all()))
             career_models: list[CareerInfoModel] = serialize_careers(list(resume.careers.all()))
             certification_models = serialize_certifications(list(resume.certifications.all()))
-            resume_model: ResumeOutputModel = ResumeOutputModel(
+            resume_model: MyResumeListOutput = MyResumeListOutput(
                 resume_id=resume.resume_id,
                 job_category=resume.job_category,
                 resume_title=resume.resume_title,
@@ -141,8 +150,9 @@ class MyResumeDetailView(View):
                 user=UserInfoModel.model_validate(resume.user),
                 career_list=career_models,
                 certification_list=certification_models,
+                resume_list=resume_list_output,
             )
-            response = ResumeResponseModel(message="Resume loaded successfully", resume=resume_model)
+            response = MyResumeMixinResponse(message="Resume loaded successfully", resume=resume_model)
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
@@ -153,7 +163,7 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             data = json.loads(request.body)
             update_data = ResumeUpdateModel(**data)
 
@@ -180,7 +190,7 @@ class MyResumeDetailView(View):
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
             resume = Resume.objects.get(user_id=user, resume_id=resume_id)  # type: ignore
             resume.delete()
             return JsonResponse({"message": "Successfully deleted resume"}, status=200)

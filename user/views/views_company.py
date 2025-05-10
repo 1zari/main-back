@@ -29,7 +29,7 @@ from user.schemas import (
     ResetCompanyPasswordResponse,
 )
 from user.services.token import create_access_token, create_refresh_token
-from utils.common import get_user_from_token, get_valid_company_user
+from utils.common import check_and_return_company_user, get_user_from_token
 from utils.ncp_storage import upload_to_ncp_storage
 
 logger = logging.getLogger(__name__)
@@ -168,7 +168,7 @@ class CompanyInfoDetailView(View):  # 기업 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            company_info: CompanyInfo = get_valid_company_user(valid_user)
+            company_info: CompanyInfo = check_and_return_company_user(valid_user)
 
             response = CompanyInfoResponse(
                 company_name=company_info.company_name,
@@ -196,7 +196,7 @@ class CompanyInfoUpdateView(View):
     def patch(self, request, *args, **kwargs) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            company_user: CompanyInfo = get_valid_company_user(valid_user)
+            company_user: CompanyInfo = check_and_return_company_user(valid_user)
 
             body = json.loads(request.body)
             validated_data = CompanyInfoUpdateRequest(**body)

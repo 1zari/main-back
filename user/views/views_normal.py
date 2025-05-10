@@ -27,7 +27,7 @@ from user.schemas import (
     UserSignupRequest,
 )
 from user.services.token import create_access_token, create_refresh_token
-from utils.common import get_user_from_token, get_valid_normal_user
+from utils.common import check_and_return_normal_user, get_user_from_token
 
 User = get_user_model()
 
@@ -138,7 +138,7 @@ class UserInfoDetailView(View):  # 유저 정보 조회
     def get(self, request, *args, **kwargs) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: UserInfo = get_valid_normal_user(valid_user)
+            user: UserInfo = check_and_return_normal_user(valid_user)
 
             #  응답 생성
             response = UserInfoResponse(
@@ -165,7 +165,7 @@ class UserInfoUpdateView(View):
     def patch(self, request, *args, **kwargs):
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user_info: UserInfo = get_valid_normal_user(valid_user)
+            user_info: UserInfo = check_and_return_normal_user(valid_user)
 
             #  요청 본문 파싱
             body = json.loads(request.body)

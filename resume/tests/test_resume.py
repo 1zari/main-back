@@ -105,10 +105,9 @@ def test_my_resume_list_view_get(client, mock_user, mock_common_user, mock_resum
     url = "/api/resume/"
 
     response = client.get(url, content_type="application_json", HTTP_AUTHORIZATION=f"Bearer {token}")
-    assert response.status_code == 200
-    data = json.loads(response.content)
-    print(data)
 
+    data = json.loads(response.content)
+    assert response.status_code == 200
     assert "resume_list" in data
     assert len(data["resume_list"]) >= 1
 
@@ -221,14 +220,16 @@ def test_my_resume_detail_get_success(
 
     response = client.get(url, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     get_data = json.loads(response.content)["resume"]
+    data = json.loads(response.content)
 
     assert response.status_code == 200
-    data = json.loads(response.content)
     assert "resume" in data
     assert len(data["resume"]) >= 1
     assert get_data["resume_title"] == mock_resume.resume_title
     assert get_data["job_category"] == mock_resume.job_category
     assert get_data["user"]["user_id"] == str(mock_resume.user.user_id)
+    assert len(get_data["resume_list"]) == 1
+    assert get_data["resume_list"][0]["resume_id"] == str(mock_resume.resume_id)
 
 
 @pytest.mark.django_db
