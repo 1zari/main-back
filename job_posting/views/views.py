@@ -236,6 +236,8 @@ class JobPostingDetailView(View):
                 post.location = location
 
             for field, value in payload.model_dump(exclude_unset=True).items():
+                if field == "location":
+                    continue
                 setattr(post, field, value)
             post.save()
 
