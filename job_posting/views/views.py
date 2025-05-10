@@ -85,6 +85,7 @@ class JobPostingDetailView(View):
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
             valid_user: CommonUser = get_user_from_token(request)
+            user = None
             if valid_user.join_type == "normal":
                 user = get_valid_normal_user(valid_user) if valid_user else None
             is_bookmarked = False
