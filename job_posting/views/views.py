@@ -124,13 +124,13 @@ class JobPostingDetailView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = get_valid_company_user(valid_user)
-            if not hasattr(user, "companyinfo"):
-                return JsonResponse(
-                    {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
-                    status=403,
-                )
-            company = user.companyinfo
+            company: CompanyInfo = get_valid_company_user(valid_user)
+            # if not hasattr(user, "companyinfo"):
+            #     return JsonResponse(
+            #         {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
+            #         status=403,
+            #     )
+            # company = user.companyinfo
 
             data = json.loads(request.body)
             payload = JobPostingCreateModel(**data)
