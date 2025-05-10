@@ -89,9 +89,8 @@ class JobPostingDetailView(View):
             user = None
             if valid_user.join_type == "normal":
                 user = check_and_return_normal_user(valid_user) if valid_user else None
-            is_bookmarked = False
-            if isinstance(user, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
+            
+            is_bookmarked = isinstance(user, UserInfo) and JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
