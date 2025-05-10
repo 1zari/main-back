@@ -31,7 +31,7 @@ def get_user_from_token(request):
         raise PermissionDenied("Invalid token")
 
 
-def get_valid_normal_user(valid_user: CommonUser) -> UserInfo:
+def check_and_return_normal_user(valid_user: CommonUser) -> UserInfo:
     if valid_user.join_type != "normal":
         raise PermissionDenied("Only 'normal' users are allowed.")
     user = UserInfo.objects.select_related("common_user").filter(common_user=valid_user).first()
@@ -40,7 +40,7 @@ def get_valid_normal_user(valid_user: CommonUser) -> UserInfo:
     return user
 
 
-def get_valid_company_user(valid_user: CommonUser) -> CompanyInfo:
+def check_and_return_company_user(valid_user: CommonUser) -> CompanyInfo:
     if valid_user.join_type != "company":
         raise PermissionDenied("Only 'company' users are allowed.")
     user = CompanyInfo.objects.select_related("common_user").filter(common_user=valid_user).first()
