@@ -37,8 +37,6 @@ class JobPostingListView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             user = None
-            valid_user: CommonUser = get_user_from_token(request)
-            user = None
             if valid_user:
                 if valid_user.join_type == "normal":
                     user = check_and_return_normal_user(valid_user) if valid_user else None
@@ -47,8 +45,8 @@ class JobPostingListView(View):
                 elif valid_user.join_type == "company":
                     user = check_and_return_company_user(valid_user)
                     postings = JobPosting.objects.select_related("company_id").filter(company_id=user)
-                else:
-                    postings = JobPosting.objects.select_related("company_id").all()
+            else:
+                postings = JobPosting.objects.select_related("company_id").all()
 
             bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
