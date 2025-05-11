@@ -112,16 +112,20 @@ class UserLoginView(View):
             refresh_token = create_refresh_token(user)
 
             # 사용자 정보 포함 응답 생성
-            response = UserLoginResponse(
-                message="Login successful.",
-                access_token=access_token,
-                refresh_token=refresh_token,
-                token_type="bearer",
-                common_user_id=user.common_user_id,
-                email=user.email,
-                name=user.userinfo.name,
-                join_type=user.join_type,
-            )
+            response_data = {
+                "message": "Login successful.",
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+                "user": {
+                    "common_user_id": str(user.common_user_id),
+                    "email": user.email,
+                    "name": user.userinfo.name,
+                    "join_type": user.join_type,
+                },
+            }
+
+            response = UserLoginResponse(**response_data)
             return JsonResponse(response.model_dump(), status=200)
 
         except ValidationError as e:
