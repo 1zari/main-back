@@ -56,7 +56,7 @@ class SearchView(View):
             Q(work_experience__in=query.work_experience) if query.work_experience else Q(),
             Q(day_discussion=query.day_discussion) if query.day_discussion else Q(),
             Q(job_keyword_main__in=query.job_keyword_main) if query.job_keyword_main else Q(),
-            Q(job_keyword_sub__in=query.job_keyword_sub) if query.job_keyword_sub else Q(),
+            Q(job_keyword_sub__overlap=query.job_keyword_sub) if query.job_keyword_sub else Q(),
         )
 
         # 검색어 필터링
@@ -129,7 +129,7 @@ class SearchView(View):
 
         city_name_map = {d.city_name: d.city_name for d in districts}
         district_name_map = {d.district_name: d.district_name for d in districts}
-        town_name_map = {d.emd_name: d.emd_name for d in districts}
+        # town_name_map = {d.emd_name: d.emd_name for d in districts} 혹시 읍면동 정보 필요할 시
 
         paginator = Paginator(final_qs, 20)  # 페이지당 20개
         page_number = request.GET.get("page", 1)
