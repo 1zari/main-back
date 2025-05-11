@@ -11,6 +11,7 @@ class JobPostingCreateModel(BaseModel):
     """
     공고 등록을 위한 스키마
     """
+
     model_config = MY_CONFIG
     job_posting_title: str
     address: str
