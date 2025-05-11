@@ -1,5 +1,6 @@
-from typing import Any, Optional
 import json
+from typing import Any, Optional
+
 import requests
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
@@ -30,7 +31,7 @@ class KakaoLoginView(View):
         try:
             data = json.loads(request.body)
             code = data.get("code")
-            #code = request.GET.get("code")
+            # code = request.GET.get("code")
             if code is None:
                 return JsonResponse({"message": "Code is required."}, status=400)
             try:
@@ -131,7 +132,7 @@ class NaverLoginView(View):
         try:
             data = json.loads(request.body)
             code = data.get("code")
-            #code = request.GET.get("code")
+            # code = request.GET.get("code")
             state = request.GET.get("state")
             if code is None or state is None:
                 return JsonResponse({"message": "Code and state are required."}, status=400)

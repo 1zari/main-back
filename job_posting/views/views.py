@@ -89,12 +89,20 @@ class JobPostingDetailView(View):
             user = None
             if valid_user.join_type == "normal":
                 user = check_and_return_normal_user(valid_user) if valid_user else None
-            
-            is_bookmarked = isinstance(user, UserInfo) and JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
+            if valid_user.join_type == "company":
+                user = check_and_return_company_user(valid_user) if valid_user else None
+            is_bookmarked = (
+                isinstance(user, UserInfo)
+                and JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
+            )
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
                 company_id=post.company_id.company_id,
+                company_logo=post.company_id.company_logo,
+                company_name=post.company_id.company_name,
+                manager_phone_number=post.company_id.manager_phone_number,
+                manager_name=post.company_id.manager_name,
                 job_posting_title=post.job_posting_title,
                 address=post.address,
                 city=post.city,
@@ -137,7 +145,6 @@ class JobPostingDetailView(View):
                     {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
                     status=403,
                 )
-
 
             data = json.loads(request.body)
             payload = JobPostingCreateModel(**data)
