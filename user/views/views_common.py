@@ -20,7 +20,11 @@ from user.schemas import (
     LogoutRequest,
     LogoutResponse,
 )
-from utils.common import check_and_return_company_user, check_and_return_normal_user
+from utils.common import (
+    check_and_return_company_user,
+    check_and_return_normal_user,
+    get_user_from_token,
+)
 
 User = get_user_model()
 
@@ -107,38 +111,18 @@ class LogoutView(View):
 class UserDeleteView(View):
     def delete(self, request, *args, **kwargs) -> JsonResponse:
         try:
-            # JWT 토큰에서 사용자 인증 정보 추출
-            auth_header = request.META.get("HTTP_AUTHORIZATION")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise PermissionDenied("Authentication is required.")
-
-            token = auth_header.split(" ")[1]
-
-            payload = jwt.decode(
-                token,
-                settings.JWT_SECRET_KEY,
-                algorithms=settings.JWT_ALGORITHM,
-            )
-
-            user_id = payload.get("sub")
-            if not user_id:
-                raise PermissionDenied("Invalid token.")
-
-            # JWT에서 유저 정보를 추출하여 CommonUser 객체 가져오기
-            common_user = CommonUser.objects.get(common_user_id=user_id)
+            valid_user: CommonUser = get_user_from_token(request)
 
             # 'normal' 또는 'company' 유저에 대한 처리
-            if common_user.join_type == "normal":
-                # 정상 사용자 처리
-                user_info = check_and_return_normal_user(common_user)  # 정상 유저 정보 가져오기
+            if valid_user.join_type == "normal":
+                user_info = check_and_return_normal_user(valid_user)  # 정상 유저 정보 가져오기
                 user_info.delete()  # 정상 유저 정보 삭제
-                common_user.delete()  # 기본 사용자 삭제
+                valid_user.delete()  # 기본 사용자 삭제
 
-            elif common_user.join_type == "company":
-                # 기업 사용자 처리
-                company_info = check_and_return_company_user(common_user)  # 기업 유저 정보 가져오기
-                company_info.delete()  # 기업 정보 삭제
-                common_user.delete()  # 기본 사용자 삭제
+            elif valid_user.join_type == "company":
+                company_user = check_and_return_company_user(valid_user)
+                company_user.delete()  # 기업 정보 삭제
+                valid_user.delete()  # 기본 사용자 삭제
 
             else:
                 raise PermissionDenied("Invalid user type.")

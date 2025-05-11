@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional
 
 import requests
@@ -8,11 +9,8 @@ from django.views import View
 
 from user.models import CommonUser
 from user.schemas import (
-    KakaoLoginRequest,
     KakaoLoginResponse,
-    NaverLoginRequest,
     NaverLoginResponse,
-    OAuthLoginUserModel,
 )
 from user.services.token import create_access_token, create_refresh_token
 
@@ -28,24 +26,13 @@ class KakaoLoginView(View):
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            code = request.GET.get("code")
-            if code is None:
-                return JsonResponse({"message": "Code is required."}, status=400)
-            try:
-                Kakao_login_request = KakaoLoginRequest(code=code)
-            except ValueError as e:
-                return JsonResponse({"message": str(e)}, status=400)
+            access_token = request.GET.get("access_token")
+            if not access_token:
+                return JsonResponse({"message": "Access token is required."}, status=400)
 
-            kakao_access_token = self.get_kakao_access_token(code)
-            if not kakao_access_token:
-                return JsonResponse({"message": "Kakao authentication failed."}, status=400)
-
-            user_data = self.get_kakao_user_info(kakao_access_token)
+            user_data = self.get_kakao_user_info(access_token)
             if not user_data:
-                return JsonResponse(
-                    {"message": "Failed to retrieve Kakao user info."},
-                    status=400,
-                )
+                return JsonResponse({"message": "Failed to retrieve Kakao user info."}, status=400)
 
             email = user_data.get("kakao_account", {}).get("email")
             common_user = self.get_or_create_common_user(email)
@@ -54,19 +41,17 @@ class KakaoLoginView(View):
                 if hasattr(common_user, "userinfo"):
                     common_user.last_login = timezone.now()
                     common_user.save()
-                    access_token = create_access_token(common_user)
+                    access_token_jwt = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = KakaoLoginResponse(
                         message="Login successful.",
-                        access_token=access_token,
+                        access_token=access_token_jwt,
                         refresh_token=refresh_token,
                         token_type="bearer",
-                        user=OAuthLoginUserModel(
-                            common_user_id=common_user.common_user_id,
-                            email=common_user.email,
-                            name=common_user.userinfo.name,
-                            join_type=common_user.join_type,
-                        ),
+                        common_user_id=common_user.common_user_id,
+                        email=common_user.email,
+                        name=common_user.userinfo.name,
+                        join_type=common_user.join_type,
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
@@ -82,22 +67,6 @@ class KakaoLoginView(View):
 
         except Exception as e:
             return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
-
-    def get_kakao_access_token(self, code: str) -> Optional[str]:
-        """카카오 액세스 토큰을 발급받는 메서드"""
-        kakao_token_url = settings.KAKAO_TOKEN_URL
-        headers = {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}
-        data = {
-            "grant_type": "authorization_code",
-            "client_id": settings.KAKAO_CLIENT_ID,
-            "client_secret": settings.KAKAO_SECRET,
-            "redirect_uri": settings.KAKAO_REDIRECT_URL,
-            "code": code,
-        }
-        response = requests.post(kakao_token_url, headers=headers, data=data)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        return None
 
     def get_kakao_user_info(self, kakao_access_token: str) -> Optional[dict[str, Any]]:
         """카카오 액세스 토큰으로 사용자 정보를 가져오는 메서드"""
@@ -127,25 +96,13 @@ class KakaoLoginView(View):
 class NaverLoginView(View):
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            code = request.GET.get("code")
-            state = request.GET.get("state")
-            if code is None or state is None:
-                return JsonResponse({"message": "Code and state are required."}, status=400)
-            try:
-                naver_login_request = NaverLoginRequest(code=code, state=state)
-            except ValueError as e:
-                return JsonResponse({"message": str(e)}, status=400)
+            access_token = request.GET.get("access_token")
+            if not access_token:
+                return JsonResponse({"message": "Access token is required."}, status=400)
 
-            naver_access_token = self.get_naver_access_token(code, state)
-            if not naver_access_token:
-                return JsonResponse({"message": "Naver authentication failed."}, status=400)
-
-            user_data = self.get_naver_user_info(naver_access_token)
+            user_data = self.get_naver_user_info(access_token)
             if not user_data:
-                return JsonResponse(
-                    {"message": "Failed to retrieve Naver user info."},
-                    status=400,
-                )
+                return JsonResponse({"message": "Failed to retrieve Naver user info."}, status=400)
 
             email = user_data.get("response", {}).get("email")
             common_user = self.get_or_create_common_user(email)
@@ -154,19 +111,17 @@ class NaverLoginView(View):
                 if hasattr(common_user, "userinfo"):
                     common_user.last_login = timezone.now()
                     common_user.save()
-                    access_token = create_access_token(common_user)
+                    access_token_jwt = create_access_token(common_user)
                     refresh_token = create_refresh_token(common_user)
                     response = NaverLoginResponse(
                         message="Login successful.",
-                        access_token=access_token,
+                        access_token=access_token_jwt,
                         refresh_token=refresh_token,
                         token_type="bearer",
-                        user=OAuthLoginUserModel(
-                            common_user_id=common_user.common_user_id,
-                            email=common_user.email,
-                            name=common_user.userinfo.name,
-                            join_type=common_user.join_type,
-                        ),
+                        common_user_id=common_user.common_user_id,
+                        email=common_user.email,
+                        name=common_user.userinfo.name,
+                        join_type=common_user.join_type,
                     )
                     return JsonResponse(response.model_dump(), status=200)
 
@@ -182,20 +137,6 @@ class NaverLoginView(View):
 
         except Exception as e:
             return JsonResponse({"message": "Server error", "error": str(e)}, status=500)
-
-    def get_naver_access_token(self, code: str, state: str) -> Optional[str]:
-        url = settings.NAVER_TOKEN_URL
-        params = {
-            "grant_type": "authorization_code",
-            "client_id": settings.NAVER_CLIENT_ID,
-            "client_secret": settings.NAVER_SECRET,
-            "code": code,
-            "state": state,
-        }
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-        return None
 
     def get_naver_user_info(self, access_token: str) -> Optional[dict[str, Any]]:
         url = settings.NAVER_USER_INFO_URL

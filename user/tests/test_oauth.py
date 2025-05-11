@@ -62,20 +62,16 @@ def mock_naver_user_data():
 # 1. 신규 사용자 로그인 (카카오)
 @pytest.mark.django_db
 @patch("user.views.views_oauth.KakaoLoginView.get_kakao_user_info")
-@patch("user.views.views_oauth.KakaoLoginView.get_kakao_access_token")
 def test_kakao_login_new_user(
-    mock_get_kakao_access_token,
     mock_get_kakao_user_info,
     client,
     kakao_login_url,
     mock_kakao_access_token,
     mock_kakao_user_data,
 ):
-    mock_get_kakao_access_token.return_value = mock_kakao_access_token
     mock_get_kakao_user_info.return_value = mock_kakao_user_data
 
-    code = "test_code"
-    response = client.get(kakao_login_url, {"code": code})
+    response = client.get(f"{kakao_login_url}?access_token={mock_kakao_access_token}")
     assert response.status_code == 202
     assert json.loads(response.content) == {
         "message": "Additional information required.",
@@ -87,21 +83,16 @@ def test_kakao_login_new_user(
 # 2. 신규 사용자 로그인 (네이버)
 @pytest.mark.django_db
 @patch("user.views.views_oauth.NaverLoginView.get_naver_user_info")
-@patch("user.views.views_oauth.NaverLoginView.get_naver_access_token")
 def test_naver_login_new_user(
-    mock_get_naver_access_token,
     mock_get_naver_user_info,
     client,
     naver_login_url,
     mock_naver_access_token,
     mock_naver_user_data,
 ):
-    mock_get_naver_access_token.return_value = mock_naver_access_token
     mock_get_naver_user_info.return_value = mock_naver_user_data
 
-    code = "test_code"
-    state = "test_state"
-    response = client.get(naver_login_url, {"code": code, "state": state})
+    response = client.get(f"{naver_login_url}?access_token={mock_naver_access_token}")
     assert response.status_code == 202
     assert json.loads(response.content) == {
         "message": "Additional information required.",
@@ -113,9 +104,7 @@ def test_naver_login_new_user(
 # 3. 기존 사용자 로그인 (카카오)
 @pytest.mark.django_db
 @patch("user.views.views_oauth.KakaoLoginView.get_kakao_user_info")
-@patch("user.views.views_oauth.KakaoLoginView.get_kakao_access_token")
 def test_kakao_login_existing_user(
-    mock_get_kakao_access_token,
     mock_get_kakao_user_info,
     client,
     kakao_login_url,
@@ -136,11 +125,9 @@ def test_kakao_login_existing_user(
         route=["Social Media"],
     )
 
-    mock_get_kakao_access_token.return_value = mock_kakao_access_token
     mock_get_kakao_user_info.return_value = mock_kakao_user_data
 
-    code = "test_code"
-    response = client.get(kakao_login_url, {"code": code})
+    response = client.get(f"{kakao_login_url}?access_token={mock_kakao_access_token}")
     assert response.status_code == 200
     response_data = json.loads(response.content)
     assert "access_token" in response_data
@@ -151,9 +138,7 @@ def test_kakao_login_existing_user(
 # 4. 기존 사용자 로그인 (네이버)
 @pytest.mark.django_db
 @patch("user.views.views_oauth.NaverLoginView.get_naver_user_info")
-@patch("user.views.views_oauth.NaverLoginView.get_naver_access_token")
 def test_naver_login_existing_user(
-    mock_get_naver_access_token,
     mock_get_naver_user_info,
     client,
     naver_login_url,
@@ -174,12 +159,9 @@ def test_naver_login_existing_user(
         route=["Social Media"],
     )
 
-    mock_get_naver_access_token.return_value = mock_naver_access_token
     mock_get_naver_user_info.return_value = mock_naver_user_data
 
-    code = "test_code"
-    state = "test_state"
-    response = client.get(naver_login_url, {"code": code, "state": state})
+    response = client.get(f"{naver_login_url}?access_token={mock_naver_access_token}")
     assert response.status_code == 200
     response_data = json.loads(response.content)
     assert "access_token" in response_data
