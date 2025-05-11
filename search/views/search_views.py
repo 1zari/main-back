@@ -1,5 +1,6 @@
 from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.measure import D
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
 from django.db.models.expressions import Exists, OuterRef
 from django.http import HttpRequest, JsonResponse
@@ -130,9 +131,17 @@ class SearchView(View):
         district_name_map = {d.district_name: d.district_name for d in districts}
         town_name_map = {d.emd_name: d.emd_name for d in districts}
 
+        paginator = Paginator(final_qs, 20)  # 페이지당 20개
+        page_number = request.GET.get("page", 1)
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
         results = []
         for jp in final_qs:
-            results.append(
+            results = [
                 JobPostingResultModel(
                     company_name=jp.company_id.company_name,
                     job_posting_id=jp.job_posting_id,
@@ -144,7 +153,13 @@ class SearchView(View):
                     summary=jp.summary,
                     company_logo=jp.company_id.company_logo,
                 )
-            )
+                for jp in page_obj.object_list  # 페이지 객체에서 아이템 가져오기
+            ]
 
-        response = JobPostingSearchResponseModel(results=results)
+        response = JobPostingSearchResponseModel(
+            results=results,
+            page=page_obj.number,  # 현재 페이지 번호
+            total_pages=paginator.num_pages,  # 전체 페이지 수
+            total_results=paginator.count,  # 전체 결과 수
+        )
         return JsonResponse(response.model_dump(), safe=False)
