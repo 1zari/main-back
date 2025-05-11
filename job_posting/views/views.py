@@ -157,6 +157,7 @@ class JobPostingDetailView(View):
 
             with transaction.atomic():
                 post = JobPosting.objects.create(
+                    company_id=company.company_id,
                     job_posting_title=payload.job_posting_title,
                     address=payload.address,
                     city=payload.city,
