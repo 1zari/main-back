@@ -24,9 +24,10 @@ def create_dummy_password(common_user: CommonUser) -> None:
 
 class KakaoLoginView(View):
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            access_token = request.GET.get("access_token")
+            body = json.loads(request.body.decode())
+            access_token = body.get("access_token")
             if not access_token:
                 return JsonResponse({"message": "Access token is required."}, status=400)
 
@@ -94,9 +95,10 @@ class KakaoLoginView(View):
 
 
 class NaverLoginView(View):
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
         try:
-            access_token = request.GET.get("access_token")
+            body = json.loads(request.body.decode())
+            access_token = body.get("access_token")
             if not access_token:
                 return JsonResponse({"message": "Access token is required."}, status=400)
 

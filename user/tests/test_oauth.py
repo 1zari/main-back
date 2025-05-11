@@ -71,7 +71,11 @@ def test_kakao_login_new_user(
 ):
     mock_get_kakao_user_info.return_value = mock_kakao_user_data
 
-    response = client.get(f"{kakao_login_url}?access_token={mock_kakao_access_token}")
+    response = client.post(
+        kakao_login_url,
+        data=json.dumps({"access_token": mock_kakao_access_token}),
+        content_type="application/json",
+    )
     assert response.status_code == 202
     assert json.loads(response.content) == {
         "message": "Additional information required.",
@@ -92,7 +96,11 @@ def test_naver_login_new_user(
 ):
     mock_get_naver_user_info.return_value = mock_naver_user_data
 
-    response = client.get(f"{naver_login_url}?access_token={mock_naver_access_token}")
+    response = client.post(
+        naver_login_url,
+        data=json.dumps({"access_token": mock_naver_access_token}),
+        content_type="application/json",
+    )
     assert response.status_code == 202
     assert json.loads(response.content) == {
         "message": "Additional information required.",
@@ -127,7 +135,11 @@ def test_kakao_login_existing_user(
 
     mock_get_kakao_user_info.return_value = mock_kakao_user_data
 
-    response = client.get(f"{kakao_login_url}?access_token={mock_kakao_access_token}")
+    response = client.post(
+        kakao_login_url,
+        data=json.dumps({"access_token": mock_kakao_access_token}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     response_data = json.loads(response.content)
     assert "access_token" in response_data
@@ -161,7 +173,11 @@ def test_naver_login_existing_user(
 
     mock_get_naver_user_info.return_value = mock_naver_user_data
 
-    response = client.get(f"{naver_login_url}?access_token={mock_naver_access_token}")
+    response = client.post(
+        naver_login_url,
+        data=json.dumps({"access_token": mock_naver_access_token}),
+        content_type="application/json",
+    )
     assert response.status_code == 200
     response_data = json.loads(response.content)
     assert "access_token" in response_data
