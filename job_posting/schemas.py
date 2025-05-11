@@ -94,6 +94,7 @@ class JobPostingListModel(BaseModel):
 
     model_config = MY_CONFIG
     job_posting_id: UUID
+    company_id: UUID
     company_name: str
     company_address: str
     job_posting_title: str
