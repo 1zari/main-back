@@ -111,7 +111,6 @@ class UserDeleteView(View):
 
             # 'normal' 또는 'company' 유저에 대한 처리
             if valid_user.join_type == "normal":
-                # 정상 사용자 처리
                 user_info = check_and_return_normal_user(valid_user)  # 정상 유저 정보 가져오기
                 user_info.delete()  # 정상 유저 정보 삭제
                 valid_user.delete()  # 기본 사용자 삭제

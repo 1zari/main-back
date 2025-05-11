@@ -397,10 +397,10 @@ class VerifyBusinessRegistrationRequest(BaseModel):
     start_dt: str  # 개업일자
 
 
-
 # ------------------------
 # oauth 응답 모델
 # ------------------------
+
 
 class KakaoLoginResponse(BaseModel):
     model_config = MY_CONFIG
@@ -409,10 +409,10 @@ class KakaoLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    common_user_id : UUID
-    email : str
-    name : str
-    join_type : str
+    common_user_id: UUID
+    email: str
+    name: str
+    join_type: str
 
 
 class NaverLoginResponse(BaseModel):
@@ -422,7 +422,7 @@ class NaverLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    common_user_id : UUID
+    common_user_id: UUID
     email: str
     name: str
     join_type: str

@@ -53,7 +53,7 @@ class KakaoLoginView(View):
                         email=common_user.email,
                         name=common_user.userinfo.name,
                         join_type=common_user.join_type,
-                        )
+                    )
                     return JsonResponse(response.model_dump(), status=200)
 
                 return JsonResponse(
@@ -124,7 +124,7 @@ class NaverLoginView(View):
                         email=common_user.email,
                         name=common_user.userinfo.name,
                         join_type=common_user.join_type,
-                        )
+                    )
                     return JsonResponse(response.model_dump(), status=200)
 
                 return JsonResponse(
