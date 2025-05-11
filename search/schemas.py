@@ -11,6 +11,7 @@ from utils.schemas import MY_CONFIG
 class JobPostingResultModel(BaseModel):
     model_config = MY_CONFIG
 
+    company_name: str
     job_posting_id: UUID
     job_posting_title: str
     city: str
@@ -28,7 +29,7 @@ class JobPostingSearchQueryModel(BaseModel):
     district_no: list[str]
     town_no: list[str]
     work_day: list[str]
-    posting_type: str
+    posting_type: list[str]
     employment_type: list[str]
     education: list[str]
     job_keyword_main: list[str]
