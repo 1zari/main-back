@@ -181,15 +181,6 @@ class CompanyLoginRequest(BaseModel):
 # ------------------------
 
 
-class LoginUserModel(BaseModel):
-    model_config = MY_CONFIG
-
-    common_user_id: UUID
-    email: EmailStr
-    name: str
-    join_type: str
-
-
 class UserLoginResponse(BaseModel):
     model_config = MY_CONFIG
 
@@ -197,16 +188,10 @@ class UserLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user: LoginUserModel
-
-
-class LoginCompanyUserModel(BaseModel):
-    model_config = MY_CONFIG
-
     common_user_id: UUID
     email: EmailStr
+    name: str
     join_type: str
-    company_name: str
 
 
 class CompanyLoginResponse(BaseModel):
@@ -216,7 +201,10 @@ class CompanyLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user: LoginCompanyUserModel
+    common_user_id: UUID
+    email: EmailStr
+    company_name: str
+    join_type: str
 
 
 # ------------------------

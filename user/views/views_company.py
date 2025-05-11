@@ -23,7 +23,6 @@ from user.schemas import (
     CompanySignupRequest,
     FindCompanyEmailRequest,
     FindCompanyEmailResponse,
-    LoginCompanyUserModel,
     ResetCompanyPasswordRequest,
     ResetCompanyPasswordResponse,
 )
@@ -142,12 +141,10 @@ class CompanyLoginView(View):
                 access_token=access_token,
                 refresh_token=refresh_token,
                 token_type="bearer",
-                user=LoginCompanyUserModel(
-                    common_user_id=user.common_user_id,
-                    email=user.email,
-                    join_type=user.join_type,
-                    company_name=user.companyinfo.company_name,
-                ),
+                common_user_id=user.common_user_id,
+                email=user.email,
+                company_name=user.companyinfo.company_name,
+                join_type=user.join_type,
             )
             return JsonResponse(response.model_dump(), status=200)
 
