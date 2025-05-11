@@ -398,35 +398,8 @@ class VerifyBusinessRegistrationRequest(BaseModel):
 
 
 # ------------------------
-# oauth 요청 모델
-# ------------------------
-
-
-class KakaoLoginRequest(BaseModel):
-    model_config = MY_CONFIG
-
-    code: str
-
-
-class NaverLoginRequest(BaseModel):
-    model_config = MY_CONFIG
-
-    code: str
-    state: str
-
-
-# ------------------------
 # oauth 응답 모델
 # ------------------------
-
-
-class OAuthLoginUserModel(BaseModel):
-    model_config = MY_CONFIG
-
-    common_user_id: UUID
-    email: EmailStr
-    name: str
-    join_type: str
 
 
 class KakaoLoginResponse(BaseModel):
@@ -436,7 +409,10 @@ class KakaoLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user: OAuthLoginUserModel
+    common_user_id: UUID
+    email: str
+    name: str
+    join_type: str
 
 
 class NaverLoginResponse(BaseModel):
@@ -446,7 +422,10 @@ class NaverLoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user: OAuthLoginUserModel
+    common_user_id: UUID
+    email: str
+    name: str
+    join_type: str
 
 
 # ------------------------
