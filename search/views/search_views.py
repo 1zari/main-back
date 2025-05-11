@@ -139,22 +139,20 @@ class SearchView(View):
             page_obj = paginator.page(1)
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
-        results = []
-        for jp in final_qs:
-            results = [
-                JobPostingResultModel(
-                    company_name=jp.company_id.company_name,
-                    job_posting_id=jp.job_posting_id,
-                    job_posting_title=jp.job_posting_title,
-                    city=city_name_map.get(jp.city, jp.city),
-                    district=district_name_map.get(jp.district, jp.district),
-                    is_bookmarked=jp.is_bookmarked if hasattr(jp, "is_bookmarked") else False,
-                    deadline=jp.deadline,
-                    summary=jp.summary,
-                    company_logo=jp.company_id.company_logo,
-                )
-                for jp in page_obj.object_list  # 페이지 객체에서 아이템 가져오기
-            ]
+        results = [
+            JobPostingResultModel(
+                company_name=jp.company_id.company_name,
+                job_posting_id=jp.job_posting_id,
+                job_posting_title=jp.job_posting_title,
+                city=city_name_map.get(jp.city, jp.city),
+                district=district_name_map.get(jp.district, jp.district),
+                is_bookmarked=jp.is_bookmarked if hasattr(jp, "is_bookmarked") else False,
+                deadline=jp.deadline,
+                summary=jp.summary,
+                company_logo=jp.company_id.company_logo,
+            )
+            for jp in page_obj.object_list  # 페이지 객체에서 아이템 가져오기
+        ]
 
         response = JobPostingSearchResponseModel(
             results=results,
