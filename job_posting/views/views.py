@@ -157,7 +157,8 @@ class JobPostingDetailView(View):
 
             with transaction.atomic():
                 post = JobPosting.objects.create(
-                    company_id=company,
+                    company_id=payload.company_id,
+                    job_posting_id=payload.job_posting_id,
                     job_posting_title=payload.job_posting_title,
                     address=payload.address,
                     city=payload.city,
@@ -181,11 +182,16 @@ class JobPostingDetailView(View):
                     salary=payload.salary,
                     summary=payload.summary,
                     content=payload.content or "",
+                    is_bookmarked=payload.is_bookmarked,
                 )
 
-            detail = JobPostingCreateModel(
+            detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
-                company_id=company.company_id,
+                company_id=post.company_id.company_id,
+                company_logo=post.company_id.company_logo,
+                company_name=post.company_id.company_name,
+                manager_phone_number=post.company_id.manager_phone_number,
+                manager_name=post.company_id.manager_name,
                 job_posting_title=post.job_posting_title,
                 address=post.address,
                 city=post.city,
