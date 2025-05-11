@@ -1,8 +1,9 @@
 import json
 import uuid
-from typing import List
+from typing import List, Optional
 
 from django.contrib.gis.geos import Point
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views import View
@@ -36,9 +37,18 @@ class JobPostingListView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            if valid_user.join_type == "normal":
-                user = check_and_return_normal_user(valid_user) if valid_user else None
+            user = check_and_return_normal_user(valid_user) if valid_user else None
             postings = JobPosting.objects.select_related("company_id").all()
+
+            # 페이지 네이션
+            paginator = Paginator(postings, 20)  # 페이지당 20개
+            page_number = request.GET.get("page", 1)
+            try:
+                page_obj = paginator.page(page_number)
+            except PageNotAnInteger:
+                page_obj = paginator.page(1)
+            except EmptyPage:
+                page_obj = paginator.page(paginator.num_pages)
 
             bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
@@ -56,11 +66,14 @@ class JobPostingListView(View):
                     deadline=post.deadline,
                     is_bookmarked=(post.job_posting_id in bookmarked_ids),
                 )
-                for post in postings
+                for post in page_obj.object_list
             ]
             response = JobPostingListResponseModel(
                 message="공고 리스트를 성공적으로 불러왔습니다.",
                 data=items,
+                page=page_obj.number,  # 현재 페이지 번호
+                total_pages=paginator.num_pages,  # 전체 페이지 수
+                total_results=paginator.count,  # 전체 결과 수
             )
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
@@ -79,11 +92,12 @@ class JobPostingDetailView(View):
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
             valid_user: CommonUser = get_user_from_token(request)
-            if valid_user.join_type == "normal":
-                user = check_and_return_normal_user(valid_user) if valid_user else None
-            is_bookmarked = False
-            if isinstance(user, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
+            user = check_and_return_normal_user(valid_user) if valid_user else None
+            is_bookmarked = (
+                JobPostingBookmark.objects.filter(user=user.common_user_id, job_posting=post).exists()
+                if user
+                else False
+            )
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
@@ -124,13 +138,12 @@ class JobPostingDetailView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = check_and_return_company_user(valid_user)
-            if not hasattr(user, "companyinfo"):
+            user: Optional[CompanyInfo] = check_and_return_company_user(valid_user) if valid_user else None
+            if not user:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
                     status=403,
                 )
-            company = user.companyinfo
 
             data = json.loads(request.body)
             payload = JobPostingCreateModel(**data)
@@ -140,7 +153,7 @@ class JobPostingDetailView(View):
 
             with transaction.atomic():
                 post = JobPosting.objects.create(
-                    company_id=company,
+                    company_id=user,
                     job_posting_title=payload.job_posting_title,
                     address=payload.address,
                     city=payload.city,
@@ -168,7 +181,7 @@ class JobPostingDetailView(View):
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
-                company_id=company.company_id,
+                company_id=user.company_id,
                 job_posting_title=post.job_posting_title,
                 address=post.address,
                 city=post.city,
@@ -205,16 +218,15 @@ class JobPostingDetailView(View):
     def patch(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = check_and_return_company_user(valid_user)
-            if not hasattr(user, "companyinfo"):
+            user: Optional[CompanyInfo] = check_and_return_company_user(valid_user) if valid_user else None
+            if not user:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 수정할 수 있습니다."},
                     status=403,
                 )
-            company = user.companyinfo
 
             post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
-            if not post or post.company_id != company:
+            if not post or post.company_id != user.company_id:
                 return JsonResponse(
                     {"error": "수정 권한이 없거나 공고를 찾을 수 없습니다."},
                     status=403,
@@ -231,10 +243,6 @@ class JobPostingDetailView(View):
             for field, value in payload.model_dump(exclude_unset=True).items():
                 setattr(post, field, value)
             post.save()
-
-            is_bookmarked = False
-            if isinstance(user, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
@@ -262,7 +270,7 @@ class JobPostingDetailView(View):
                 salary=post.salary,
                 summary=post.summary,
                 content=post.content,
-                is_bookmarked=is_bookmarked,
+                is_bookmarked=False,
             )
             response = JobPostingDetailResponseModel(
                 message="공고가 성공적으로 수정되었습니다.",
@@ -275,16 +283,15 @@ class JobPostingDetailView(View):
     def delete(self, request: HttpRequest, job_posting_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user: CompanyInfo = check_and_return_company_user(valid_user)
-            if not hasattr(user, "companyinfo"):
+            user: Optional[CompanyInfo] = check_and_return_company_user(valid_user) if valid_user else None
+            if not user:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 삭제할 수 있습니다."},
                     status=403,
                 )
-            company = user.companyinfo
 
             post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
-            if not post or post.company_id != company:
+            if not post or post.company_id != user.company_id:
                 return JsonResponse(
                     {"error": "삭제 권한이 없거나 공고를 찾을 수 없습니다."},
                     status=403,
