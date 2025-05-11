@@ -50,7 +50,7 @@ class JobPostingListView(View):
                 bookmarked_ids = set(
                     JobPostingBookmark.objects.filter(user=user).values_list("job_posting_id", flat=True)
                 )
-            postings = JobPostingListModel.objects.all()
+            postings = JobPosting.objects.all()
 
             items: List[JobPostingListModel] = [
                 JobPostingListModel(
