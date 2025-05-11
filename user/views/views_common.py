@@ -20,7 +20,11 @@ from user.schemas import (
     LogoutRequest,
     LogoutResponse,
 )
-from utils.common import check_and_return_company_user, check_and_return_normal_user, get_user_from_token
+from utils.common import (
+    check_and_return_company_user,
+    check_and_return_normal_user,
+    get_user_from_token,
+)
 
 User = get_user_model()
 

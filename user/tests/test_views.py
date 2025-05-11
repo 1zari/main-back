@@ -401,11 +401,11 @@ def test_reset_company_password(client, company_info):
 
 
 @pytest.mark.django_db
-@patch("utils.common.get_valid_normal_user")
-def test_normal_user_delete_success(mock_get_valid_normal_user, client, common_user, user_token):
-    """일반 유저 회원 탈퇴 성공 테스트 (get_valid_normal_user 사용)"""
+@patch("utils.common.check_and_return_normal_user")
+def test_normal_user_delete_success(mock_check_and_return_normal_user, client, common_user, user_token):
+    """일반 유저 회원 탈퇴 성공 테스트"""
     user_info = UserInfo.objects.create(common_user=common_user, name="일반유저")
-    mock_get_valid_normal_user.return_value = user_info
+    mock_check_and_return_normal_user.return_value = user_info
     url = reverse("user:user-delete")
     response = client.delete(
         url,
@@ -420,16 +420,16 @@ def test_normal_user_delete_success(mock_get_valid_normal_user, client, common_u
 
 
 @pytest.mark.django_db
-@patch("utils.common.get_valid_company_user")
-def test_company_user_delete_success(mock_get_valid_company_user, client, common_company, company_token):
-    """기업 유저 회원 탈퇴 성공 테스트 (get_valid_company_user 사용)"""
+@patch("utils.common.check_and_return_company_user")
+def test_company_user_delete_success(mock_check_and_return_company_user, client, common_company, company_token):
+    """기업 유저 회원 탈퇴 성공 테스트"""
     company_info = CompanyInfo.objects.create(
         common_user=common_company,
         company_name="테스트 회사",
         establishment="2023-01-01",
         business_registration_number="123-45-67890",
     )
-    mock_get_valid_company_user.return_value = company_info
+    mock_check_and_return_company_user.return_value = company_info
     url = reverse("user:user-delete")
     response = client.delete(
         url,
