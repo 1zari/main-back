@@ -43,6 +43,9 @@ class JobPostingSearchResponseModel(BaseModel):
     model_config = MY_CONFIG
 
     results: List[JobPostingResultModel]
+    page: int
+    total_pages: int
+    total_results: int
 
 
 class TownCategory(BaseModel):
