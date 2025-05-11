@@ -11,8 +11,9 @@ class JobPostingCreateModel(BaseModel):
     """
     공고 등록을 위한 스키마
     """
-
     model_config = MY_CONFIG
+    job_posting_id : UUID
+    company_id: UUID
     job_posting_title: str
     address: str
     city: str
@@ -36,7 +37,7 @@ class JobPostingCreateModel(BaseModel):
     salary: int
     summary: str
     content: Optional[str]
-
+    is_bookmarked : bool
 
 class JobPostingResponseModel(BaseModel):
     """

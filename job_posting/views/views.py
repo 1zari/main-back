@@ -57,6 +57,7 @@ class JobPostingListView(View):
             items: List[JobPostingListModel] = [
                 JobPostingListModel(
                     job_posting_id=post.job_posting_id,
+                    company_id=post.company_id.company_id,
                     company_name=post.company_id.company_name,
                     company_address=post.company_id.company_address,
                     job_posting_title=post.job_posting_title,
@@ -182,7 +183,7 @@ class JobPostingDetailView(View):
                     content=payload.content or "",
                 )
 
-            detail = JobPostingResponseModel(
+            detail = JobPostingCreateModel(
                 job_posting_id=post.job_posting_id,
                 company_id=company.company_id,
                 job_posting_title=post.job_posting_title,
