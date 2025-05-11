@@ -1,9 +1,10 @@
 import json
 import uuid
-from typing import List
+from typing import List, Union
 
 from django.contrib.gis.geos import Point
 from django.db import transaction
+from django.db.models.query import QuerySet
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from mypy.join import join_types
@@ -21,6 +22,7 @@ from job_posting.schemas import (
     JobPostingUpdateModel,
 )
 from user.models import CommonUser, CompanyInfo, UserInfo
+from user.tests.test_views import user_info
 from utils.common import (
     check_and_return_company_user,
     check_and_return_normal_user,
@@ -36,17 +38,19 @@ class JobPostingListView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)
-            user = None
+            user: Union[UserInfo, CompanyInfo, None] = None
+            postings: QuerySet[JobPosting]
             if valid_user:
                 if valid_user.join_type == "normal":
                     user = check_and_return_normal_user(valid_user) if valid_user else None
+
                     postings = JobPosting.objects.select_related("company_id").all()
 
                 elif valid_user.join_type == "company":
-                    user = check_and_return_company_user(valid_user)
+                    user = check_and_return_company_user(valid_user) if valid_user else None
                     postings = JobPosting.objects.select_related("company_id").filter(company_id=user)
             else:
-                postings = JobPosting.objects.select_related("company_id").all()
+                postings = JobPosting.objects.none()
 
             bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
@@ -88,7 +92,7 @@ class JobPostingDetailView(View):
                 return JsonResponse({"error": "공고를 찾을 수 없습니다."}, status=404)
 
             valid_user: CommonUser = get_user_from_token(request)
-            user = None
+            user: Union[UserInfo, CompanyInfo, None] = None
             if valid_user:
                 if valid_user.join_type == "normal":
                     user = check_and_return_normal_user(valid_user)
@@ -256,11 +260,15 @@ class JobPostingDetailView(View):
 
             is_bookmarked = False
             if isinstance(company, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(user=user, job_posting=post).exists()
+                is_bookmarked = JobPostingBookmark.objects.filter(user=company, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
                 company_id=post.company_id.company_id,
+                company_logo=post.company_id.company_logo,
+                company_name=post.company_id.company_name,
+                manager_phone_number=post.company_id.manager_phone_number,
+                manager_name=post.company_id.manager_name,
                 job_posting_title=post.job_posting_title,
                 address=post.address,
                 city=post.city,
