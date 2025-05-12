@@ -21,7 +21,6 @@ from job_posting.schemas import (
     JobPostingUpdateModel,
 )
 from user.models import CommonUser, CompanyInfo, UserInfo
-
 from utils.common import (
     check_and_return_company_user,
     check_and_return_normal_user,
@@ -104,9 +103,7 @@ class JobPostingDetailView(View):
                 elif valid_user.join_type == "company":
                     user = check_and_return_company_user(valid_user)
             is_bookmarked = (
-               JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
-                if user
-                else False
+                JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists() if user else False
             )
 
             detail = JobPostingResponseModel(
