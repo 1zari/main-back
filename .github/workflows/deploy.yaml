@@ -29,20 +29,48 @@ jobs:
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
-          cd /root/${{ secrets.DEPLOY_PATH }}  # 프로젝트 디렉토리 이동
-          echo "프로젝트 폴더이동"
-          git pull origin release  # 최신 코드 반영
-          echo "코드 최신화 완료"
-          export PATH="/root/.local/bin:$PATH"
-          echo "환경변수 설정"
-          source .venv/bin/activate  # 가상환경 설정
-          echo "가상환경 활성화"
-          poetry install  # 의존성 패키지 설치
-          echo "의존성 설치 완료"
-          python manage.py migrate  # 마이그레이션 변경 반영
-          echo "마이그레이션 완료"
-          sudo kill -HUP $(cat /run/gunicorn.pid)  # 기존 실행 중이던 gunicorn 프로세서를 HUP로 KILL
-          echo "Gunicron HUP 작동"
-          sudo systemctl restart nginx  # nginx 서버 재시작
-          echo "Nginx 서버 재시작완료"
+          cd /root/${{ secrets.DEPLOY_PATH }}
+          echo "📍 프로젝트 폴더 이동"
+
+          echo "📌 현재 커밋 저장"
+          PREV_COMMIT=\$(git rev-parse HEAD)
+
+          echo "📦 코드 업데이트"
+          if ! git pull origin release; then
+            echo "❌ git pull 실패! 롤백 중..."
+            git reset --hard \$PREV_COMMIT
+            exit 1
+          fi
+
+          echo "🌐 환경변수 설정 및 가상환경 진입"
+          export PATH="/root/.local/bin:\$PATH"
+          source .venv/bin/activate
+
+          echo "📦 의존성 설치"
+          if ! poetry install; then
+            echo "❌ 의존성 설치 실패! 롤백 중..."
+            git reset --hard \$PREV_COMMIT
+            poetry install
+            exit 1
+          fi
+
+          echo "🧬 마이그레이션 수행"
+          if ! python manage.py migrate; then
+            echo "❌ 마이그레이션 실패! 롤백 중..."
+            git reset --hard \$PREV_COMMIT
+            python manage.py migrate
+            exit 1
+          fi
+
+          echo "🚀 Gunicorn 리로드"
+          if ! sudo kill -HUP \$(cat /run/gunicorn.pid); then
+            echo "❌ Gunicorn 재시작 실패! 롤백 중..."
+            git reset --hard \$PREV_COMMIT
+            sudo kill -HUP \$(cat /run/gunicorn.pid)
+            exit 1
+          fi
+
+          echo "🔁 Nginx 재시작"
+          sudo systemctl restart nginx
+          echo "✅ 배포 완료!"
           EOF
