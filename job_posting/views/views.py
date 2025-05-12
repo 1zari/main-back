@@ -101,7 +101,7 @@ class JobPostingListView(View):
                     company_name=post.company_id.company_name,
                     company_logo=post.company_id.company_logo,
                     city=post.city,
-                    district =post.district,
+                    district=post.district,
                     job_posting_title=post.job_posting_title,
                     summary=post.summary,
                     deadline=post.deadline,
