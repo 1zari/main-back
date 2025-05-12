@@ -110,6 +110,9 @@ class JobPostingListResponseModel(BaseModel):
     model_config = MY_CONFIG
     message: str
     data: List[JobPostingListModel]
+    page: int
+    total_pages: int
+    total_results: int
 
 
 class JobPostingUpdateModel(BaseModel):

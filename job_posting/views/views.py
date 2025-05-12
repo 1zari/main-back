@@ -3,6 +3,7 @@ import uuid
 from typing import List, Union
 
 from django.contrib.gis.geos import Point
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, JsonResponse
@@ -44,13 +45,22 @@ class JobPostingListView(View):
                     user = check_and_return_normal_user(valid_user)
                 elif valid_user.join_type == "company":
                     user = check_and_return_company_user(valid_user)
+            postings = JobPosting.objects.all()
+            # 페이지 네이션
+            paginator = Paginator(postings, 20)  # 페이지당 20개
+            page_number = request.GET.get("page", 1)
+            try:
+                page_obj = paginator.page(page_number)
+            except PageNotAnInteger:
+                page_obj = paginator.page(1)
+            except EmptyPage:
+                page_obj = paginator.page(paginator.num_pages)
 
             bookmarked_ids: set[int] = set()
             if isinstance(user, CommonUser):
                 bookmarked_ids = set(
                     JobPostingBookmark.objects.filter(user=user).values_list("job_posting_id", flat=True)
                 )
-            postings = JobPosting.objects.all()
 
             items: List[JobPostingListModel] = [
                 JobPostingListModel(
@@ -63,11 +73,14 @@ class JobPostingListView(View):
                     deadline=post.deadline,
                     is_bookmarked=(post.job_posting_id in bookmarked_ids),
                 )
-                for post in postings
+                for post in page_obj.object_list
             ]
             response = JobPostingListResponseModel(
                 message="공고 리스트를 성공적으로 불러왔습니다.",
                 data=items,
+                page=page_obj.number,  # 현재 페이지 번호
+                total_pages=paginator.num_pages,  # 전체 페이지 수
+                total_results=paginator.count,  # 전체 결과 수
             )
             return JsonResponse(response.model_dump(), status=200)
         except Exception as e:
@@ -93,8 +106,9 @@ class JobPostingDetailView(View):
                 elif valid_user.join_type == "company":
                     user = check_and_return_company_user(valid_user)
             is_bookmarked = (
-                isinstance(user, UserInfo)
-                and JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
+               JobPostingBookmark.objects.filter(user=valid_user, job_posting=post).exists()
+                if user
+                else False
             )
 
             detail = JobPostingResponseModel(
@@ -225,11 +239,12 @@ class JobPostingDetailView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             company: CompanyInfo = check_and_return_company_user(valid_user)
-            if not (company):
+            if not company:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 수정할 수 있습니다."},
                     status=403,
                 )
+            company = user.companyinfo
 
             post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
             if not post or post.company_id != company:
@@ -286,7 +301,7 @@ class JobPostingDetailView(View):
                 salary=post.salary,
                 summary=post.summary,
                 content=post.content,
-                is_bookmarked=is_bookmarked,
+                is_bookmarked=False,
             )
             response = JobPostingDetailResponseModel(
                 message="공고가 성공적으로 수정되었습니다.",
@@ -300,7 +315,7 @@ class JobPostingDetailView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             company: CompanyInfo = check_and_return_company_user(valid_user)
-            if not (company):
+            if not company:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 삭제할 수 있습니다."},
                     status=403,
