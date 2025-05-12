@@ -27,7 +27,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          ssh -T ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
           cd /root/${{ secrets.DEPLOY_PATH }}
           echo "📍 프로젝트 폴더 이동"
