@@ -99,7 +99,9 @@ class JobPostingListView(View):
                     job_posting_id=post.job_posting_id,
                     company_id=post.company_id.company_id,
                     company_name=post.company_id.company_name,
-                    company_address=post.company_id.company_address,
+                    company_logo=post.company_id.company_logo,
+                    city=post.city,
+                    district=post.district,
                     job_posting_title=post.job_posting_title,
                     summary=post.summary,
                     deadline=post.deadline,
@@ -185,7 +187,7 @@ class JobPostingDetailView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             company: CompanyInfo = check_and_return_company_user(valid_user)
-            if not (company):
+            if not company:
                 return JsonResponse(
                     {"error": "기업 사용자만 공고를 등록할 수 있습니다."},
                     status=403,
