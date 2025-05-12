@@ -29,49 +29,52 @@ jobs:
         run: |
           ssh -T ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
+          
+          # 1. 배포 경로로 이동
           cd /root/${{ secrets.DEPLOY_PATH }}
-          echo "[STEP] 프로젝트 폴더 이동"
           
-          echo "[STEP] 현재 커밋 저장"
-          PREV_COMMIT=\$(git rev-parse HEAD)
+          # 2. 현재 커밋 해시 저장 
+          PREV_COMMIT=$(git rev-parse HEAD)
           
-          echo "[STEP] 코드 업데이트"
+          # 3. release 브랜치 pull 시도
           if ! git pull origin release; then
-            echo "[ERROR] git pull 실패! 롤백 중..."
-            git reset --hard \$PREV_COMMIT
-            exit 1
+              git reset --hard "$PREV_COMMIT"
+              exit 1
           fi
           
-          echo "[STEP] 환경변수 설정 및 가상환경 진입"
-          export PATH="/root/.local/bin:\$PATH"
+          # 4. 환경변수 설정 및 가상환경 활성화
+          export PATH="/root/.local/bin:$PATH"
           source .venv/bin/activate
           
-          echo "[STEP] 의존성 설치"
-          if ! poetry install; then
-            echo "[ERROR] 의존성 설치 실패! 롤백 중..."
-            git reset --hard \$PREV_COMMIT
-            poetry install
-            exit 1
+          # 5. Poetry 설치 여부 확인
+          if ! command -v poetry >/dev/null 2>&1; then
+              exit 1
           fi
           
-          echo "[STEP] 마이그레이션 수행"
-          if ! python manage.py migrate; then
-            echo "[ERROR] 마이그레이션 실패! 롤백 중..."
-            git reset --hard \$PREV_COMMIT
-            python manage.py migrate
-            exit 1
+          # 6. 의존성 설치 
+          if ! poetry install --no-interaction --no-root; then
+              git reset --hard "$PREV_COMMIT"
+              poetry install --no-interaction --no-root
+              exit 1
           fi
           
-          echo "[STEP] Gunicorn 리로드"
-          if ! sudo kill -HUP \$(cat /run/gunicorn.pid); then
-            echo "[ERROR] Gunicorn 재시작 실패! 롤백 중..."
-            git reset --hard \$PREV_COMMIT
-            sudo kill -HUP \$(cat /run/gunicorn.pid)
-            exit 1
+          # 7. DB 마이그레이션 
+          if ! python manage.py migrate --noinput; then
+              git reset --hard "$PREV_COMMIT"
+              python manage.py migrate --noinput
+              exit 1
           fi
           
-          echo "[STEP] Nginx 재시작"
+          # 8. Gunicorn 리로드 
+          if [ -f /run/gunicorn.pid ]; then
+              if ! sudo kill -HUP $(cat /run/gunicorn.pid); then
+                  git reset --hard "$PREV_COMMIT"
+                  sudo kill -HUP $(cat /run/gunicorn.pid)
+                  exit 1
+              fi
+          fi
+          
+          # 9. Nginx 재시작
           sudo systemctl restart nginx
-          echo "[SUCCESS] 배포 완료!"
           EOF
      
