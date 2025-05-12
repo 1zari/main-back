@@ -46,6 +46,10 @@ class JobPostingResponseModel(BaseModel):
     model_config = MY_CONFIG
     job_posting_id: UUID
     company_id: UUID
+    company_logo: Optional[str]
+    company_name: str
+    manager_phone_number: str
+    manager_name: str
     job_posting_title: str
     address: str
     city: str
@@ -89,6 +93,7 @@ class JobPostingListModel(BaseModel):
 
     model_config = MY_CONFIG
     job_posting_id: UUID
+    company_id: UUID
     company_name: str
     company_address: str
     job_posting_title: str
