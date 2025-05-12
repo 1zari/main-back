@@ -25,14 +25,14 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 
 
-#      - name: Setup SSH
-#        run: |
-#          mkdir -p ~/.ssh
-#          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
-#          chmod 600 ~/.ssh/id_rsa
-#          echo "${{ secrets.DEPLOY_HOST }} ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk4jAruppYO5733cmQNG6+/kQGglH4KNxDiqfXsOPuKlyxiiUgaqv9ArhLDZpS19XlfSpKbx6jiIj2KWDvTF/Ugi3Kmz2Cfu7BNz4bNJZ6wHLCo00ZRBxbMVq5IOUMWnw2wutKNzK9v5zJpy73CjNWV5dEUEaZRjrMCJ92KkaXvyLHrFcH7ine85JcSRZjbkRU5xYOp9ZbqGrT97dVcCEfX9I4DnoIIQDAIGVC7wRZ32cNSzmfq31aQS7tcT4hKpKNaN1qKi1qbA5Qx3vRGi7iR/WD3oxbFyr04p93bTMdnsx9KKq3OM4p6XjD3CnE28l5ZBx9TAMhaHKbw2b6ItrpAx1SzQ7sR5Pu8CKcJzsVYl9Ojd+/JRRJ0WLmSCPbsNSjWvKP5pJgKCRr4HHDQqM3XJnYd9u5z2LGc73vJj5Ka547tJK9SRcw6xc5cUgBdKfPIJgzSk3lfZOPPAwI1xfvLaQOAe2C8RX0AgtGKA05/VOvFhVIcfurMEn572tT6SM=" >> ~/.ssh/known_hosts
-#          echo "${{ secrets.DEPLOY_HOST }} ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBM+hNcNlmA45bvRExVKLBa39u6uWEv3GUAvbLp//j3qCVklX5/CEL1hcJf1X/XF7TvqsQvyRtDSZf0wqVrAwboA=" >> ~/.ssh/known_hosts
-#          echo "${{ secrets.DEPLOY_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEC/3eXtPAyXkAFyL3TbTnLGgHJNX6WDy+RUjpdZhxUH" >> ~/.ssh/known_hosts
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.DEPLOY_HOST }} ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk4jAruppYO5733cmQNG6+/kQGglH4KNxDiqfXsOPuKlyxiiUgaqv9ArhLDZpS19XlfSpKbx6jiIj2KWDvTF/Ugi3Kmz2Cfu7BNz4bNJZ6wHLCo00ZRBxbMVq5IOUMWnw2wutKNzK9v5zJpy73CjNWV5dEUEaZRjrMCJ92KkaXvyLHrFcH7ine85JcSRZjbkRU5xYOp9ZbqGrT97dVcCEfX9I4DnoIIQDAIGVC7wRZ32cNSzmfq31aQS7tcT4hKpKNaN1qKi1qbA5Qx3vRGi7iR/WD3oxbFyr04p93bTMdnsx9KKq3OM4p6XjD3CnE28l5ZBx9TAMhaHKbw2b6ItrpAx1SzQ7sR5Pu8CKcJzsVYl9Ojd+/JRRJ0WLmSCPbsNSjWvKP5pJgKCRr4HHDQqM3XJnYd9u5z2LGc73vJj5Ka547tJK9SRcw6xc5cUgBdKfPIJgzSk3lfZOPPAwI1xfvLaQOAe2C8RX0AgtGKA05/VOvFhVIcfurMEn572tT6SM=" >> ~/.ssh/known_hosts
+          echo "${{ secrets.DEPLOY_HOST }} ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBM+hNcNlmA45bvRExVKLBa39u6uWEv3GUAvbLp//j3qCVklX5/CEL1hcJf1X/XF7TvqsQvyRtDSZf0wqVrAwboA=" >> ~/.ssh/known_hosts
+          echo "${{ secrets.DEPLOY_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEC/3eXtPAyXkAFyL3TbTnLGgHJNX6WDy+RUjpdZhxUH" >> ~/.ssh/known_hosts
 
       - name: Deploy to Server
         run: |
@@ -41,9 +41,9 @@ jobs:
           cd ${{ secrets.DEPLOY_PATH }}  # 프로젝트 디렉토리
           git pull origin release  # 최신 코드 반영
           source .venv/bin/activate  # 가상환경 설정
-          export PATH="$HOME/.local/bin:$PATH" # Actions 는 비로그인 + 비인터랙티브 쉘 이기때문에 설정따로 해줘야함
           poetry install  # 의존성 패키지 설치
           python manage.py migrate  # 마이그레이션 변경 반영
+#          python manage.py collectstatic --noinput  # Django admin 위한 정적파일 복사
           sudo kill -HUP $(cat /run/gunicorn.pid)  # 기존 실행 중이던 gunicorn 프로세서를 HUP로 KILL
           sudo systemctl restart nginx  # nginx 서버 재시작
           EOF
