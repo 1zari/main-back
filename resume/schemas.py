@@ -230,6 +230,8 @@ class SubmissionCompanyOutputDetailModel(BaseModel):
 
     job_category: str
     name: str
+    phone_number: str
+    email: str
     resume_title: str
     education_level: str
     school_name: str
