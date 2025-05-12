@@ -5,10 +5,8 @@ from typing import List, Union
 from django.contrib.gis.geos import Point
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models.query import QuerySet
 from django.http import HttpRequest, JsonResponse
 from django.views import View
-from mypy.join import join_types
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from job_posting.schemas import (
@@ -23,7 +21,7 @@ from job_posting.schemas import (
     JobPostingUpdateModel,
 )
 from user.models import CommonUser, CompanyInfo, UserInfo
-from user.tests.test_views import user_info
+
 from utils.common import (
     check_and_return_company_user,
     check_and_return_normal_user,
@@ -244,7 +242,6 @@ class JobPostingDetailView(View):
                     {"error": "기업 사용자만 공고를 수정할 수 있습니다."},
                     status=403,
                 )
-            company = user.companyinfo
 
             post = JobPosting.objects.filter(job_posting_id=job_posting_id).first()
             if not post or post.company_id != company:
