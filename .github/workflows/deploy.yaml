@@ -13,12 +13,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Debug SSH Keyscan
-        run: |
-          ssh-keyscan -H 211.188.53.238 > output.txt
-          cat output.txt
-          echo "SSH Keyscan output saved and printed."
-
       - name: Debug SSH Key
         run: |
           echo "${{ secrets.DEPLOY_KEY }}" | head -n 5
@@ -29,11 +23,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.DEPLOY_HOST }} ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk4jAruppYO5733cmQNG6+/kQGglH4KNxDiqfXsOPuKlyxiiUgaqv9ArhLDZpS19XlfSpKbx6jiIj2KWDvTF/Ugi3Kmz2Cfu7BNz4bNJZ6wHLCo00ZRBxbMVq5IOUMWnw2wutKNzK9v5zJpy73CjNWV5dEUEaZRjrMCJ92KkaXvyLHrFcH7ine85JcSRZjbkRU5xYOp9ZbqGrT97dVcCEfX9I4DnoIIQDAIGVC7wRZ32cNSzmfq31aQS7tcT4hKpKNaN1qKi1qbA5Qx3vRGi7iR/WD3oxbFyr04p93bTMdnsx9KKq3OM4p6XjD3CnE28l5ZBx9TAMhaHKbw2b6ItrpAx1SzQ7sR5Pu8CKcJzsVYl9Ojd+/JRRJ0WLmSCPbsNSjWvKP5pJgKCRr4HHDQqM3XJnYd9u5z2LGc73vJj5Ka547tJK9SRcw6xc5cUgBdKfPIJgzSk3lfZOPPAwI1xfvLaQOAe2C8RX0AgtGKA05/VOvFhVIcfurMEn572tT6SM=" >> ~/.ssh/known_hosts
+          echo "${{ secrets.DEPLOY_HOST }} ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBM+hNcNlmA45bvRExVKLBa39u6uWEv3GUAvbLp//j3qCVklX5/CEL1hcJf1X/XF7TvqsQvyRtDSZf0wqVrAwboA=" >> ~/.ssh/known_hosts
+          echo "${{ secrets.DEPLOY_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEC/3eXtPAyXkAFyL3TbTnLGgHJNX6WDy+RUjpdZhxUH" >> ~/.ssh/known_hosts
 
       - name: Deploy to Server
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@211.188.53.238 << 'EOF'
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
           cd ${{ secrets.DEPLOY_PATH }}  # 프로젝트 디렉토리
           git pull origin release  # 최신 코드 반영
