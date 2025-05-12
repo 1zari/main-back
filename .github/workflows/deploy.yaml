@@ -38,8 +38,9 @@ jobs:
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
-          cd ${{ secrets.DEPLOY_PATH }}  # 프로젝트 디렉토리
+          cd /root/${{ secrets.DEPLOY_PATH }}  # 프로젝트 디렉토리
           git pull origin release  # 최신 코드 반영
+          export PATH="/root/.local/bin:$PATH"
           source .venv/bin/activate  # 가상환경 설정
           poetry install  # 의존성 패키지 설치
           python manage.py migrate  # 마이그레이션 변경 반영
