@@ -30,47 +30,48 @@ jobs:
           ssh -T ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
           set -e
           cd /root/${{ secrets.DEPLOY_PATH }}
-          echo "📍 프로젝트 폴더 이동"
-
-          echo "📌 현재 커밋 저장"
+          echo "[STEP] 프로젝트 폴더 이동"
+          
+          echo "[STEP] 현재 커밋 저장"
           PREV_COMMIT=\$(git rev-parse HEAD)
-
-          echo "📦 코드 업데이트"
+          
+          echo "[STEP] 코드 업데이트"
           if ! git pull origin release; then
-            echo "❌ git pull 실패! 롤백 중..."
+            echo "[ERROR] git pull 실패! 롤백 중..."
             git reset --hard \$PREV_COMMIT
             exit 1
           fi
-
-          echo "🌐 환경변수 설정 및 가상환경 진입"
+          
+          echo "[STEP] 환경변수 설정 및 가상환경 진입"
           export PATH="/root/.local/bin:\$PATH"
           source .venv/bin/activate
-
-          echo "📦 의존성 설치"
+          
+          echo "[STEP] 의존성 설치"
           if ! poetry install; then
-            echo "❌ 의존성 설치 실패! 롤백 중..."
+            echo "[ERROR] 의존성 설치 실패! 롤백 중..."
             git reset --hard \$PREV_COMMIT
             poetry install
             exit 1
           fi
-
-          echo "🧬 마이그레이션 수행"
+          
+          echo "[STEP] 마이그레이션 수행"
           if ! python manage.py migrate; then
-            echo "❌ 마이그레이션 실패! 롤백 중..."
+            echo "[ERROR] 마이그레이션 실패! 롤백 중..."
             git reset --hard \$PREV_COMMIT
             python manage.py migrate
             exit 1
           fi
-
-          echo "🚀 Gunicorn 리로드"
+          
+          echo "[STEP] Gunicorn 리로드"
           if ! sudo kill -HUP \$(cat /run/gunicorn.pid); then
-            echo "❌ Gunicorn 재시작 실패! 롤백 중..."
+            echo "[ERROR] Gunicorn 재시작 실패! 롤백 중..."
             git reset --hard \$PREV_COMMIT
             sudo kill -HUP \$(cat /run/gunicorn.pid)
             exit 1
           fi
-
-          echo "🔁 Nginx 재시작"
+          
+          echo "[STEP] Nginx 재시작"
           sudo systemctl restart nginx
-          echo "✅ 배포 완료!"
+          echo "[SUCCESS] 배포 완료!"
           EOF
+     
