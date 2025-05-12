@@ -54,7 +54,7 @@ class SearchView(View):
             Q(employment_type__in=query.employment_type) if query.employment_type else Q(),
             Q(education__in=query.education) if query.education else Q(),
             Q(work_experience__in=query.work_experience) if query.work_experience else Q(),
-            Q(day_discussion=query.day_discussion) if query.day_discussion else Q(),
+            Q(day_discussion=True) if query.day_discussion else Q(),
             Q(job_keyword_main__in=query.job_keyword_main) if query.job_keyword_main else Q(),
             Q(job_keyword_sub__overlap=query.job_keyword_sub) if query.job_keyword_sub else Q(),
         )
