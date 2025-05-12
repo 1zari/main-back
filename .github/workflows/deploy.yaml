@@ -23,11 +23,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa  # pub키의 key pair (private key) 
           chmod 600 ~/.ssh/id_rsa # 읽고 쓰는 권한 
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts # 서버 신뢰할수있는 사용자등록
+          ssh-keyscan -H 211.188.53.238 >> ~/.ssh/known_hosts
+          #ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts # 서버 신뢰할수있는 사용자등록
 
       - name: Deploy to Server
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF' #user, IP 설정
+          ssh ${{ secrets.DEPLOY_USER }}@211.188.53.238 << 'EOF'
+         # ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF' #user, IP 설정
             set -e
             cd ${{ secrets.DEPLOY_PATH }} # 프로젝트 디렉토리
             git pull origin release #최신 코드 반영
