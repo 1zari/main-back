@@ -13,6 +13,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
+      - name: Debug SSH Key
+        run: |
+          echo "${{ secrets.DEPLOY_KEY }}" | head -n 5
+          echo "SSH Key saved and permissions set"
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
