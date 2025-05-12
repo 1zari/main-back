@@ -43,7 +43,6 @@ jobs:
           source .venv/bin/activate  # 가상환경 설정
           poetry install  # 의존성 패키지 설치
           python manage.py migrate  # 마이그레이션 변경 반영
-#          python manage.py collectstatic --noinput  # Django admin 위한 정적파일 복사
           sudo kill -HUP $(cat /run/gunicorn.pid)  # 기존 실행 중이던 gunicorn 프로세서를 HUP로 KILL
           sudo systemctl restart nginx  # nginx 서버 재시작
           EOF
