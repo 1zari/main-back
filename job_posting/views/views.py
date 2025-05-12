@@ -1,11 +1,11 @@
 import json
 import uuid
-import requests
-from typing import List, Union
+from typing import List, Optional, Union
 
+import requests
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views import View
@@ -29,7 +29,8 @@ from utils.common import (
     get_user_from_token,
 )
 
-def get_region_from_address(address: str) -> tuple[str, str, str]:
+
+def get_region_from_address(address: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
     NAVER_CLIENT_ID = settings.NCP_MAP_USER
     NAVER_CLIENT_SECRET = settings.NCP_MAP_SECRET
 
@@ -59,7 +60,8 @@ def get_region_from_address(address: str) -> tuple[str, str, str]:
         elif "DONGMYUN" in elem["types"]:
             town = elem["longName"]
 
-    return city, district, town
+    return city or "", district or "", town or ""
+
 
 class JobPostingListView(View):
     """
@@ -194,7 +196,7 @@ class JobPostingDetailView(View):
             # 입력된 주소로 시,도 / 시,군,구 / 동,면 자동 추출
             city, district, town = get_region_from_address(payload.address)
 
-           # location을 Point로 변환
+            # location을 Point로 변환
             location = Point(payload.location[0], payload.location[1])
 
             with transaction.atomic():
@@ -202,9 +204,9 @@ class JobPostingDetailView(View):
                     company_id=company,
                     job_posting_title=payload.job_posting_title,
                     address=payload.address,
-                    city=city,
-                    district=district,
-                    town=town,
+                    city=city or "",
+                    district=district or "",
+                    town=town or "",
                     location=location,
                     work_time_start=payload.work_time_start,
                     work_time_end=payload.work_time_end,
