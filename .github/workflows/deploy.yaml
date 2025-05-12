@@ -12,12 +12,12 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
-      - name: check value
+
+      - name: Debug SSH Keyscan
         run: |
-          echo "${{ secrets.DEPLOY_KEY }}"
-          echo "${{ secrets.DEPLOY_HOST }}"
-          echo "${{ secrets.DEPLOY_USER }}"
-          echo "${{ secrets.DEPLOY_PATH }}"
+          ssh-keyscan -H 211.188.53.238 > output.txt
+          cat output.txt
+          echo "SSH Keyscan output saved and printed."
 
       - name: Debug SSH Key
         run: |
@@ -29,7 +29,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts  # 주석 처리된 부분
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Server
         run: |
