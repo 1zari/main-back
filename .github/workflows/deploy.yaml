@@ -13,24 +13,68 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
+      - name: Debug SSH Key
+        run: |
+          echo "${{ secrets.DEPLOY_KEY }}" | head -n 5
+          echo "SSH Key saved and permissions set"
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa  # pub키의 key pair (private key) 
-          chmod 600 ~/.ssh/id_rsa # 읽고 쓰는 권한 
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts # 서버 신뢰할수있는 사용자등록
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 
 
       - name: Deploy to Server
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF' #user, IP 설정
-            set -e
-            cd ${{ secrets.DEPLOY_PATH }} # 프로젝트 디렉토리
-            git pull origin release #최신 코드 반영
-            source .venv/bin/activate  # 가상환경 설정
-            poetry install  # 의존성 패키지 설치 
-            python manage.py migrate # 마이그레이션 변경 반영  
-            python manage.py collectstatic --noinput  #django admin 위한 정적파일 복사 
-            sudo kill -HUP $(cat /run/gunicorn.pid) #기존 실행중이던 gunicorn 프로세서를 HUP로 KILL 
-          # 실행중이던 작업을 마무리 한 프로세서를 자동으로 KILL 하고 최신코드 반영된 프로세서 재생성함.
-            sudo sytemctl restart nginx # nginx 서버 재시작 
+          ssh -T ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          set -e
+          
+          # 1. 배포 경로로 이동
+          cd /root/${{ secrets.DEPLOY_PATH }}
+          
+          # 2. 현재 커밋 해시 저장 
+          PREV_COMMIT=$(git rev-parse HEAD)
+          
+          # 3. release 브랜치 pull 시도
+          if ! git pull origin release; then
+              git reset --hard "$PREV_COMMIT"
+              exit 1
+          fi
+          
+          # 4. 환경변수 설정 및 가상환경 활성화
+          export PATH="/root/.local/bin:$PATH"
+          source .venv/bin/activate
+          
+          # 5. Poetry 설치 여부 확인
+          if ! command -v poetry >/dev/null 2>&1; then
+              exit 1
+          fi
+          
+          # 6. 의존성 설치 
+          if ! poetry install --no-interaction --no-root; then
+              git reset --hard "$PREV_COMMIT"
+              poetry install --no-interaction --no-root
+              exit 1
+          fi
+          
+          # 7. DB 마이그레이션 
+          if ! python manage.py migrate --noinput; then
+              git reset --hard "$PREV_COMMIT"
+              python manage.py migrate --noinput
+              exit 1
+          fi
+          
+          # 8. Gunicorn 리로드 
+          if [ -f /run/gunicorn.pid ]; then
+              if ! sudo kill -HUP $(cat /run/gunicorn.pid); then
+                  git reset --hard "$PREV_COMMIT"
+                  sudo kill -HUP $(cat /run/gunicorn.pid)
+                  exit 1
+              fi
+          fi
+          
+          # 9. Nginx 재시작
+          sudo systemctl restart nginx
           EOF
+     
