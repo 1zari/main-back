@@ -288,7 +288,7 @@ class SubmissionCompanyDetialView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             user: CompanyInfo = check_and_return_company_user(valid_user)
-            submission = Submission.objects.get(submission_id=submission_id)
+            submission = Submission.objects.select_related("user__common_user").get(submission_id=submission_id)
             if submission is None:
                 return JsonResponse({"errors": "Not found submission data"}, status=404)
             submission.is_read = True
@@ -297,6 +297,8 @@ class SubmissionCompanyDetialView(View):
             submission_model = SubmissionCompanyOutputDetailModel(
                 job_category=submission.snapshot_resume["job_category"],
                 name=submission.user.name,
+                phone_number=submission.user.phone_number,
+                email=submission.user.common_user.email,
                 resume_title=submission.snapshot_resume["resume_title"],
                 education_state=submission.snapshot_resume["education_state"],
                 education_level=submission.snapshot_resume["education_level"],
