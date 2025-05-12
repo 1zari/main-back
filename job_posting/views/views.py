@@ -1,9 +1,11 @@
 import json
 import uuid
+import requests
 from typing import List, Union
 
 from django.contrib.gis.geos import Point
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.views import View
@@ -27,6 +29,37 @@ from utils.common import (
     get_user_from_token,
 )
 
+def get_region_from_address(address: str) -> tuple[str, str, str]:
+    NAVER_CLIENT_ID = settings.NCP_MAP_USER
+    NAVER_CLIENT_SECRET = settings.NCP_MAP_SECRET
+
+    url = "https://maps.apigw.ntruss.com/map-geocode/v2/geocode"
+    headers = {
+        "x-ncp-apigw-api-key-id": NAVER_CLIENT_ID,
+        "x-ncp-apigw-api-key": NAVER_CLIENT_SECRET,
+        "Accept": "application/json",
+    }
+    params = {"query": address}
+
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code != 200:
+        raise Exception(f"주소 정보를 가져오는 데 실패했습니다. 상태 코드: {response.status_code}")
+
+    result = response.json()
+    if not result["addresses"]:
+        raise Exception("주소가 정확하지 않거나 결과를 찾을 수 없습니다.")
+
+    elements = result["addresses"][0]["addressElements"]
+    city = district = town = None
+    for elem in elements:
+        if "SIDO" in elem["types"]:
+            city = elem["longName"]
+        elif "SIGUGUN" in elem["types"]:
+            district = elem["longName"]
+        elif "DONGMYUN" in elem["types"]:
+            town = elem["longName"]
+
+    return city, district, town
 
 class JobPostingListView(View):
     """
@@ -158,8 +191,10 @@ class JobPostingDetailView(View):
 
             data = json.loads(request.body)
             payload = JobPostingCreateModel(**data)
+            # 입력된 주소로 시,도 / 시,군,구 / 동,면 자동 추출
+            city, district, town = get_region_from_address(payload.address)
 
-            # location을 Point로 변환
+           # location을 Point로 변환
             location = Point(payload.location[0], payload.location[1])
 
             with transaction.atomic():
@@ -167,9 +202,9 @@ class JobPostingDetailView(View):
                     company_id=company,
                     job_posting_title=payload.job_posting_title,
                     address=payload.address,
-                    city=payload.city,
-                    district=payload.district,
-                    town=payload.town,
+                    city=city,
+                    district=district,
+                    town=town,
                     location=location,
                     work_time_start=payload.work_time_start,
                     work_time_end=payload.work_time_end,
@@ -260,10 +295,6 @@ class JobPostingDetailView(View):
                     continue
                 setattr(post, field, value)
             post.save()
-
-            is_bookmarked = False
-            if isinstance(company, CommonUser):
-                is_bookmarked = JobPostingBookmark.objects.filter(user=company, job_posting=post).exists()
 
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
