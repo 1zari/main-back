@@ -15,9 +15,6 @@ class JobPostingCreateModel(BaseModel):
     model_config = MY_CONFIG
     job_posting_title: str
     address: str
-    city: str
-    district: str
-    town: str
     location: tuple[float, float]  # (경도, 위도)
     work_time_start: time
     work_time_end: time
@@ -95,7 +92,9 @@ class JobPostingListModel(BaseModel):
     job_posting_id: UUID
     company_id: UUID
     company_name: str
-    company_address: str
+    city: str
+    district: str
+    company_logo: Optional[str]
     job_posting_title: str
     summary: str
     deadline: date
