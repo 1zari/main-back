@@ -15,7 +15,6 @@ class JobPostingCreateModel(BaseModel):
     model_config = MY_CONFIG
     job_posting_title: str
     address: str
-    location: tuple[float, float]  # (경도, 위도)
     work_time_start: time
     work_time_end: time
     posting_type: str
