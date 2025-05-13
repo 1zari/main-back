@@ -32,7 +32,7 @@ from utils.common import (
 
 
 def get_region_from_address(
-    address: str,
+    address: Optional[str],
 ) -> tuple[Optional[float], Optional[float], Optional[str], Optional[str], Optional[str]]:
     NAVER_CLIENT_ID = settings.NCP_MAP_USER
     NAVER_CLIENT_SECRET = settings.NCP_MAP_SECRET
@@ -295,18 +295,12 @@ class JobPostingDetailView(View):
 
             data = json.loads(request.body)
             payload = JobPostingUpdateModel(**data)
+            # 입력된 주소로 시,도 / 시,군,구 / 동,면 자동 추출
+            longitude, latitude, city, district, town = get_region_from_address(payload.address)
 
-            # location이 있으면 Point로 변환
-            if payload.location:
-                location = Point(payload.location[0], payload.location[1])
-                post.location = location
-
-            for field, value in payload.model_dump(exclude_unset=True).items():
-                if field == "location":
-                    continue
-                setattr(post, field, value)
+            # location을 Point로 변환
+            location = Point(longitude, latitude)
             post.save()
-
             detail = JobPostingResponseModel(
                 job_posting_id=post.job_posting_id,
                 company_id=post.company_id.company_id,
@@ -316,10 +310,10 @@ class JobPostingDetailView(View):
                 manager_name=post.company_id.manager_name,
                 job_posting_title=post.job_posting_title,
                 address=post.address,
-                city=post.city,
-                district=post.district,
-                town=post.town,
-                location=(post.location.x, post.location.y),
+                city=city or "",
+                district=district or "",
+                town=town or "",
+                location=(location.x, location.y) or "",
                 work_time_start=post.work_time_start,
                 work_time_end=post.work_time_end,
                 posting_type=post.posting_type,
