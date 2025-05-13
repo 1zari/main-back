@@ -121,10 +121,6 @@ class JobPostingUpdateModel(BaseModel):
     model_config = MY_CONFIG
     job_posting_title: Optional[str]
     address: Optional[str]
-    city: Optional[str]
-    district: Optional[str]
-    town: Optional[str]
-    location: Optional[tuple[float, float]]
     work_time_start: Optional[time]
     work_time_end: Optional[time]
     posting_type: Optional[str]
