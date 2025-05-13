@@ -31,7 +31,9 @@ from utils.common import (
 )
 
 
-def get_region_from_address(address: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
+def get_region_from_address(
+    address: str,
+) -> tuple[Optional[float], Optional[float], Optional[str], Optional[str], Optional[str]]:
     NAVER_CLIENT_ID = settings.NCP_MAP_USER
     NAVER_CLIENT_SECRET = settings.NCP_MAP_SECRET
 
@@ -51,7 +53,11 @@ def get_region_from_address(address: str) -> tuple[Optional[str], Optional[str],
     if not result["addresses"]:
         raise Exception("주소가 정확하지 않거나 결과를 찾을 수 없습니다.")
 
-    elements = result["addresses"][0]["addressElements"]
+    addr_info = result["addresses"][0]
+    elements = addr_info["addressElements"]
+    longitude = float(addr_info["x"]) if addr_info.get("x") else None
+    latitude = float(addr_info["y"]) if addr_info.get("y") else None
+
     city = district = town = None
     for elem in elements:
         if "SIDO" in elem["types"]:
@@ -61,7 +67,7 @@ def get_region_from_address(address: str) -> tuple[Optional[str], Optional[str],
         elif "DONGMYUN" in elem["types"]:
             town = elem["longName"]
 
-    return city or "", district or "", town or ""
+    return longitude, latitude, city, district, town
 
 
 class JobPostingListView(View):
@@ -197,10 +203,10 @@ class JobPostingDetailView(View):
             data = json.loads(request.body)
             payload = JobPostingCreateModel(**data)
             # 입력된 주소로 시,도 / 시,군,구 / 동,면 자동 추출
-            city, district, town = get_region_from_address(payload.address)
+            longitude, latitude, city, district, town = get_region_from_address(payload.address)
 
             # location을 Point로 변환
-            location = Point(payload.location[0], payload.location[1])
+            location = Point(longitude, latitude)
 
             with transaction.atomic():
                 post = JobPosting.objects.create(
