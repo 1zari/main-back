@@ -1,0 +1,89 @@
+name: Code Quality Checks
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+    services:
+      db:
+        image: postgis/postgis:14-3.3
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PG_DB }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Create .env file
+        run: |
+          echo "DJANGO_ENV=dev" >> $GITHUB_WORKSPACE/.env
+          echo "DB_NAME=${{ secrets.PG_DB }}" >> $GITHUB_WORKSPACE/.env
+          echo "DB_USER=${{ secrets.PG_USER }}" >> $GITHUB_WORKSPACE/.env
+          echo "DB_PASSWORD=${{ secrets.PG_PASSWORD }}" >> $GITHUB_WORKSPACE/.env
+          echo "DB_HOST=localhost" >> $GITHUB_WORKSPACE/.env
+          echo "DB_PORT=5432" >> $GITHUB_WORKSPACE/.env
+
+      - name: Create secrets.json
+        run: |
+          echo '${{ secrets.SECRETS_JSON }}' > $GITHUB_WORKSPACE/secrets.json
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Install system dependencies (GDAL, GEOS, etc.)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgdal-dev gdal-bin libgeos-dev
+
+      - name: Set GDAL and GEOS environment variables
+        run: |
+          echo "CPLUS_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
+          echo "C_INCLUDE_PATH=/usr/include/gdal" >> $GITHUB_ENV
+          echo "GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so" >> $GITHUB_ENV
+          echo "GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so" >> $GITHUB_ENV
+
+      - name: Install Packages & Libraries with Poetry
+        run: |
+          poetry install
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U ${{ secrets.PG_USER }}; do
+            sleep 1;
+          done
+
+      - name: Run Django Migration
+        run: |
+          poetry run python manage.py migrate
+
+      - name: Run Mypy
+        run: |
+          poetry run mypy .
+
+      - name: Run Isort, Black
+        run: |
+          poetry run isort --check --profile black . 
+          poetry run black --check .

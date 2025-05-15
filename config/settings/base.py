@@ -44,18 +44,23 @@ SECRET_KEY = secrets["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS: list[str] = [
+    "senior-naeil.life",
+    "www.senior-naeil.life",
+    "211.188.53.238",
+    "1zari.kro.kr",
+    "senior-tomorrow.kro.kr",
+]
 
 # Application definition
 
 INSTALLED_APPS = [
     # own
+    "utils",
     "user",
-    "job_position",
+    "job_posting",
     "resume",
     "search",
-    "django_elasticsearch_dsl",
     # django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -63,13 +68,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
+    "django_extensions",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -101,7 +110,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
         "PASSWORD": os.environ.get("DB_PASSWORD"),
@@ -109,16 +118,7 @@ DATABASES = {
         "PORT": os.environ.get("DB_PORT"),
     }
 }
-ELASTICSEARCH_DSL = {
-    "default": {
-        "hosts": "localhost:9200",
-        "http_auth": ("elastic", "123456"),
-        "verify_certs": False,
-        "use_ssl": True,
-        "ssl_assert_hostname": False,
-        "ssl_show_warn": False,
-    },
-}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -144,7 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "asia/seoul"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -154,9 +154,125 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+APPEND_SLASH = True
+
+AUTH_USER_MODEL = "user.CommonUser"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+JWT_SECRET_KEY = secrets["JWT_SECRET_KEY"]
+KOREA_TAX_API_KEY = secrets["KOREA_TAX_API_KEY"]
+
+# jwt setting
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Access Token 만료 시간 (분)
+REFRESH_TOKEN_EXPIRE_DAYS = 1  # Refresh Token 만료 시간 (일)
+
+NAVER_CLIENT_ID = secrets["naver"]["client_id"]
+NAVER_SECRET = secrets["naver"]["secret"]
+NAVER_REDIRECT_URL = secrets["naver"]["redirect_url"]
+
+
+KAKAO_CLIENT_ID = secrets["kakao"]["client_id"]
+KAKAO_SECRET = secrets["kakao"]["secret"]
+KAKAO_REDIRECT_URL = secrets["kakao"]["redirect_url"]
+
+SOLAPI_API_KEY = secrets["solapi"]["api_key"]
+SOLAPI_SECRET = secrets["solapi"]["secret"]
+SOLAPI_SENDER = secrets["solapi"]["sender"]
+
+# NCP object storage 서비스
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+NCP_S3_ENDPOINT = secrets["NCP_S3_ENDPOINT"]
+NCP_S3_ACCESS_KEY = secrets["NCP_S3_ACCESS_KEY"]
+NCP_S3_SECRET_KEY = secrets["NCP_S3_SECRET_KEY"]
+NCP_S3_BUCKET_NAME = secrets["NCP_S3_BUCKET_NAME"]
+NCP_S3_REGION_NAME = secrets["NCP_S3_REGION_NAME"]
+NCP_MAP_SECRET = secrets["NCP_MAP_SECRET"]
+NCP_MAP_USER = secrets["NCP_MAP_USER"]
+
+REDIS_PORT = os.environ.get("REDIS_PORT")
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_DB = os.environ.get("REDIS_DB")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+
+KOREA_TAX_API_URL = os.getenv("KOREA_TAX_API_URL")
+
+KAKAO_TOKEN_URL = os.getenv("KAKAO_TOKEN_URL") or ""
+KAKAO_USER_INFO_URL = os.getenv("KAKAO_USER_INFO_URL") or ""
+
+NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL") or ""
+NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL") or ""
+
+
+# CSRF 설정
+CSRF_TRUSTED_ORIGINS = [
+    "https://senior-naeil.life",  # 백엔드 도메인(API server)
+    "https://senior-tomorrow.kro.kr",  # 프론트 도메인
+    "https://1zari.kro.kr",  # 프론트 도메인
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+]
+CSRF_COOKIE_SECURE = True  # SSL 적용시 True 해야함.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+# CORS_ALLOW_HEADERS = [
+#     "accept",
+#     "accept-encoding",
+#     "authorization",
+#     "content-type",
+#     "dnt",
+#     "origin",
+#     "user-agent",
+#     "x-csrftoken",
+#     "x-requested-with",
+#     "x-user-role",
+# ]
+
+# CORS 설정
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = [
+#     "https://1zari.dev1.garam.xyz",
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "https://senior-tomorrow.kro.kr",
+#     "https://1zari.kro.kr",
+#     "https://senior-tomorrow.vercel.app",
+#     "https://senior-naeil.life",
+#     "https://www.senior-naeil.life",
+#     "http://localhost:8000",
+#     "http://127.0.0.1:8000",
+# ]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+
+# LOGGING 설정
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
