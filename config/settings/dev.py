@@ -5,8 +5,8 @@ from .base import *
 ROOT_URLCONF = "config.urls.dev_urls"
 
 
-GDAL_LIBRARY_PATH= os.environ.get("GDAL_LIBRARY_PATH")
-GEOS_LIBRARY_PATH= os.environ.get("GEOS_LIBRARY_PATH")
+GDAL_LIBRARY_PATH = os.environ.get("GDAL_LIBRARY_PATH")
+GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")
 
 # # 로컬과 CI 환경 구분
 # if os.environ.get("CI") == "true":
