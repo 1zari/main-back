@@ -31,7 +31,7 @@ class SearchView(View):
                 district_no=request.GET.getlist("district_no"),  # 시군구 id
                 town_no=request.GET.getlist("town_no"),  # 읍면동 id
                 work_day=request.GET.getlist("work_day"),  # 근무 요일
-                day_discussion=request.GET.get("day_discussion") == "true",
+                day_discussion=request.GET.get("day_discussion") == "true",  # 요일 협의 여부/ Bool 형태로 변환
                 posting_type=request.GET.getlist("posting_type"),  # 공고 형태 공공, 기업
                 employment_type=request.GET.getlist("employment_type"),  # 고용형태 정규직, 계약직
                 education=request.GET.getlist("education"),  # 학력사항
@@ -91,9 +91,19 @@ class SearchView(View):
             qs = qs.filter(town__in=town_code_to_name.values())
         # 6. 공간 필터링 (읍면동 기준, 3km 반경)
         if query.town_no and district_filter:
-            regions = District.objects.filter(district_filter).aggregate(Union("geometry"))["geometry__union"]
-            if regions:
-                regions_3km = regions.buffer(3000)  # 3km 버퍼
+            buffered_regions = []
+            districts_to_buffer = District.objects.filter(district_filter)
+            for district in districts_to_buffer:
+                if district.geometry:
+                    buffered_regions.append(district.geometry.buffer(3000))
+
+            if buffered_regions:
+                # 버퍼 처리된 폴리곤들을 Union
+                regions_3km = (
+                    buffered_regions[0].union(*buffered_regions[1:])
+                    if len(buffered_regions) > 1
+                    else buffered_regions[0]
+                )
                 qs = qs.filter(location__dwithin=(regions_3km, D(km=0)))
 
         # 7. 북마크 여부
