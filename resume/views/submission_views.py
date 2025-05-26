@@ -9,9 +9,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from resume.models import Resume, Submission
-from resume.schemas import (
-    CareerInfoModel,
-    CertificationInfoModel,
+from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoModel
+from resume.schemas.submission_schemas import (
     JobpostingGetListModel,
     JobpostingListOutputModel,
     SnapshotResumeModel,

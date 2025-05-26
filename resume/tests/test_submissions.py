@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from job_posting.models import JobPosting
 from resume.models import CareerInfo, Certification, Resume, Submission
-from resume.schemas import CareerInfoModel, CertificationInfoModel
+from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoModel
 from user.models import CommonUser, CompanyInfo, UserInfo
 from user.services.token import create_access_token
 
