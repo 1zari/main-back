@@ -1,11 +1,13 @@
 import json
 import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from pydantic_core._pydantic_core import ValidationError
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from resume.models import Resume, Submission
@@ -42,7 +44,6 @@ from utils.common import (
 # ------------------------
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class SubmissionListView(View):
     """
     지원한 공고 리스트 API (유저)
@@ -65,6 +66,12 @@ class SubmissionListView(View):
             )
 
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -119,6 +126,12 @@ class SubmissionListView(View):
             )
             return JsonResponse(response.model_dump(mode="json"), status=201)
 
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -128,7 +141,6 @@ class SubmissionListView(View):
 # ------------------------
 
 
-@method_decorator(csrf_protect, name="dispatch")
 class SubmissionDetailView(View):
     """
     지원 공고 상세
@@ -172,6 +184,12 @@ class SubmissionDetailView(View):
             )
             return JsonResponse(response.model_dump(), status=200)
 
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -187,11 +205,16 @@ class SubmissionDetailView(View):
                 return JsonResponse({"errors": "Not found submission data"}, status=404)
             submission.delete()
             return JsonResponse({"message": "Successfully data deleted"}, status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
 
-@method_decorator(csrf_protect, name="dispatch")
 class SubmissionMemoView(View):
     """
     memo update 및 delete 뷰
@@ -216,6 +239,12 @@ class SubmissionMemoView(View):
 
             response = SubmissionMemoResponseModel(message="Successfully updated memo", memo=submission.memo)
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -234,6 +263,12 @@ class SubmissionMemoView(View):
                 return JsonResponse({"errors": "Not found submission data"}, status=404)
 
             return JsonResponse({"message": "Successfully deleted submission memo"}, status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -274,6 +309,12 @@ class SubmissionCompanyListView(View):
             )
 
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -313,6 +354,12 @@ class SubmissionCompanyDetialView(View):
             )
             return JsonResponse(response.model_dump(), status=200)
 
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 

@@ -22,3 +22,9 @@ GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")
 #     # 로컬 환경에서 사용하는 경로 (macOS)
 #     GDAL_LIBRARY_PATH = "/opt/homebrew/lib/libgdal.dylib"
 #     GEOS_LIBRARY_PATH = "/opt/homebrew/lib/libgeos_c.dylib"
+
+INSTALLED_APPS += ["debug_toolbar"]
+
+INTERNAL_IPS = ["127.0.0.1"]
+
+MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]

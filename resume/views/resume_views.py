@@ -7,7 +7,8 @@ from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.csrf import csrf_exempt
+from pydantic_core._pydantic_core import ValidationError
 
 from resume.models import CareerInfo, Certification, Resume
 from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoModel
@@ -36,7 +37,6 @@ from utils.common import check_and_return_normal_user, get_user_from_token
 # ------------------------
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeListView(View):
     """
     내 이력서 관련 (일반 유저)
@@ -66,6 +66,12 @@ class MyResumeListView(View):
                 resume_list=resume_models,
             )
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -73,7 +79,6 @@ class MyResumeListView(View):
         """
         새로운 이력서 등록
         """
-        from pydantic_core._pydantic_core import ValidationError
 
         try:
             valid_user: CommonUser = get_user_from_token(request)
@@ -113,7 +118,6 @@ class MyResumeListView(View):
             return JsonResponse({"errors": str(e)}, status=400)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeDetailView(View):
     """
     이력서 단일 조회 / 수정 / 삭제
@@ -153,6 +157,12 @@ class MyResumeDetailView(View):
             )
             response = MyResumeMixinResponse(message="Resume loaded successfully", resume=resume_model)
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -179,7 +189,12 @@ class MyResumeDetailView(View):
 
             response = ResumeResponseModel(message="Resume updated successfully", resume=updated_resume)
             return JsonResponse(response.model_dump(), status=200)
-
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
@@ -195,6 +210,12 @@ class MyResumeDetailView(View):
             return JsonResponse({"message": "Successfully deleted resume"}, status=200)
         except Resume.DoesNotExist:
             return JsonResponse({"error": "Resume not found"}, status=404)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
