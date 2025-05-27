@@ -10,9 +10,8 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from resume.models import CareerInfo, Certification, Resume
-from resume.schemas import (
-    CareerInfoModel,
-    CertificationInfoModel,
+from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoModel
+from resume.schemas.resume_schemas import (
     MyResume,
     MyResumeListOutput,
     MyResumeMixinResponse,
@@ -40,7 +39,7 @@ from utils.common import check_and_return_normal_user, get_user_from_token
 @method_decorator(csrf_exempt, name="dispatch")
 class MyResumeListView(View):
     """
-    이력서
+    내 이력서 관련 (일반 유저)
     """
 
     def get(self, request: HttpRequest) -> JsonResponse:
@@ -50,7 +49,7 @@ class MyResumeListView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = check_and_return_normal_user(valid_user)
-            resumes: list[Resume] = list(Resume.objects.filter(user=user))
+            resumes: list[Resume] = list(Resume.objects.select_related("user").filter(user=user).all())
 
             resume_models: List[ResumeListOutputModel] = []
             for resume in resumes:
@@ -159,7 +158,7 @@ class MyResumeDetailView(View):
 
     def patch(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
-        이력서 수정
+        이력서 부분 수정
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
