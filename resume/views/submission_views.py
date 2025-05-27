@@ -1,12 +1,11 @@
 import json
+import logging
 import uuid
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from pydantic_core._pydantic_core import ValidationError
 
 from job_posting.models import JobPosting, JobPostingBookmark
@@ -38,6 +37,10 @@ from utils.common import (
     check_and_return_normal_user,
     get_user_from_token,
 )
+from utils.logging_decorators import log_resume_call
+
+logger = logging.getLogger(__name__)
+
 
 # ------------------------
 # 지원 관련 api
@@ -49,6 +52,7 @@ class SubmissionListView(View):
     지원한 공고 리스트 API (유저)
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest) -> JsonResponse:
         """
         지원한 공고 리스트 조회
@@ -75,6 +79,7 @@ class SubmissionListView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def post(self, request: HttpRequest) -> JsonResponse:
         """
         공고 지원 (유저)
@@ -146,6 +151,7 @@ class SubmissionDetailView(View):
     지원 공고 상세
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         상세 데이터 조회
@@ -193,6 +199,7 @@ class SubmissionDetailView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def delete(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         지원공고 삭제
@@ -220,6 +227,7 @@ class SubmissionMemoView(View):
     memo update 및 delete 뷰
     """
 
+    @log_resume_call
     def patch(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         memo 수정
@@ -248,6 +256,7 @@ class SubmissionMemoView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def delete(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         """
         memo 삭제
@@ -278,6 +287,7 @@ class SubmissionCompanyListView(View):
     기업 유저 지원자 목록 조회
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest) -> JsonResponse:
         """
         공고 제목 및 지원서 목록 리스트 조회
@@ -324,6 +334,7 @@ class SubmissionCompanyDetialView(View):
     기업회원 지원자 이력서 조회
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest, submission_id: uuid.UUID) -> JsonResponse:
         try:
             valid_user: CommonUser = get_user_from_token(request)

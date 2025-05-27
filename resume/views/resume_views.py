@@ -1,13 +1,12 @@
 import json
+import logging
 import uuid
 from typing import List
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 from pydantic_core._pydantic_core import ValidationError
 
 from resume.models import CareerInfo, Certification, Resume
@@ -31,6 +30,9 @@ from resume.serializer import (
 from user.models import CommonUser, UserInfo
 from user.schemas import UserInfoModel
 from utils.common import check_and_return_normal_user, get_user_from_token
+from utils.logging_decorators import log_resume_call
+
+logger = logging.getLogger(__name__)
 
 # ------------------------
 # 이력서 관련 api
@@ -42,6 +44,7 @@ class MyResumeListView(View):
     내 이력서 관련 (일반 유저)
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest) -> JsonResponse:
         """
         내 이력서 리스트 조회
@@ -75,6 +78,7 @@ class MyResumeListView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def post(self, request: HttpRequest) -> JsonResponse:
         """
         새로운 이력서 등록
@@ -123,6 +127,7 @@ class MyResumeDetailView(View):
     이력서 단일 조회 / 수정 / 삭제
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 상세 조회
@@ -166,6 +171,7 @@ class MyResumeDetailView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def patch(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 부분 수정
@@ -198,6 +204,7 @@ class MyResumeDetailView(View):
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def delete(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 삭제
