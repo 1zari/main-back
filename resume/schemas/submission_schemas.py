@@ -8,6 +8,18 @@ from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoMode
 from utils.schemas import MY_CONFIG
 
 
+class SubmissionOutputModel(BaseModel):
+    model_config = MY_CONFIG
+    job_category: str = ""
+    resume_title: str
+    education_level: str
+    school_name: str
+    education_state: str
+    introduce: str
+    career_list: Optional[List[CareerInfoModel]]
+    certification_list: Optional[List[CertificationInfoModel]]
+
+
 # ------------------------
 # Submission (지원한 이력서)
 # ------------------------
@@ -30,9 +42,6 @@ class JobpostingListOutputModel(BaseModel):
 
 
 class SnapshotResumeModel(BaseModel):
-    """
-    이력서 스냅샷 모델
-    """
     model_config = MY_CONFIG
 
     job_category: str
@@ -62,9 +71,11 @@ class SubmissionModel(BaseModel):
 
 class SubmissionMemoUpdateModel(BaseModel):
     """
-    메모 모델
+    메모 업데이트 모델
     """
+
     memo: Optional[str] = None
+
 
 class JobpostingGetListModel(BaseModel):
     """
@@ -75,6 +86,7 @@ class JobpostingGetListModel(BaseModel):
 
     job_posting_id: UUID
     job_posting_title: str
+
 
 class SubmissionCompanyOutputDetailModel(BaseModel):
     model_config = MY_CONFIG
@@ -91,6 +103,7 @@ class SubmissionCompanyOutputDetailModel(BaseModel):
     career_list: list[CareerInfoModel]
     certification_list: list[CertificationInfoModel]
 
+
 class SubmissionCompanyGetListInfoModel(BaseModel):
     """
     기업 유저 지원자 목록 조회 포함 항목
@@ -106,6 +119,7 @@ class SubmissionCompanyGetListInfoModel(BaseModel):
     created_at: date
     resume_title: str
 
+
 class SubmissionCompanyGetListOutputModel(BaseModel):
     """
     기업 유저 지원자 목록 조회 시 보여질 모든 항목
@@ -117,9 +131,11 @@ class SubmissionCompanyGetListOutputModel(BaseModel):
     job_posting_list: list[JobpostingGetListModel]
     submission_list: list[SubmissionCompanyGetListInfoModel]
 
+
 # ------------------------
 # 응답 모델
 # ------------------------
+
 
 class SubmissionListResponseModel(BaseModel):
     message: str

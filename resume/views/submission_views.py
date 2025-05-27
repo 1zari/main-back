@@ -1,13 +1,13 @@
 import json
 import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from pydantic_core._pydantic_core import ValidationError
-from django.core.exceptions import PermissionDenied
 
 from job_posting.models import JobPosting, JobPostingBookmark
 from resume.models import Resume, Submission
@@ -25,6 +25,7 @@ from resume.schemas.submission_schemas import (
     SubmissionMemoResponseModel,
     SubmissionMemoUpdateModel,
     SubmissionModel,
+    SubmissionOutputModel,
 )
 from resume.serializer import (
     serialize_careers,
@@ -125,7 +126,6 @@ class SubmissionListView(View):
             )
             return JsonResponse(response.model_dump(mode="json"), status=201)
 
-
         except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
             return JsonResponse({"errors": "Invalid JSON format"}, status=400)
         except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
@@ -183,7 +183,6 @@ class SubmissionDetailView(View):
                 submission=submission_model,
             )
             return JsonResponse(response.model_dump(), status=200)
-
 
         except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
             return JsonResponse({"errors": "Invalid JSON format"}, status=400)
@@ -354,7 +353,6 @@ class SubmissionCompanyDetialView(View):
                 submission=submission_model,
             )
             return JsonResponse(response.model_dump(), status=200)
-
 
         except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
             return JsonResponse({"errors": "Invalid JSON format"}, status=400)
