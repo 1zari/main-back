@@ -8,12 +8,12 @@ logger_search = logging.getLogger("search")
 logger_utils = logging.getLogger("utils")
 
 
-def log_user_call(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+def log_user_call(view_method):
+    @wraps(view_method)
+    def wrapper(self, request, *args, **kwargs):
         logger_user.info(f"요청: {request.method} {request.path}")
         try:
-            response = view_func(request, *args, **kwargs)
+            response = view_method(self, request, *args, **kwargs)
             logger_user.info(f"응답: {response.status_code} {request.path}")
             return response
         except Exception as e:
@@ -23,12 +23,12 @@ def log_user_call(view_func):
     return wrapper
 
 
-def log_job_posting_call(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+def log_job_posting_call(view_method):
+    @wraps(view_method)
+    def wrapper(self, request, *args, **kwargs):
         logger_job_posting.info(f"요청: {request.method} {request.path}")
         try:
-            response = view_func(request, *args, **kwargs)
+            response = view_method(self, request, *args, **kwargs)
             logger_job_posting.info(f"응답: {response.status_code} {request.path}")
             return response
         except Exception as e:
@@ -38,12 +38,12 @@ def log_job_posting_call(view_func):
     return wrapper
 
 
-def log_resume_call(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+def log_resume_call(view_method):
+    @wraps(view_method)
+    def wrapper(self, request, *args, **kwargs):
         logger_resume.info(f"요청: {request.method} {request.path}")
         try:
-            response = view_func(request, *args, **kwargs)
+            response = view_method(self, request, *args, **kwargs)
             logger_resume.info(f"응답: {response.status_code} {request.path}")
             return response
         except Exception as e:
@@ -53,12 +53,12 @@ def log_resume_call(view_func):
     return wrapper
 
 
-def log_search_call(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+def log_search_call(view_method):
+    @wraps(view_method)
+    def wrapper(self, request, *args, **kwargs):
         logger_search.info(f"요청: {request.method} {request.path}")
         try:
-            response = view_func(request, *args, **kwargs)
+            response = view_method(self, request, *args, **kwargs)
             logger_search.info(f"응답: {response.status_code} {request.path}")
             return response
         except Exception as e:
@@ -68,12 +68,12 @@ def log_search_call(view_func):
     return wrapper
 
 
-def log_utils_call(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+def log_utils_call(view_method):
+    @wraps(view_method)
+    def wrapper(self, request, *args, **kwargs):
         logger_utils.info(f"요청: {request.method} {request.path}")
         try:
-            response = view_func(request, *args, **kwargs)
+            response = view_method(self, request, *args, **kwargs)
             logger_utils.info(f"응답: {response.status_code} {request.path}")
             return response
         except Exception as e:
