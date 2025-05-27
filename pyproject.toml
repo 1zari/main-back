@@ -1,5 +1,5 @@
 [project]
-name = "main-back"
+name = "config"
 version = "0.1.0"
 description = ""
 authors = [
@@ -11,9 +11,33 @@ dependencies = [
     "django (>=5.2,<6.0)",
     "dotenv (>=0.9.9,<0.10.0)",
     "psycopg2 (>=2.9.10,<3.0.0)",
-    "django-elasticsearch-dsl (>=8.0,<9.0)",
     "isort (>=6.0.1,<7.0.0)",
-    "black (>=25.1.0,<26.0.0)"
+    "black (>=25.1.0,<26.0.0)",
+    "pydantic[email] (>=2.11.3,<3.0.0)",
+    "pyjwt (>=2.10.1,<3.0.0)",
+    "pytest-django (>=4.11.1,<5.0.0)",
+    "gdal (==3.8.4)",
+    "pillow (>=11.2.1,<12.0.0)",
+    "django-extensions (>=4.1,<5.0)",
+    "ipython (>=9.1.0,<10.0.0)",
+    "requests (>=2.32.3,<3.0.0)",
+    "django-stubs (>=5.1.3,<6.0.0)",
+    "types-redis (>=4.6.0.20241004,<5.0.0.0)",
+    "types-requests (<2.0.0)",
+    "types-pyjwt (>=1.7.1,<2.0.0)",
+    "email-validator (>=2.2.0,<3.0.0)",
+    "redis (>=5.2.1,<6.0.0)",
+    "pytest-mock (>=3.14.0,<4.0.0)",
+    "responses (>=0.25.7,<0.26.0)",
+    "boto3 (==1.26.98)",
+    "botocore (==1.29.98)",
+    "boto3-stubs (>=1.26.0,<2.0.0)",
+    "types-psycopg2 (>=2.9.21.20250318,<3.0.0.0)",
+    "solapi (>=5.0.0,<6.0.0)",
+    "geojson-pydantic (>=2.0.0,<3.0.0)",
+    "geopandas (>=1.0.1,<2.0.0)",
+    "types-geopandas (>=1.0.1.20250510,<2.0.0.0)",
+    "urllib3 (>=1.25.4,<1.27)",
 ]
 
 
@@ -22,7 +46,20 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 80
+line-length = 120
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py"]
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.15.0"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
+
