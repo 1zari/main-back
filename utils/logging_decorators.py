@@ -1,11 +1,12 @@
 import logging
 from functools import wraps
 
-logger_user=logging.getLogger("user")
+logger_user = logging.getLogger("user")
 logger_job_posting = logging.getLogger("job_posting")
-logger_resume=logging.getLogger("resume")
-logger_search=logging.getLogger("search")
-logger_utils=logging.getLogger("utils")
+logger_resume = logging.getLogger("resume")
+logger_search = logging.getLogger("search")
+logger_utils = logging.getLogger("utils")
+
 
 def log_user_call(view_func):
     @wraps(view_func)
@@ -18,6 +19,7 @@ def log_user_call(view_func):
         except Exception as e:
             logger_user.exception(f"에러 발생: {e}")
             raise
+
     return wrapper
 
 
@@ -32,6 +34,7 @@ def log_job_posting_call(view_func):
         except Exception as e:
             logger_job_posting.exception(f"에러 발생: {e}")
             raise
+
     return wrapper
 
 
@@ -46,6 +49,7 @@ def log_resume_call(view_func):
         except Exception as e:
             logger_resume.exception(f"에러 발생: {e}")
             raise
+
     return wrapper
 
 
@@ -60,6 +64,7 @@ def log_search_call(view_func):
         except Exception as e:
             logger_search.exception(f"에러 발생: {e}")
             raise
+
     return wrapper
 
 
@@ -74,4 +79,5 @@ def log_utils_call(view_func):
         except Exception as e:
             logger_utils.exception(f"에러 발생: {e}")
             raise
+
     return wrapper
