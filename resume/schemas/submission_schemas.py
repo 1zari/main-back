@@ -8,18 +8,6 @@ from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoMode
 from utils.schemas import MY_CONFIG
 
 
-class SubmissionOutputModel(BaseModel):
-    model_config = MY_CONFIG
-    job_category: str = ""
-    resume_title: str
-    education_level: str
-    school_name: str
-    education_state: str
-    introduce: str
-    career_list: Optional[List[CareerInfoModel]]
-    certification_list: Optional[List[CertificationInfoModel]]
-
-
 # ------------------------
 # Submission (지원한 이력서)
 # ------------------------
@@ -41,24 +29,10 @@ class JobpostingListOutputModel(BaseModel):
     is_bookmarked: bool
 
 
-class JobpostingDetailOutputModel(BaseModel):
-    """
-    채용공고 상세 내보내기 모델
-    """
-
-    model_config = MY_CONFIG
-    job_posting_id: UUID
-    city: str
-    district: str
-    company_name: str
-    company_address: str
-    job_posting_title: str
-    summary: str
-    deadline: date
-    is_bookmarked: bool
-
-
 class SnapshotResumeModel(BaseModel):
+    """
+    이력서 스냅샷 모델
+    """
     model_config = MY_CONFIG
 
     job_category: str
@@ -87,8 +61,10 @@ class SubmissionModel(BaseModel):
 
 
 class SubmissionMemoUpdateModel(BaseModel):
+    """
+    메모 모델
+    """
     memo: Optional[str] = None
-
 
 class JobpostingGetListModel(BaseModel):
     """
@@ -99,35 +75,6 @@ class JobpostingGetListModel(BaseModel):
 
     job_posting_id: UUID
     job_posting_title: str
-
-
-class SubmissionGetListModel(BaseModel):
-    """
-    내 지원 목록 보여질 때 지원 정보
-    """
-
-    model_config = MY_CONFIG
-
-    company_name: str
-    company_address: str
-    summary: str
-    deadline: date
-    is_bookmarked: bool
-    resume_title: str
-    memo: Optional[str] = None
-    created_at: date
-
-
-class SubmissionGetDetailModel(BaseModel):
-    model_config = MY_CONFIG
-
-    submission_id: UUID
-    job_posting: JobpostingListOutputModel
-    snapshot_resume: SnapshotResumeModel
-    memo: Optional[str] = None
-    is_read: bool
-    created_at: date
-
 
 class SubmissionCompanyOutputDetailModel(BaseModel):
     model_config = MY_CONFIG
@@ -144,11 +91,6 @@ class SubmissionCompanyOutputDetailModel(BaseModel):
     career_list: list[CareerInfoModel]
     certification_list: list[CertificationInfoModel]
 
-
-class SubmissionGetListInfoModel(BaseModel):
-    model_config = MY_CONFIG
-
-
 class SubmissionCompanyGetListInfoModel(BaseModel):
     """
     기업 유저 지원자 목록 조회 포함 항목
@@ -164,7 +106,6 @@ class SubmissionCompanyGetListInfoModel(BaseModel):
     created_at: date
     resume_title: str
 
-
 class SubmissionCompanyGetListOutputModel(BaseModel):
     """
     기업 유저 지원자 목록 조회 시 보여질 모든 항목
@@ -176,11 +117,9 @@ class SubmissionCompanyGetListOutputModel(BaseModel):
     job_posting_list: list[JobpostingGetListModel]
     submission_list: list[SubmissionCompanyGetListInfoModel]
 
-
 # ------------------------
 # 응답 모델
 # ------------------------
-
 
 class SubmissionListResponseModel(BaseModel):
     message: str
