@@ -232,6 +232,9 @@ LOGGING = {
         },
     },
     "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
         "user_file": {
             "level": "ERROR",
             "class": "logging.FileHandler",
