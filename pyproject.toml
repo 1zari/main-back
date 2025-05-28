@@ -38,6 +38,7 @@ dependencies = [
     "geopandas (>=1.0.1,<2.0.0)",
     "types-geopandas (>=1.0.1.20250510,<2.0.0.0)",
     "urllib3 (>=1.25.4,<1.27)",
+    "django-debug-toolbar (>=5.2.0,<6.0.0)",
 ]
 
 

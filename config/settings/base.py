@@ -212,6 +212,90 @@ KAKAO_USER_INFO_URL = os.getenv("KAKAO_USER_INFO_URL") or ""
 NAVER_TOKEN_URL = os.getenv("NAVER_TOKEN_URL") or ""
 NAVER_USER_INFO_URL = os.getenv("NAVER_USER_INFO_URL") or ""
 
+log_dir = BASE_DIR / "logs"
+
+# 로그 디렉터리가 존재하지 않으면 생성
+if not log_dir.exists():
+    log_dir.mkdir(parents=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {filename}:{lineno} - {funcName} - {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "user_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": log_dir / "user.log",
+            "formatter": "verbose",
+        },
+        "job_posting_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": log_dir / "job_posting.log",
+            "formatter": "verbose",
+        },
+        "resume_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": log_dir / "resume.log",
+            "formatter": "verbose",
+        },
+        "search_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": log_dir / "search.log",
+            "formatter": "verbose",
+        },
+        "utils_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": log_dir / "utils.log",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "user": {
+            "handlers": ["user_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "job_posting": {
+            "handlers": ["job_posting_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "resume": {
+            "handlers": ["resume_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "search": {
+            "handlers": ["search_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "utils": {
+            "handlers": ["utils_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
+
 
 # CSRF 설정
 CSRF_TRUSTED_ORIGINS = [
@@ -260,19 +344,3 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-
-
-# LOGGING 설정
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-}

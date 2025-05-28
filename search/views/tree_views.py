@@ -7,6 +7,7 @@ from django.views import View
 
 from config.settings.base import REDIS_DB, REDIS_HOST, REDIS_PORT
 from search.schemas import JobTreeResponse, RegionTreeResponse
+from utils.logging_decorators import log_search_call
 
 r = redis.Redis(
     host=cast(str, REDIS_HOST),
@@ -17,6 +18,7 @@ r = redis.Redis(
 
 
 class RegionTreeView(View):
+    @log_search_call
     def get(self, request) -> JsonResponse:
         region_tree_json = r.get("region_tree")
 
@@ -32,6 +34,7 @@ class RegionTreeView(View):
 
 
 class JobTreeView(View):
+    @log_search_call
     def get(self, request) -> JsonResponse:
         job_tree_json = r.get("job_categories")
         job_tree = json.loads(job_tree_json) if job_tree_json else {}

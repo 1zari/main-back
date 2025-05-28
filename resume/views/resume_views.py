@@ -1,18 +1,17 @@
 import json
+import logging
 import uuid
 from typing import List
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from pydantic_core._pydantic_core import ValidationError
 
 from resume.models import CareerInfo, Certification, Resume
-from resume.schemas import (
-    CareerInfoModel,
-    CertificationInfoModel,
+from resume.schemas.common_schemas import CareerInfoModel, CertificationInfoModel
+from resume.schemas.resume_schemas import (
     MyResume,
     MyResumeListOutput,
     MyResumeMixinResponse,
@@ -31,18 +30,21 @@ from resume.serializer import (
 from user.models import CommonUser, UserInfo
 from user.schemas import UserInfoModel
 from utils.common import check_and_return_normal_user, get_user_from_token
+from utils.logging_decorators import log_resume_call
+
+logger = logging.getLogger(__name__)
 
 # ------------------------
 # 이력서 관련 api
 # ------------------------
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeListView(View):
     """
-    이력서
+    내 이력서 관련 (일반 유저)
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest) -> JsonResponse:
         """
         내 이력서 리스트 조회
@@ -50,7 +52,7 @@ class MyResumeListView(View):
         try:
             valid_user: CommonUser = get_user_from_token(request)
             user: UserInfo = check_and_return_normal_user(valid_user)
-            resumes: list[Resume] = list(Resume.objects.filter(user=user))
+            resumes: list[Resume] = list(Resume.objects.select_related("user").filter(user=user).all())
 
             resume_models: List[ResumeListOutputModel] = []
             for resume in resumes:
@@ -67,14 +69,20 @@ class MyResumeListView(View):
                 resume_list=resume_models,
             )
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def post(self, request: HttpRequest) -> JsonResponse:
         """
         새로운 이력서 등록
         """
-        from pydantic_core._pydantic_core import ValidationError
 
         try:
             valid_user: CommonUser = get_user_from_token(request)
@@ -114,12 +122,12 @@ class MyResumeListView(View):
             return JsonResponse({"errors": str(e)}, status=400)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class MyResumeDetailView(View):
     """
     이력서 단일 조회 / 수정 / 삭제
     """
 
+    @log_resume_call
     def get(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 상세 조회
@@ -154,12 +162,19 @@ class MyResumeDetailView(View):
             )
             response = MyResumeMixinResponse(message="Resume loaded successfully", resume=resume_model)
             return JsonResponse(response.model_dump(), status=200)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def patch(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
-        이력서 수정
+        이력서 부분 수정
         """
         try:
             valid_user: CommonUser = get_user_from_token(request)
@@ -180,10 +195,16 @@ class MyResumeDetailView(View):
 
             response = ResumeResponseModel(message="Resume updated successfully", resume=updated_resume)
             return JsonResponse(response.model_dump(), status=200)
-
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 
+    @log_resume_call
     def delete(self, request: HttpRequest, resume_id: uuid.UUID) -> JsonResponse:
         """
         이력서 삭제
@@ -196,6 +217,12 @@ class MyResumeDetailView(View):
             return JsonResponse({"message": "Successfully deleted resume"}, status=200)
         except Resume.DoesNotExist:
             return JsonResponse({"error": "Resume not found"}, status=404)
+        except json.JSONDecodeError:  # JSON 파싱 오류 별도 처리
+            return JsonResponse({"errors": "Invalid JSON format"}, status=400)
+        except ValidationError as e:  # Pydantic 유효성 검사 오류 별도 처리
+            return JsonResponse({"errors": e.errors()}, status=400)  # 상세 오류 반환
+        except PermissionDenied as e:  # get_vaild_user에서 발생한 권한 오류 처리
+            return JsonResponse({"errors": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"errors": str(e)}, status=400)
 

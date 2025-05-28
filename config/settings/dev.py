@@ -13,3 +13,9 @@ GEOS_LIBRARY_PATH = "/usr/lib/x86_64-linux-gnu/libgeos_c.so"
 # 로컬 환경에서 사용하는 경로 (macOS)
 # GDAL_LIBRARY_PATH = "/opt/homebrew/lib/libgdal.dylib"
 # GEOS_LIBRARY_PATH = "/opt/homebrew/lib/libgeos_c.dylib"
+
+INSTALLED_APPS += ["debug_toolbar"]
+
+INTERNAL_IPS = ["*"]
+
+MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]

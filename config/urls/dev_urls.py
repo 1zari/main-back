@@ -1,3 +1,4 @@
+from debug_toolbar.toolbar import debug_toolbar_urls  # type: ignore
 from django.contrib import admin
 from django.urls import include, path
 
@@ -11,4 +12,4 @@ urlpatterns = [
     path("api/user/", include("user.urls.urls")),
     path("api/search/", include("search.urls.search_urls")),
     path("api/csrf/", get_csrf_token),
-]
+] + debug_toolbar_urls()

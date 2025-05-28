@@ -4,3 +4,6 @@
 secrets.json
 __pycache__/
 *.pyc
+.python-version
+*.log
+logs/
