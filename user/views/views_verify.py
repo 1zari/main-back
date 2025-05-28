@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from solapi import SolapiMessageService  # type: ignore
 from solapi.model import Message  # type: ignore
 
+from user.models import UserInfo
 from user.redis import r
 from user.schemas import (
     SendVerificationCodeRequest,
@@ -31,6 +32,9 @@ class SendVerificationCodeView(View):
 
             if not phone_number:
                 return JsonResponse({"message": "Phone number is required."}, status=400)
+
+            if UserInfo.objects.filter(phone_number=phone_number).exists():
+                return JsonResponse({"error": "Phone number already exists."}, status=400)
 
             # 인증번호 생성
             verification_code = "".join(random.choices(string.digits, k=6))
