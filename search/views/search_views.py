@@ -16,9 +16,11 @@ from search.schemas import (
 )
 from user.models import CommonUser
 from utils.common import check_and_return_normal_user, get_user_from_token
+from utils.logging_decorators import log_search_call
 
 
 class SearchView(View):
+    @log_search_call
     def get(self, request: HttpRequest) -> JsonResponse:
         # 0. 인증된 사용자 가져오기
         valid_user: CommonUser = get_user_from_token(request)
@@ -125,7 +127,8 @@ class SearchView(View):
             "deadline",
             "summary",
             "company_id__company_logo",
-        )
+            "created_at",
+        ).order_by("-created_at")
 
         #  지역 코드 리스트 수집
         city_codes = final_qs.values_list("city", flat=True).distinct()
