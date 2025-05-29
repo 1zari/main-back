@@ -19,7 +19,7 @@ DISTRICT_FIELD = "DIST_NAME"  # 시군구
 TOWN_FIELD = "EMD_NAME"  # 읍면동
 
 # 3. 생성할 데이터 수
-N = 1000
+N = 50000
 
 # 4. 직종, 교육, 요일, 급여 등 더미 값 목록
 main_keywords = ["외식·음료"]
@@ -43,20 +43,17 @@ posting_types = ["기업", "공공"]
 employment_types = ["정규직", "비정규직"]
 experiences = ["경력", "무관"]
 
-co = CompanyInfo.objects.first()
-# 5. 특정 회사 UUID (고정값)
-COMPANY_ID: uuid.UUID | Any = co.company_id if co else None
-company = CompanyInfo.objects.get(company_id=COMPANY_ID)
+companies = CompanyInfo.objects.all()
 
 
 def run_dummy_job_posting():
     created = 0
-
+    JobPosting.objects.all().delete()
     while created < N:
         polygon = gdf.sample(1).iloc[0]
         try:
             point = polygon.geometry.representative_point()  # 중심 근처 랜덤 포인트
-
+            random_company = random.choice(companies)
             JobPosting.objects.create(
                 job_posting_title=f"공고 {created+1}",
                 address="대한민국 어디쯤",
@@ -72,7 +69,7 @@ def run_dummy_job_posting():
                 job_keyword_main=random.choice(main_keywords),
                 job_keyword_sub=random.choice(sub_keywords),
                 number_of_positions=random.randint(1, 10),
-                company_id=company,
+                company_id=random_company,
                 education=random.choice(educations),
                 deadline=datetime.today().date() + timedelta(days=random.randint(1, 30)),
                 time_discussion=random.choice([True, False]),
