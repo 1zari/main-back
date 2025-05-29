@@ -1,7 +1,3 @@
-from functools import reduce
-
-from django.contrib.gis.db.models.aggregates import Union
-from django.contrib.gis.measure import D
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
 from django.db.models.expressions import Exists, OuterRef
