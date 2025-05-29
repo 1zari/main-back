@@ -19,7 +19,7 @@ DISTRICT_FIELD = "DIST_NAME"  # 시군구
 TOWN_FIELD = "EMD_NAME"  # 읍면동
 
 # 3. 생성할 데이터 수
-N = 1000
+N = 10000
 
 # 4. 직종, 교육, 요일, 급여 등 더미 값 목록
 main_keywords = ["외식·음료"]
@@ -51,7 +51,7 @@ company = CompanyInfo.objects.get(company_id=COMPANY_ID)
 
 def run_dummy_job_posting():
     created = 0
-
+    JobPosting.objects.all().delete()
     while created < N:
         polygon = gdf.sample(1).iloc[0]
         try:
