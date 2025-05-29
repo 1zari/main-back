@@ -77,7 +77,8 @@ class SearchView(View):
         if query.town_no:
             district_filter |= Q(emd_no__in=query.town_no)
 
-        districts = District.objects.filter(district_filter).distinct()
+        # 지역 객체 조회
+        districts = District.objects.filter(district_filter)
 
         # 변환 매핑 생성
         city_code_to_name = {d.city_no: d.city_name for d in districts}
@@ -89,12 +90,10 @@ class SearchView(View):
             qs = qs.filter(city__in=city_code_to_name.values())
         if query.district_no:
             qs = qs.filter(district__in=district_code_to_name.values())
-        if query.town_no:
-            qs = qs.filter(town__in=town_code_to_name.values())
         # 6. 공간 필터링 (읍면동 기준, 3km 반경)
         if query.town_no and district_filter:
             buffered_regions = []
-            districts_to_buffer = District.objects.filter(district_filter)
+            districts_to_buffer = districts
             for district in districts_to_buffer:
                 if district.geometry:
                     buffered_regions.append(district.geometry.buffer(3000))
@@ -110,7 +109,7 @@ class SearchView(View):
 
         # 7. 북마크 여부
         if current_user:
-            bookmarked_qs = JobPostingBookmark.objects.filter(
+            bookmarked_qs = JobPostingBookmark.objects.select_related("user_id").filter(
                 user_id=current_user.common_user_id,
                 job_posting_id=OuterRef("pk"),
             )
