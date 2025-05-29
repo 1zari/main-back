@@ -1,5 +1,3 @@
-from django.contrib.gis.db.models.aggregates import Union
-from django.contrib.gis.measure import D
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
 from django.db.models.expressions import Exists, OuterRef
@@ -99,13 +97,11 @@ class SearchView(View):
                     buffered_regions.append(district.geometry.buffer(3000))
 
             if buffered_regions:
-                # 버퍼 처리된 폴리곤들을 Union
-                regions_3km = (
-                    buffered_regions[0].union(*buffered_regions[1:])
-                    if len(buffered_regions) > 1
-                    else buffered_regions[0]
-                )
-                qs = qs.filter(location__dwithin=(regions_3km, D(km=0)))
+                # 버퍼 처리된 폴리곤들을 순차적으로 Union
+                regions_3km = buffered_regions[0]
+                for region in buffered_regions[1:]:
+                    regions_3km = regions_3km.union(region)
+                qs = qs.filter(location__within=regions_3km)
 
         # 7. 북마크 여부
         if current_user:
