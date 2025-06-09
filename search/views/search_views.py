@@ -87,7 +87,7 @@ class SearchView(View):
         if query.city_no:
             qs = qs.filter(city__in=city_code_to_name.values())
         if query.district_no:
-            qs = qs.filter(district__in=district_code_to_name.values())
+            qs = qs.filter(city__in=city_code_to_name.values(), district__in=district_code_to_name.values())
         # 6. 공간 필터링 (읍면동 기준, 3km 반경)
         if query.town_no and district_filter:
             buffered_regions = []
